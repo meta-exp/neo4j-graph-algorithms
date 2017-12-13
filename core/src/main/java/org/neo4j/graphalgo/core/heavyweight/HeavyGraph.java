@@ -33,7 +33,7 @@ import java.util.function.IntPredicate;
  *
  * @author mknblch
  */
-public class HeavyGraph implements Graph, NodeWeights, NodeProperties, RelationshipPredicate {
+public class HeavyGraph implements Graph, NodeWeights, NodeProperties, RelationshipPredicate, HandyStuff {
 
     private final IdMap nodeIdMap;
     private AdjacencyMatrix container;
@@ -53,6 +53,12 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
         this.nodeWeights = nodeWeights;
         this.nodeProperties = nodeProperties;
     }
+
+    @Override
+    public int[] getEdges(int nodeId) {return container.getEdges(nodeId);}
+
+    @Override
+    public int getNodeOnOtherSide(int nodeId, int edgeId) {return container.getNodeOnOtherSide(nodeId, edgeId);}
 
     @Override
     public long nodeCount() {

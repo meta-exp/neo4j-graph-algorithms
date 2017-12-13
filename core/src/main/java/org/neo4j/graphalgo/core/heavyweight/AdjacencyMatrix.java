@@ -93,6 +93,14 @@ class AdjacencyMatrix {
         }
     }
 
+    public int[] getEdges(int nodeId){
+        return outgoing[nodeId];
+    }
+
+    public int getNodeOnOtherSide(int nodeId, int edgeId){
+        return outgoing[nodeId][edgeId];
+    }
+
     /**
      * initialize array for outgoing connections
      */

@@ -1,21 +1,18 @@
-package org.neo4j.graphalgo.impl;
+package org.neo4j.graphalgo;
 
-import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.*;
-import org.neo4j.graphalgo.core.IdMap;
+import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Relationship;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.neo4j.graphalgo.core.utils.ArrayUtil.binaryLookup;
-
-public class MetaPath extends Algorithm<MetaPath> implements RelationshipConsumer {
+public class MetaPath extends Algorithm<MetaPath> {
 
     private IdMapping idMapping;
-    private NodeIterator nodeIterator;
+    private HandyStuff handyStuff;
     private RelationshipIterator relationshipIterator;
     private Degrees degrees;
     private int startNodeId;
@@ -26,40 +23,58 @@ public class MetaPath extends Algorithm<MetaPath> implements RelationshipConsume
     private int [][] metapaths;
     private int edgeCounter = 0;
     private int randomIndex;
-    private int nextNodeHopId;
+    private int nodeHopId;
     private Random random;
 
     public MetaPath(IdMapping idMapping,
-                    NodeIterator nodeIterator,
+                    HandyStuff handyStuff,
                     RelationshipIterator relationshipIterator,
                     Degrees degrees,
-                    int startNodeId,
-                    int endNodeId,
+                    long startNodeId,
+                    long endNodeId,
                     int numberOfRandomWalks,
                     int randomWalkLength){
         this.idMapping = idMapping;
-        this.nodeIterator = nodeIterator;
+        this.handyStuff = handyStuff;
         this.relationshipIterator = relationshipIterator;
         this.degrees = degrees;
-        this.startNodeId = startNodeId;
-        this.endNodeId = endNodeId;
+        this.startNodeId = idMapping.toMappedNodeId(startNodeId);
+        this.nodeHopId = idMapping.toMappedNodeId(startNodeId);
+        this.endNodeId = idMapping.toMappedNodeId(endNodeId);
         this.numberOfrandomWalks = numberOfRandomWalks;
         this.randomWalkLength = randomWalkLength;
-        this.metapaths = new int[numberOfRandomWalks][randomWalkLength];
-        this.nextNodeHopId = startNodeId;
+        this.metapaths = new int[numberOfRandomWalks][randomWalkLength+1];
         this.random = new Random();
     }
 
     public Result compute() {
-        for(int j=0; j < numberOfrandomWalks; j++ ) {
-            for(int i = 0; i < randomWalkLength; i++) {
-                int degree = degrees.degree(nextNodeHopId, Direction.OUTGOING);
-                randomIndex = random.nextInt(degree);
-                relationshipIterator.forEachOutgoing(nextNodeHopId, this);
-                metapaths[j][i] = nextNodeHopId;
+
+        for(int i=0; i < numberOfrandomWalks; i++) {
+            metapaths[i][0] = startNodeId;
+            for(int j=1; j <= randomWalkLength; j++){
+                int degree = degrees.degree(nodeHopId, Direction.OUTGOING);
+                if (degree > 0) {
+                    int randomEdgeIndex= random.nextInt(degree);
+                    nodeHopId = handyStuff.getNodeOnOtherSide(startNodeId, randomEdgeIndex);
+                    // map back to neo4j-ids?
+                    metapaths[i][j] = nodeHopId;
+                }
+                else {
+                    // Integer.MAX_VALUE means that there we have reached a node which has no outgoing edges
+                    metapaths[i][j] = Integer.MAX_VALUE;
+                }
             }
         }
 
+        for(int i=0; i < numberOfrandomWalks; i++){
+            String strArray[] = Arrays.stream(metapaths[i])
+                    .mapToObj(String::valueOf)
+                    .toArray(String[]::new);
+
+            System.out.println(String.join(" - ", strArray ) + "\n");
+        }
+
+        /*
         for(int i=0; i < numberOfrandomWalks; i++){
             if(containsEndpoint(metapaths[i])){
                 for(int j=0; j < randomWalkLength; i++) {
@@ -71,6 +86,7 @@ public class MetaPath extends Algorithm<MetaPath> implements RelationshipConsume
                 }
             }
         }
+        */
 
         return new Result();
     }
@@ -84,21 +100,6 @@ public class MetaPath extends Algorithm<MetaPath> implements RelationshipConsume
         return false;
     }
 
-    @Override
-    public boolean accept(
-            int sourceNodeId,
-            int targetNodeId,
-            long relationId) {
-
-        if(edgeCounter == randomIndex){
-            nextNodeHopId = targetNodeId;
-            return false;
-        }
-
-        edgeCounter ++;
-
-        return true;
-    }
 
     public Stream<MetaPath.Result> resultStream() {
         return IntStream.range(0, 1).mapToObj(result -> new Result());
