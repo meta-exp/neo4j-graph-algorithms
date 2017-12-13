@@ -6,6 +6,7 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.ProcedureConfiguration;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressLogger;
+import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphalgo.core.utils.TerminationFlag;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.AllShortestPaths;
@@ -13,6 +14,7 @@ import org.neo4j.graphalgo.impl.HugeMSBFSAllShortestPaths;
 import org.neo4j.graphalgo.impl.GettingStarted;
 import org.neo4j.graphalgo.impl.MSBFSAllShortestPaths;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphalgo.results.GettingStartedResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -35,18 +37,19 @@ public class GettingStartedProc {
     public KernelTransaction transaction;
 
     @Procedure("algo.gettingStarted.stream")
-    @Description("CALL algo.gettingStarted.stream(weightProperty:String" +
-            "{nodeQuery:'labelName', relationshipQuery:'relationshipName', defaultValue:1.0, concurrency:4}) " +
-            "YIELD sourceNodeId, targetNodeId, distance - yields a stream of {sourceNodeId, targetNodeId, distance}")
+    @Description("CALL algo.gettingStarted.stream({defaultValue:false, concurrency:4}) " +
+            "YIELD hasEdge - yields a stream of {hasEdge}")
 
     public Stream<GettingStarted.Result> gettingStartedStream(
-            @Name(value = "propertyName") String propertyName,
             @Name(value = "config", defaultValue = "{}")
                     Map<String, Object> config) {
 
         ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
         AllocationTracker tracker = AllocationTracker.create();
         Graph graph = new GraphLoader(api, Pools.DEFAULT)
+                .withoutNodeProperties()
+                .withoutNodeWeights()
+                .withoutRelationshipWeights()
                 .withConcurrency(configuration.getConcurrency())
                 .withAllocationTracker(tracker)
                 .load(configuration.getGraphImpl());
@@ -56,4 +59,30 @@ public class GettingStartedProc {
         graph.release();
         return algo.resultStream();
     }
+
+    @Procedure("algo.gettingStarted")
+    @Description("CALL algo.gettingStarted({defaultValue:false, concurrency:4}) " +
+            "YIELD loadMillis, writeMillis, computeMillis, hasEdge - yields evaluation details")
+
+    public Stream<GettingStartedResult> gettingStarted(
+            @Name(value = "config", defaultValue = "{}")  Map<String, Object> config) {
+
+        final GettingStartedResult.Builder builder = GettingStartedResult.builder();
+        ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
+        AllocationTracker tracker = AllocationTracker.create();
+
+        final Graph graph;
+        try (ProgressTimer timer = builder.timeLoad()) {
+            graph = new GraphLoader(api, Pools.DEFAULT)
+                    .withConcurrency(configuration.getConcurrency())
+                    .withAllocationTracker(tracker)
+                    .load(configuration.getGraphImpl());
+        }
+
+        final GettingStarted algo = new GettingStarted(graph);
+        builder.timeEval(algo::compute);
+
+        return Stream.of(builder.build());
+    }
+
 }

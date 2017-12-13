@@ -17,13 +17,13 @@ public class GettingStarted extends Algorithm<GettingStarted> {
         this.hasEdge = false;
     }
 
-    public GettingStarted compute() {
+    public Result compute() {
         graph.forEachNode(node -> {
             graph.forEachRelationship(node, Direction.BOTH, (source, target, id) -> {hasEdge = true;
                 return false;});
             return !hasEdge;
         });
-        return this;
+        return new Result(this.hasEdge);
     }
 
     public Stream<GettingStarted.Result> resultStream() {

@@ -35,35 +35,35 @@ public class GettingStartedTest {
     @BeforeClass
     public static void setup() throws KernelException {
         final String cypher =
-                "CREATE (s:Node {name:'s'})\n" +
-                        "CREATE (a:Node {name:'a'})\n" +
-                        "CREATE (b:Node {name:'b'})\n" +
-                        "CREATE (c:Node {name:'c'})\n" +
-                        "CREATE (d:Node {name:'d'})\n" +
-                        "CREATE (e:Node {name:'e'})\n" +
-                        "CREATE (f:Node {name:'f'})\n" +
-                        "CREATE (g:Node {name:'g'})\n" +
-                        "CREATE (h:Node {name:'h'})\n" +
-                        "CREATE (i:Node {name:'i'})\n" +
-                        "CREATE (x:Node {name:'x'})\n" +
+                "CREATE (s:Node {name:'s', blow: 2})\n" +
+                        "CREATE (a:Node {name:'a', blow: 2})\n" +
+                        "CREATE (b:Node {name:'b', blow: 2})\n" +
+                        "CREATE (c:Node {name:'c', blow: 2})\n" +
+                        "CREATE (d:Node {name:'d', blow: 2})\n" +
+                        "CREATE (e:Node {name:'e', blow: 2})\n" +
+                        "CREATE (f:Node {name:'f', blow: 2})\n" +
+                        "CREATE (g:Node {name:'g', blow: 2})\n" +
+                        "CREATE (h:Node {name:'h', blow: 2})\n" +
+                        "CREATE (i:Node {name:'i', blow: 2})\n" +
+                        "CREATE (x:Node {name:'x', blow: 2})\n" +
                         "CREATE" +
 
-                        " (x)-[:TYPE {cost:5}]->(s),\n" + // creates cycle
+                        " (x)-[:TYPE {cost:5, blue: 1}]->(s),\n" + // creates cycle
 
-                        " (s)-[:TYPE {cost:5}]->(a),\n" + // line 1
-                        " (a)-[:TYPE {cost:5}]->(b),\n" +
-                        " (b)-[:TYPE {cost:5}]->(c),\n" +
-                        " (c)-[:TYPE {cost:5}]->(x),\n" +
+                        " (s)-[:TYPE {cost:10, blue: 1}]->(a),\n" + // line 1
+                        " (a)-[:TYPE {cost:5, blue: 1}]->(b),\n" +
+                        " (b)-[:TYPE {cost:5, blue: 1}]->(c),\n" +
+                        " (c)-[:TYPE {cost:5, blue: 1}]->(x),\n" +
 
-                        " (s)-[:TYPE {cost:3}]->(d),\n" + // line 2
-                        " (d)-[:TYPE {cost:3}]->(e),\n" +
-                        " (e)-[:TYPE {cost:3}]->(f),\n" +
-                        " (f)-[:TYPE {cost:3}]->(x),\n" +
+                        " (s)-[:TYPE {cost:3, blue: 1}]->(d),\n" + // line 2
+                        " (d)-[:TYPE {cost:3, blue: 1}]->(e),\n" +
+                        " (e)-[:TYPE {cost:3, blue: 1}]->(f),\n" +
+                        " (f)-[:TYPE {cost:3, blue: 1}]->(x),\n" +
 
-                        " (s)-[:TYPE {cost:2}]->(g),\n" + // line 3
-                        " (g)-[:TYPE {cost:2}]->(h),\n" +
-                        " (h)-[:TYPE {cost:2}]->(i),\n" +
-                        " (i)-[:TYPE {cost:2}]->(x)";
+                        " (s)-[:TYPE {cost:2, blue: 1}]->(g),\n" + // line 3
+                        " (g)-[:TYPE {cost:2, blue: 1}]->(h),\n" +
+                        " (h)-[:TYPE {cost:2, blue: 1}]->(i),\n" +
+                        " (i)-[:TYPE {cost:2, blue: 1}]->(x)";
 
         api = TestDatabaseCreator.createTestDatabase();
 
@@ -100,7 +100,7 @@ public class GettingStartedTest {
 
         final Consumer consumer = mock(Consumer.class);
 
-        final String cypher = "CALL algo.gettingStarted.stream('', {graph:'"+graphImpl+"'}) YIELD hasEdge RETURN hasEdge";
+        final String cypher = "CALL algo.gettingStarted.stream({graph:'"+graphImpl+"'}) YIELD hasEdge";
 
         api.execute(cypher).accept(row -> {
             final boolean hasEdges = row.getBoolean("hasEdge");
