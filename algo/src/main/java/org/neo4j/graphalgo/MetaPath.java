@@ -1,10 +1,12 @@
 package org.neo4j.graphalgo;
 
 import org.neo4j.graphalgo.api.*;
+import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.Direction;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -12,58 +14,50 @@ public class MetaPath extends Algorithm<MetaPath> {
 
     private HandyStuff handyStuff;
     private Degrees degrees;
-    private int startNodeId;
-    private int endNodeId;
+    private IdMap mapping;
+    private HashSet<Integer> startNodeIds;
+    private HashSet<Integer> endNodeIds;
     private int randomWalkLength;
     private int numberOfrandomWalks;
-    private String [][] metapaths;
-    private int nodeHopId;
+    private ArrayList<ArrayList<String>> metapaths;
     private Random random;
 
     public MetaPath(IdMapping idMapping,
                     HandyStuff handyStuff,
                     Degrees degrees,
-                    long startNodeId,
-                    long endNodeId,
+                    HashSet<Long> startNodeIds,
+                    HashSet<Long> endNodeIds,
                     int numberOfRandomWalks,
                     int randomWalkLength){
+
+        this.startNodeIds = new HashSet<>();
+        this.endNodeIds = new HashSet<>();
+        convertIds(idMapping, startNodeIds, this.startNodeIds);
+        convertIds(idMapping, endNodeIds, this.endNodeIds);
         this.handyStuff = handyStuff;
         this.degrees = degrees;
-        this.startNodeId = idMapping.toMappedNodeId(startNodeId);
-        this.nodeHopId = idMapping.toMappedNodeId(startNodeId);
-        this.endNodeId = idMapping.toMappedNodeId(endNodeId);
         this.numberOfrandomWalks = numberOfRandomWalks;
         this.randomWalkLength = randomWalkLength;
-        this.metapaths = new String[numberOfRandomWalks][randomWalkLength+1];
+        this.metapaths = new ArrayList<>();
         this.random = new Random();
+    }
+
+    private void convertIds(IdMapping idMapping, HashSet<Long> incomingIds, HashSet<Integer> convertedIds){
+        for(long l : incomingIds){
+          convertedIds.add(idMapping.toMappedNodeId(l));
+        }
     }
 
     public Result compute() {
 
-        for(int i=0; i < numberOfrandomWalks; i++) {
-            nodeHopId = startNodeId;
-            metapaths[i][0] = handyStuff.getLabel(nodeHopId);
-            for(int j=1; j <= randomWalkLength; j++){
-                int degree = degrees.degree(nodeHopId, Direction.OUTGOING);
-                if (degree > 0) {
-                    int randomEdgeIndex= random.nextInt(degree);
-                    nodeHopId = handyStuff.getNodeOnOtherSide(nodeHopId, randomEdgeIndex);
-                    // map back to neo4j-ids?
-                    metapaths[i][j] = handyStuff.getLabel(nodeHopId);
-                }
-                else {
-                    metapaths[i][j] = "X";
-                }
-            }
+        for (int nodeId : startNodeIds) {
+            computeMetapathFromNode(nodeId);
         }
 
         HashSet<String> finalMetaPaths = new HashSet<>();
 
-        for(int i=0; i < numberOfrandomWalks; i++){
-            String strArray[] = Arrays.stream(metapaths[i])
-                    .toArray(String[]::new);
-
-            finalMetaPaths.add(String.join(" | ", strArray ) + "\n");
+        for(ArrayList<String> metapath :metapaths){
+            finalMetaPaths.add(String.join(" | ", metapath ) + "\n");
         }
 
         for (String s:finalMetaPaths
@@ -71,32 +65,31 @@ public class MetaPath extends Algorithm<MetaPath> {
             System.out.println(s);
         }
 
-        /*
-        for(int i=0; i < numberOfrandomWalks; i++){
-            if(containsEndpoint(metapaths[i])){
-                for(int j=0; j < randomWalkLength; i++) {
-                    System.out.print(Integer.toString(metapaths[i][j]) + " - ");
-                    if(metapaths[i][j] == endNodeId){
-                        System.out.println();
-                        break;
-                    }
-                }
-            }
-        }
-        */
-
         return new Result();
     }
 
-    private boolean containsEndpoint(int[] walkInstance){
-        for(int i=0; i < walkInstance.length; i++){
-            if(walkInstance[i] == endNodeId)
-                return true;
+    private void computeMetapathFromNode(int startNodeId){
+        for(int i=0; i < numberOfrandomWalks; i++) {
+            int nodeHopId = startNodeId;
+            ArrayList<String> metapath = new ArrayList<>();
+            metapath.add(handyStuff.getLabel(nodeHopId));
+            for(int j=1; j <= randomWalkLength; j++){
+                int degree = degrees.degree(nodeHopId, Direction.OUTGOING);
+                if (endNodeIds.contains(nodeHopId)){
+                    metapaths.add(metapath);
+                    break;
+                }
+                else if (degree <= 0 || endNodeIds.contains(nodeHopId)) {
+                    break;
+                }
+                else {
+                    int randomEdgeIndex= random.nextInt(degree);
+                    nodeHopId = handyStuff.getNodeOnOtherSide(nodeHopId, randomEdgeIndex);
+                    metapath.add(handyStuff.getLabel(nodeHopId));
+                }
+            }
         }
-
-        return false;
     }
-
 
     public Stream<MetaPath.Result> resultStream() {
         return IntStream.range(0, 1).mapToObj(result -> new Result());

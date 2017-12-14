@@ -17,6 +17,7 @@ import org.neo4j.graphalgo.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -118,12 +119,14 @@ public class MetaPathTest {
     public void testMetaPath() throws Exception {
         final Label snpLabel = Label.label("SNP");
         final Label genLabel = Label.label("GEN");
-        long startNodeId;
-        long endNodeId;
+        final HashSet<Long> startNodeIds = new HashSet<>();
+        final HashSet<Long> endNodeIds = new HashSet<>();
 
         try (Transaction tx = api.beginTx()) {
-            startNodeId = api.findNode(snpLabel, "name", "a").getId();
-            endNodeId = api.findNode(genLabel, "name", "o").getId();
+            startNodeIds.add(api.findNode(snpLabel, "name", "c").getId());
+            startNodeIds.add(api.findNode(snpLabel, "name", "a").getId());
+            endNodeIds.add(api.findNode(genLabel, "name", "o").getId());
+            endNodeIds.add(api.findNode(genLabel, "name", "l").getId());
         }
 
         final HeavyGraph graph;
@@ -134,7 +137,7 @@ public class MetaPathTest {
                 .load(HeavyGraphFactory.class);
 
 
-        MetaPath algo = new MetaPath(graph, graph, graph, startNodeId, endNodeId, 10, 8);
+        MetaPath algo = new MetaPath(graph, graph, graph, startNodeIds, endNodeIds, 10, 8);
 
         // Something does not work: e.g. 0 - 0 - 0 - 0
         algo.compute();
