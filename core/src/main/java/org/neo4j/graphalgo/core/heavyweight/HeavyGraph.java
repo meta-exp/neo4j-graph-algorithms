@@ -26,6 +26,7 @@ import org.neo4j.graphalgo.core.utils.RawValues;
 import org.neo4j.graphdb.Direction;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.function.IntPredicate;
 
 /**
@@ -40,6 +41,8 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     private WeightMapping relationshipWeights;
     private WeightMapping nodeWeights;
     private WeightMapping nodeProperties;
+    // Watch Out! There is no default value. If The nodeId does not exist as key, null will be returned.
+    private HashMap<Integer, String> labelMap;
 
     HeavyGraph(
             IdMap nodeIdMap,
@@ -52,6 +55,29 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
         this.relationshipWeights = relationshipWeights;
         this.nodeWeights = nodeWeights;
         this.nodeProperties = nodeProperties;
+    }
+
+    HeavyGraph(
+            IdMap nodeIdMap,
+            AdjacencyMatrix container,
+            final WeightMapping relationshipWeights,
+            final WeightMapping nodeWeights,
+            final WeightMapping nodeProperties,
+            final HashMap<Integer, String> labelMap) {
+        this.nodeIdMap = nodeIdMap;
+        this.container = container;
+        this.relationshipWeights = relationshipWeights;
+        this.nodeWeights = nodeWeights;
+        this.nodeProperties = nodeProperties;
+        this.labelMap = labelMap;
+    }
+
+    @Override
+    public String getLabel(int nodeId){
+        if (labelMap == null){
+            return null;
+        }
+        return labelMap.get(nodeId);
     }
 
     @Override

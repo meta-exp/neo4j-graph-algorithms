@@ -23,12 +23,17 @@ import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.api.GraphSetup;
 import org.neo4j.graphalgo.api.WeightMapping;
 import org.neo4j.graphalgo.core.IdMap;
+import org.neo4j.graphalgo.core.LabelImporter;
+import org.neo4j.graphalgo.core.NodeImporter;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.helpers.Exceptions;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.function.Supplier;
 
 /**
@@ -57,7 +62,11 @@ public class HeavyGraphFactory extends GraphFactory {
 
     private Graph importGraph(final int batchSize) throws
             EntityNotFoundException {
+
         final IdMap idMap = loadIdMap();
+
+        final HashMap<Integer, String> labelMap = loadLabelMap(idMap, setup.loadWithLabels);
+
 
         final Supplier<WeightMapping> relWeights = () -> newWeightMap(
                 dimensions.relWeightId(),
@@ -101,6 +110,7 @@ public class HeavyGraphFactory extends GraphFactory {
                 relWeights,
                 nodeWeights,
                 nodeProps,
+                labelMap,
                 tasks);
 
         progressLogger.logDone();
@@ -113,10 +123,11 @@ public class HeavyGraphFactory extends GraphFactory {
             final Supplier<WeightMapping> relWeightsSupplier,
             final Supplier<WeightMapping> nodeWeightsSupplier,
             final Supplier<WeightMapping> nodePropsSupplier,
+            final HashMap<Integer, String> labelMap,
             Collection<RelationshipImporter> tasks) {
         if (tasks.size() == 1) {
             RelationshipImporter importer = tasks.iterator().next();
-            return importer.toGraph(idMap);
+            return importer.toGraph(idMap, labelMap);
         }
 
         final AdjacencyMatrix matrix = new AdjacencyMatrix(nodeCount, setup.sort);
@@ -133,6 +144,7 @@ public class HeavyGraphFactory extends GraphFactory {
                 matrix,
                 relWeights,
                 nodeWeights,
-                nodeProps);
+                nodeProps,
+                labelMap);
     }
 }

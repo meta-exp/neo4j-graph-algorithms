@@ -8,4 +8,6 @@ public interface HandyStuff {
 
     int getNodeOnOtherSide(int nodeId, int edgeId);
 
+    String getLabel(int nodeId);
+
 }

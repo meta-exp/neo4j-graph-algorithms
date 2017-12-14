@@ -18,13 +18,7 @@
  */
 package org.neo4j.graphalgo.api;
 
-import org.neo4j.graphalgo.core.GraphDimensions;
-import org.neo4j.graphalgo.core.HugeNullWeightMap;
-import org.neo4j.graphalgo.core.HugeWeightMap;
-import org.neo4j.graphalgo.core.IdMap;
-import org.neo4j.graphalgo.core.NodeImporter;
-import org.neo4j.graphalgo.core.NullWeightMap;
-import org.neo4j.graphalgo.core.WeightMap;
+import org.neo4j.graphalgo.core.*;
 import org.neo4j.graphalgo.core.huge.HugeIdMap;
 import org.neo4j.graphalgo.core.huge.HugeNodeImporter;
 import org.neo4j.graphalgo.core.utils.ImportProgress;
@@ -37,6 +31,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
 import org.neo4j.logging.NullLog;
 
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -83,6 +78,16 @@ public abstract class GraphFactory {
                 dimensions.nodeCount(),
                 dimensions.labelId());
         return nodeImporter.call();
+    }
+
+    protected HashMap<Integer, String> loadLabelMap(IdMap mapping, boolean loadLabels) throws EntityNotFoundException {
+        if (!loadLabels){
+            return null;
+        }
+        final LabelImporter labelImporter = new LabelImporter(
+                api,
+                mapping);
+        return labelImporter.call();
     }
 
     protected HugeIdMap loadHugeIdMap(AllocationTracker tracker) throws EntityNotFoundException {

@@ -81,6 +81,7 @@ public class GraphLoader {
     private AllocationTracker tracker = AllocationTracker.EMPTY;
     private boolean sort = false;
     private boolean loadAsUndirected = false;
+    private boolean loadWithLabels = false;
 
     /**
      * Creates a new serial GraphLoader.
@@ -193,6 +194,10 @@ public class GraphLoader {
         return this;
     }
 
+    public GraphLoader withLabelAsProperty(boolean loadWithLabels) {
+        this.loadWithLabels = loadWithLabels;
+        return this;
+    }
     /**
      * Instructs the loader to load only nodes with the given label name.
      * If the label is not found, every node will be loaded.
@@ -501,6 +506,7 @@ public class GraphLoader {
                 logMillis,
                 sort,
                 loadAsUndirected,
+                loadWithLabels,
                 tracker);
 
         try {

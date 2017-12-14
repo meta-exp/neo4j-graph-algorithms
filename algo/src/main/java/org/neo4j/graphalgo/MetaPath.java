@@ -1,11 +1,8 @@
 package org.neo4j.graphalgo;
 
-import jdk.nashorn.internal.runtime.Property;
 import org.neo4j.graphalgo.api.*;
 import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.PropertyContainer;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -13,34 +10,24 @@ import java.util.stream.Stream;
 
 public class MetaPath extends Algorithm<MetaPath> {
 
-    private IdMapping idMapping;
     private HandyStuff handyStuff;
-    private RelationshipIterator relationshipIterator;
     private Degrees degrees;
     private int startNodeId;
     private int endNodeId;
     private int randomWalkLength;
     private int numberOfrandomWalks;
-    private int nodeCount;
     private String [][] metapaths;
-    private int edgeCounter = 0;
-    private int randomIndex;
     private int nodeHopId;
     private Random random;
-    private PropertyContainer propContainer;
 
     public MetaPath(IdMapping idMapping,
                     HandyStuff handyStuff,
-                    RelationshipIterator relationshipIterator,
                     Degrees degrees,
                     long startNodeId,
                     long endNodeId,
                     int numberOfRandomWalks,
-                    int randomWalkLength,
-                    PropertyContainer propContainer){
-        this.idMapping = idMapping;
+                    int randomWalkLength){
         this.handyStuff = handyStuff;
-        this.relationshipIterator = relationshipIterator;
         this.degrees = degrees;
         this.startNodeId = idMapping.toMappedNodeId(startNodeId);
         this.nodeHopId = idMapping.toMappedNodeId(startNodeId);
@@ -49,25 +36,23 @@ public class MetaPath extends Algorithm<MetaPath> {
         this.randomWalkLength = randomWalkLength;
         this.metapaths = new String[numberOfRandomWalks][randomWalkLength+1];
         this.random = new Random();
-        this.propContainer = propContainer;
     }
 
     public Result compute() {
 
         for(int i=0; i < numberOfrandomWalks; i++) {
             nodeHopId = startNodeId;
-            metapaths[i][0] = (String)((HashMap<String, Object>)propContainer.getProperty("label")).get(Integer.toString(nodeHopId));
+            metapaths[i][0] = handyStuff.getLabel(nodeHopId);
             for(int j=1; j <= randomWalkLength; j++){
                 int degree = degrees.degree(nodeHopId, Direction.OUTGOING);
                 if (degree > 0) {
                     int randomEdgeIndex= random.nextInt(degree);
                     nodeHopId = handyStuff.getNodeOnOtherSide(nodeHopId, randomEdgeIndex);
                     // map back to neo4j-ids?
-                    metapaths[i][j] = (String)((HashMap<String, Object>)propContainer.getProperty("label")).get(Integer.toString(nodeHopId));
+                    metapaths[i][j] = handyStuff.getLabel(nodeHopId);
                 }
                 else {
-                    // Integer.MAX_VALUE means that there we have reached a node which has no outgoing edges
-                    metapaths[i][j] = "-1";
+                    metapaths[i][j] = "X";
                 }
             }
         }
@@ -122,7 +107,6 @@ public class MetaPath extends Algorithm<MetaPath> {
 
     @Override
     public MetaPath release() {
-        idMapping = null;
         return null;
     }
 

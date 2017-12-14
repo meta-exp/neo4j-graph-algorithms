@@ -79,7 +79,8 @@ public class GraphSetup {
     public final boolean sort;
     // in/out adjacencies are allowed to be merged into an undirected view of the graph
     public final boolean loadAsUndirected;
-
+    // Tell the factory to construct a label map
+    public final boolean loadWithLabels;
     /**
      * main ctor
      * @param startLabel the start label. null means any label.
@@ -119,6 +120,7 @@ public class GraphSetup {
             long logMillis,
             boolean sort,
             boolean loadAsUndirected,
+            boolean loadWithLabels,
             AllocationTracker tracker) {
 
         this.startLabel = startLabel;
@@ -141,6 +143,7 @@ public class GraphSetup {
         this.logMillis = logMillis;
         this.sort = sort;
         this.loadAsUndirected = loadAsUndirected;
+        this.loadWithLabels = loadWithLabels;
         this.tracker = tracker;
     }
 
@@ -167,6 +170,7 @@ public class GraphSetup {
         this.logMillis = -1;
         this.sort = false;
         this.loadAsUndirected = false;
+        this.loadWithLabels = false;
         this.tracker = AllocationTracker.EMPTY;
     }
 
@@ -196,6 +200,7 @@ public class GraphSetup {
         this.logMillis = -1;
         this.sort = false;
         this.loadAsUndirected = false;
+        this.loadWithLabels = false;
         this.tracker = AllocationTracker.EMPTY;
     }
 

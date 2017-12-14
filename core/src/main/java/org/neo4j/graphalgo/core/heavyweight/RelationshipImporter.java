@@ -39,6 +39,7 @@ import org.neo4j.kernel.impl.api.RelationshipVisitor;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import java.util.HashMap;
 import java.util.function.Supplier;
 
 
@@ -332,13 +333,14 @@ final class RelationshipImporter extends StatementTask<Void, EntityNotFoundExcep
         weights.put(relId, doubleValue);
     }
 
-    Graph toGraph(final IdMap idMap) {
+    Graph toGraph(final IdMap idMap, final HashMap<Integer, String> labelMap) {
         return new HeavyGraph(
                 idMap,
                 matrix,
                 relWeights,
                 nodeWeights,
-                nodeProps);
+                nodeProps,
+                labelMap);
     }
 
     void writeInto(

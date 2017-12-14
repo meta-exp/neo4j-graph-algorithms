@@ -1,44 +1,36 @@
-package org.neo4j.graphalgo.impl;
+package org.neo4j.graphalgo.core.heavyweight;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.neo4j.graphalgo.MetaPath;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.neo4j.graphalgo.GettingStartedProc;
 import org.neo4j.graphalgo.TestDatabaseCreator;
-import org.neo4j.graphalgo.api.Graph;
-import org.neo4j.graphalgo.api.NodeIterator;
+import org.neo4j.graphalgo.api.RelationshipConsumer;
 import org.neo4j.graphalgo.core.GraphLoader;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphalgo.core.utils.RawValues;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.graphalgo.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
+import static org.neo4j.graphdb.Direction.INCOMING;
+import static org.neo4j.graphdb.Direction.OUTGOING;
 
-
-/**         5     5      5
- *      (1)---(2)---(3)----.
- *    5/ 2    2     2     2 \     5
- *  (0)---(7)---(8)---(9)---(10)-//->(0)
- *    3\    3     3     3   /
- *      (4)---(5)---(6)----°
- *
- * S->X: {S,G,H,I,X}:8, {S,D,E,F,X}:12, {S,A,B,C,X}:20
- */
-
-public class MetaPathTest {
+public class LabelMapTest {
 
     private static GraphDatabaseAPI api;
 
     @BeforeClass
     public static void setup() throws KernelException {
         final String cypher =
-                        "CREATE (a:SNP {name:\"a\"})\n" +
+                "CREATE (a:SNP {name:\"a\"})\n" +
                         "CREATE (b:PHN {name:\"b\"})\n" +
                         "CREATE (c:SNP {name:\"c\"})\n" +
                         "CREATE (d:PHN {name:\"d\"})\n" +
@@ -115,30 +107,42 @@ public class MetaPathTest {
     }
 
     @Test
-    public void testMetaPath() throws Exception {
-        final Label snpLabel = Label.label("SNP");
-        final Label genLabel = Label.label("GEN");
-        long startNodeId;
-        long endNodeId;
+    public void testLabelMapNotNull(){
+        final HeavyGraph graphWithLabelMap;
 
-        try (Transaction tx = api.beginTx()) {
-            startNodeId = api.findNode(snpLabel, "name", "a").getId();
-            endNodeId = api.findNode(genLabel, "name", "o").getId();
-        }
-
-        final HeavyGraph graph;
-
-        graph = (HeavyGraph) new GraphLoader(api)
-                .asUndirected(true)
+        graphWithLabelMap = (HeavyGraph) new GraphLoader(api)
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-
-        MetaPath algo = new MetaPath(graph, graph, graph, startNodeId, endNodeId, 10, 8);
-
-        // Something does not work: e.g. 0 - 0 - 0 - 0
-        algo.compute();
-
+        assert null != graphWithLabelMap.getLabel(1);
     }
 
+    @Test
+    public void testLabelMapNull(){
+        final HeavyGraph graphWithoutLabelMap;
+        graphWithoutLabelMap = (HeavyGraph) new GraphLoader(api)
+                .withLabelAsProperty(false)
+                .load(HeavyGraphFactory.class);
+        assert null == graphWithoutLabelMap.getLabel(1);
+    }
+
+    @Test
+    public void testDefaultGraphLoader(){
+        final HeavyGraph graphWithoutLabelMap;
+        graphWithoutLabelMap = (HeavyGraph) new GraphLoader(api)
+                .load(HeavyGraphFactory.class);
+        assert null == graphWithoutLabelMap.getLabel(1);
+    }
+
+    @Test
+    public void testLabelMapForKey(){
+        final HeavyGraph graphWithLabelMap;
+
+        graphWithLabelMap = (HeavyGraph) new GraphLoader(api)
+                .withLabelAsProperty(true)
+                .load(HeavyGraphFactory.class);
+
+        assert "PHN".equals(graphWithLabelMap.getLabel(1));
+    }
 }
+
