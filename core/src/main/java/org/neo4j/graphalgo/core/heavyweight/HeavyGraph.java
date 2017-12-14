@@ -37,11 +37,14 @@ import java.util.stream.Collectors;
  */
 public class HeavyGraph implements Graph, NodeWeights, NodeProperties, RelationshipPredicate, ArrayGraphInterface {
 
+    public final static String TYPE = "heavy";
+
     private final IdMap nodeIdMap;
     private AdjacencyMatrix container;
     private WeightMapping relationshipWeights;
     private WeightMapping nodeWeights;
     private WeightMapping nodeProperties;
+    private boolean canRelease = true;
     // Watch Out! There is no default value. If The nodeId does not exist as key, null will be returned.
     private AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap;
     private Collection<Integer> labels = null;
@@ -219,6 +222,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
 
     @Override
     public void release() {
+        if (!canRelease) return;
         container = null;
         relationshipWeights = null;
         nodeWeights = null;
@@ -241,4 +245,13 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
 
     }
 
+    @Override
+    public String getType() {
+        return TYPE;
+    }
+
+    @Override
+    public void canRelease(boolean canRelease) {
+        this.canRelease = canRelease;
+    }
 }
