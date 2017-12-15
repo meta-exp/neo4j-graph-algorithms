@@ -79,7 +79,7 @@ public class MetaPath extends Algorithm<MetaPath> {
                     metapaths.add(metapath);
                     break;
                 }
-                else if (degree <= 0 || endNodeIds.contains(nodeHopId)) {
+                else if (degree <= 0) {
                     break;
                 }
                 else {
