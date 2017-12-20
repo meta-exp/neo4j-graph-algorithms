@@ -1,6 +1,7 @@
 package org.neo4j.graphalgo.impl;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.neo4j.graphalgo.MetaPath;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import static org.junit.Assert.assertEquals;
 
 
 /**         5     5      5
@@ -35,9 +37,10 @@ import java.util.Map;
 public class MetaPathTest {
 
     private static GraphDatabaseAPI api;
+    private MetaPath algo;
 
     @BeforeClass
-    public static void setup() throws KernelException {
+    public static void setup() throws KernelException, Exception {
         final String cypher =
                         "CREATE (a:SNP {name:\"a\"})\n" +
                         "CREATE (b:PHN {name:\"b\"})\n" +
@@ -107,7 +110,6 @@ public class MetaPathTest {
             api.execute(cypher);
             tx.success();
         }
-
     }
 
     @AfterClass
@@ -115,8 +117,8 @@ public class MetaPathTest {
         api.shutdown();
     }
 
-    @Test
-    public void testMetaPath() throws Exception {
+    @Before
+    public void setupMetapaths() throws Exception {
         final Label snpLabel = Label.label("SNP");
         final Label genLabel = Label.label("GEN");
         final HashSet<Long> startNodeIds = new HashSet<>();
@@ -137,11 +139,16 @@ public class MetaPathTest {
                 .load(HeavyGraphFactory.class);
 
 
-        MetaPath algo = new MetaPath(graph, graph, graph, startNodeIds, endNodeIds, 10, 8);
+        algo = new MetaPath(graph, graph, graph, startNodeIds, endNodeIds, 10, 8);
 
         // Something does not work: e.g. 0 - 0 - 0 - 0
         algo.compute();
 
+    }
+
+    @Test
+    public void testSimilarityMeasure() throws Exception {
+        assertEquals(0.5, algo.similarity(), 0);
     }
 
 }

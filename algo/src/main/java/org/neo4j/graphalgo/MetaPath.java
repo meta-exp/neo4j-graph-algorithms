@@ -135,7 +135,7 @@ public class MetaPath extends Algorithm<MetaPath> {
     }
 
     public float similarity (){
-        int sum = 0;
+        float sum = 0;
         for (int weight: metapathsWeights){
             sum += weight;
         }
