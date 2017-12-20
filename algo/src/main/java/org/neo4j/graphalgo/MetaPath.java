@@ -20,7 +20,9 @@ public class MetaPath extends Algorithm<MetaPath> {
     private int randomWalkLength;
     private int numberOfrandomWalks;
     private ArrayList<ArrayList<String>> metapaths;
+    private ArrayList<Integer> metapathsWeights;
     private Random random;
+    private final static int DEFAULT_WEIGHT = 5;
 
     public MetaPath(IdMapping idMapping,
                     HandyStuff handyStuff,
@@ -39,6 +41,7 @@ public class MetaPath extends Algorithm<MetaPath> {
         this.numberOfrandomWalks = numberOfRandomWalks;
         this.randomWalkLength = randomWalkLength;
         this.metapaths = new ArrayList<>();
+        this.metapathsWeights = new ArrayList<>();
         this.random = new Random();
     }
 
@@ -77,6 +80,7 @@ public class MetaPath extends Algorithm<MetaPath> {
                 int degree = degrees.degree(nodeHopId, Direction.OUTGOING);
                 if (endNodeIds.contains(nodeHopId)){
                     metapaths.add(metapath);
+                    metapathsWeights.add(DEFAULT_WEIGHT);
                     break;
                 }
                 else if (degree <= 0) {
@@ -116,6 +120,26 @@ public class MetaPath extends Algorithm<MetaPath> {
         public String toString() {
             return "Result{}";
         }
+    }
+
+    public void showTop(int n){
+        for (int i = 0; i < n; i++){
+            System.out.println(i + ". " + String.join(" | ", metapaths.get(i) ) + "  " + metapathsWeights.get(i));
+        }
+    }
+
+    public void weight (int index, int weight) throws Exception {
+        if(weight <= 0 || weight > 10)
+            throw new Exception("Weight needs to be in range (0;10]");
+        metapathsWeights.set(index, weight);
+    }
+
+    public float similarity (){
+        int sum = 0;
+        for (int weight: metapathsWeights){
+            sum += weight;
+        }
+        return sum/metapathsWeights.size()/10;
     }
 
 }
