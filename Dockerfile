@@ -9,7 +9,8 @@ WORKDIR /neo4j-graph-algorithms/
 RUN mvn clean install
 RUN cp algo/target/graph-algorithms-*.jar /var/lib/neo4j/plugins/
 
-# TODO: I think we would have to use the file from the neo4j repo
+EXPOSE 7474 7473 7687
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 # CMD ["neo4j console"]
 #ENTRYPOINT ["neo4j", "console"]
