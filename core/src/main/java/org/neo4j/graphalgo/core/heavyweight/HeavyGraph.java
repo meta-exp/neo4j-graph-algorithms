@@ -81,6 +81,12 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     }
 
     @Override
+    public Collection<String> getAllLabels()
+    {
+        return labelMap.values();
+    }
+
+    @Override
     public int[] getEdges(int nodeId) {return container.getEdges(nodeId);}
 
     @Override
