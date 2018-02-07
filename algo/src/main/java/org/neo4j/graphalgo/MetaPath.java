@@ -88,7 +88,7 @@ public class MetaPath extends Algorithm<MetaPath> {
                 }
                 else {
                     int randomEdgeIndex= random.nextInt(degree);
-                    nodeHopId = handyStuff.getNodeOnOtherSide(nodeHopId, randomEdgeIndex);
+                    nodeHopId = handyStuff.getOutgoingNodes(nodeHopId)[randomEdgeIndex];
                     metapath.add(handyStuff.getLabel(nodeHopId));
                 }
             }

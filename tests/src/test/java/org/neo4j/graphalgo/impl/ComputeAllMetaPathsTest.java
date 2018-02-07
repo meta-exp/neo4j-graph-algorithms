@@ -62,7 +62,7 @@ public class ComputeAllMetaPathsTest {
                         "  (i)-[:TYPE1]->(t),\n" +
                         "  (t)-[:TYPE1]->(s),\n" +
                         "  (t)-[:TYPE1]->(o),\n" +
-                        "  (k)-[:TYPE1]->(s),\n";
+                        "  (k)-[:TYPE1]->(s)\n";
 
         api = TestDatabaseCreator.createTestDatabase();
 
@@ -110,8 +110,9 @@ public class ComputeAllMetaPathsTest {
     }
 
     @Test
-    public void testSimilarityMeasure() throws Exception {
+    public void testCalculationOfMetapaths() throws Exception {
         //assertEquals(0.5, algo.similarity(), 0);
+        assert(algo.computeAllMetapaths().contains("A | C | B"));
 
     }
 

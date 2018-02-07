@@ -6,9 +6,11 @@ import java.util.Collection;
 
 public interface HandyStuff {
 
-    int[] getEdges(int nodeId);
+    int[] getAdjecentNodes(int nodeId);
 
-    int getNodeOnOtherSide(int nodeId, int edgeId);
+    int[] getOutgoingNodes(int nodeId);
+
+    int[] getIncomingNodes(int nodeId);
 
     String getLabel(int nodeId);
 

@@ -93,12 +93,29 @@ class AdjacencyMatrix {
         }
     }
 
-    public int[] getEdges(int nodeId){
+    public int[] getAdjecentNodes(int nodeId){
+        int[] adjecentNodes = new int[degree(nodeId, Direction.BOTH)];
+        for(int i = 0; i < degree(nodeId, Direction.INCOMING); i++)
+        {
+            adjecentNodes[i] = incoming[nodeId][i];
+        }
+
+        for(int i = 0; i < degree(nodeId, Direction.OUTGOING); i++)
+        {
+            adjecentNodes[degree(nodeId, Direction.INCOMING) + i] = outgoing[nodeId][i];
+        }
+
+        return adjecentNodes;
+    }
+
+    public int[] getOutgoingNodes(int nodeId){
+
         return outgoing[nodeId];
     }
 
-    public int getNodeOnOtherSide(int nodeId, int edgeId){
-        return outgoing[nodeId][edgeId];
+    public int[] getIncomingNodes(int nodeId)
+    {
+        return incoming[nodeId];
     }
 
     /**

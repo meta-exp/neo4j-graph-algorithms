@@ -32,6 +32,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private int[][] initialInstances;
     private final static int MAX_LABEL_COUNT = 50;
     private final static int MAX_INSTANCE_COUNT = 1000;
+    private byte currentLabelId = 0;
 
 
     public ComputeAllMetaPaths(HeavyGraph graph,IdMapping idMapping,
@@ -57,10 +58,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     public Result compute() {
 
-        initializeLabelDictAndInitialInstances();
-        computeMetapathsFromAllNodeLabels();
-
-        HashSet<String> finalMetaPaths = collectMetapathsToStringsAndRemoveDuplicates();
+        HashSet<String> finalMetaPaths = computeAllMetapaths();
 
         for (String s:finalMetaPaths) {
             System.out.println(s);
@@ -69,32 +67,42 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         return new Result();
     }
 
+    public HashSet<String> computeAllMetapaths()
+    {
+        initializeLabelDictAndInitialInstances();
+        computeMetapathsFromAllNodeLabels();
+
+        return collectMetapathsToStringsAndRemoveDuplicates();
+    }
+
     private void initializeLabelDictAndInitialInstances()
     {
-        byte currentLabelId = 0;
-        while (graph.nodeIterator().hasNext()) {
-            int node = graph.nodeIterator().next();
+        currentLabelId = 0;
+        graph.forEachNode(node -> initializeNode(node));
+    }
 
-            String nodeLabel = handyStuff.getLabel(node);
-            Byte nodeLabelId = labelDictionary.get(nodeLabel);
+    private boolean initializeNode(int node)
+    {
+        String nodeLabel = handyStuff.getLabel(node);
+        Byte nodeLabelId = labelDictionary.get(nodeLabel);
 
-            if(nodeLabelId == null)
-            {
-                labelDictionary.put(nodeLabel, currentLabelId);
-                nodeLabelId = currentLabelId;
-                currentLabelId++;
-                ArrayList<String> metapath = new ArrayList<>();
-                metapath.add(nodeLabel);
-                metapaths.add(metapath);
-            }
-
-            int instanceIndex = 0;
-            while(initialInstances[instanceIndex][nodeLabelId] != 0) //maybe using arrays was a bad idea...
-            {
-                instanceIndex++;
-            }
-            initialInstances[instanceIndex][nodeLabelId] = node + 1; //to avoid nodeId 0, remember to subtract 1 later
+        if(nodeLabelId == null)
+        {
+            labelDictionary.put(nodeLabel, currentLabelId);
+            nodeLabelId = currentLabelId;
+            currentLabelId++;
+            ArrayList<String> metapath = new ArrayList<>();
+            metapath.add(nodeLabel);
+            metapaths.add(metapath);
         }
+
+        int instanceIndex = 0;
+        while(instanceIndex < MAX_INSTANCE_COUNT && initialInstances[instanceIndex][nodeLabelId] != 0) //maybe using arrays was a bad idea...
+        {
+            instanceIndex++;
+        }
+        initialInstances[instanceIndex][nodeLabelId] = node + 1; //to avoid nodeId 0, remember to subtract 1 later
+        return true;
     }
 
     private void computeMetapathsFromAllNodeLabels()
@@ -126,8 +134,8 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         }
 
         for (int instance : currentInstances) {
-            for (int nodeId : handyStuff.getEdges(instance)) {
-                nextInstances.get(labelDictionary.get(handyStuff.getLabel(nodeId))).add(nodeId);
+            for (int nodeId : handyStuff.getAdjecentNodes(instance)) {
+                nextInstances.get(labelDictionary.get(handyStuff.getLabel(nodeId))).add(nodeId);//get the id of the label of the node. add the node to the corresponding instances array
             }
         }
 
@@ -135,15 +143,14 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             ArrayList<Integer> nextInstancesForLabel = nextInstances.get(i);
             if (!nextInstancesForLabel.isEmpty())
             {
-                currentMetaPath = (ArrayList<String>) currentMetaPath.clone(); //not sure if this is needed
-                currentMetaPath.add(handyStuff.getLabel(nextInstancesForLabel.get(0)));
+                currentMetaPath.add(handyStuff.getLabel(nextInstancesForLabel.get(0)));//get(0) since all have the same label. mybe rename currentMetaPath?
                 metapaths.add(currentMetaPath);
-                int[] recursiveInstances = new int[nextInstancesForLabel.size()];
+                int[] recursiveInstances = new int[nextInstancesForLabel.size()];//convert ArrayList<String> to  int[] array
                 for (int j = 0; j < nextInstancesForLabel.size(); j++) {
                     recursiveInstances[j] = nextInstancesForLabel.get(j);
                 }
 
-                computeMetapathFromNodeLabel(currentMetaPath, recursiveInstances, metaPathLength-1);
+                computeMetapathFromNodeLabel(currentMetaPath, recursiveInstances, metaPathLength-1);  //do somehow dp instead?
             }
         }
 
@@ -165,7 +172,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         instanceIndex = 0;
         while(initialInstances[instanceIndex][labelDictionary.get(startNodeLabel)] != 0) //maybe using arrays was a bad idea...
         {
-            initialInstancesRow[instanceIndex] = initialInstances[instanceIndex][labelDictionary.get(startNodeLabel)];
+            initialInstancesRow[instanceIndex] = initialInstances[instanceIndex][labelDictionary.get(startNodeLabel)] - 1;// copy the initial instances of one common label
             instanceIndex++;
         }
 
