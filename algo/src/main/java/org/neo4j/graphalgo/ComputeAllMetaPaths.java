@@ -143,14 +143,18 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             ArrayList<Integer> nextInstancesForLabel = nextInstances.get(i);
             if (!nextInstancesForLabel.isEmpty())
             {
-                currentMetaPath.add(handyStuff.getLabel(nextInstancesForLabel.get(0)));//get(0) since all have the same label. mybe rename currentMetaPath?
-                metapaths.add(currentMetaPath);
+                ArrayList<String> newMetaPath = new ArrayList<>();
+                for (String label : currentMetaPath) {
+                    newMetaPath.add(label);
+                }
+                newMetaPath.add(handyStuff.getLabel(nextInstancesForLabel.get(0)));//get(0) since all have the same label. mybe rename currentMetaPath?
+                metapaths.add(newMetaPath);
                 int[] recursiveInstances = new int[nextInstancesForLabel.size()];//convert ArrayList<String> to  int[] array
                 for (int j = 0; j < nextInstancesForLabel.size(); j++) {
                     recursiveInstances[j] = nextInstancesForLabel.get(j);
                 }
 
-                computeMetapathFromNodeLabel(currentMetaPath, recursiveInstances, metaPathLength-1);  //do somehow dp instead?
+                computeMetapathFromNodeLabel(newMetaPath, recursiveInstances, metaPathLength-1);  //do somehow dp instead?
             }
         }
 
@@ -176,7 +180,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             instanceIndex++;
         }
 
-        computeMetapathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength);
+        computeMetapathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
     }
 
     public Stream<ComputeAllMetaPaths.Result> resultStream() {
