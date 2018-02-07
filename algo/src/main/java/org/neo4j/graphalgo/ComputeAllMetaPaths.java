@@ -57,6 +57,20 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     public Result compute() {
 
+        initializeLabelDictAndInitialInstances();
+        computeMetapathsFromAllNodeLabels();
+
+        HashSet<String> finalMetaPaths = collectMetapathsToStringsAndRemoveDuplicates();
+
+        for (String s:finalMetaPaths) {
+            System.out.println(s);
+        }
+
+        return new Result();
+    }
+
+    private void initializeLabelDictAndInitialInstances()
+    {
         byte currentLabelId = 0;
         while (graph.nodeIterator().hasNext()) {
             int node = graph.nodeIterator().next();
@@ -79,24 +93,24 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             {
                 instanceIndex++;
             }
-            initialInstances[instanceIndex][nodeLabelId] = node + 1; //to avoid nodeId 0
+            initialInstances[instanceIndex][nodeLabelId] = node + 1; //to avoid nodeId 0, remember to subtract 1 later
         }
+    }
 
+    private void computeMetapathsFromAllNodeLabels()
+    {
         for(String nodeLabel : handyStuff.getAllLabels()) {
             computeMetapathFromNodeLabel(nodeLabel, metaPathLength);
         }
+    }
 
+    private HashSet<String> collectMetapathsToStringsAndRemoveDuplicates()
+    {
         HashSet<String> finalMetaPaths = new HashSet<>();
-
         for(ArrayList<String> metapath :metapaths){
             finalMetaPaths.add(String.join(" | ", metapath ) + "\n");
         }
-
-        for (String s:finalMetaPaths) {
-            System.out.println(s);
-        }
-
-        return new Result();
+        return finalMetaPaths;
     }
 
     private void computeMetapathFromNodeLabel(ArrayList<String> currentMetaPath, int[] currentInstances, int metaPathLength)
@@ -117,7 +131,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             }
         }
 
-        for(int i = 0; i < nextInstances.size(); i++) {
+        for(int i = 0; i < nextInstances.size(); i++) { //replace with for each
             ArrayList<Integer> nextInstancesForLabel = nextInstances.get(i);
             if (!nextInstancesForLabel.isEmpty())
             {
