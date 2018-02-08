@@ -17,10 +17,8 @@ import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.graphalgo.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
+
 import static org.junit.Assert.assertEquals;
 
 
@@ -112,8 +110,41 @@ public class ComputeAllMetaPathsTest {
     @Test
     public void testCalculationOfMetapaths() throws Exception {
         //assertEquals(0.5, algo.similarity(), 0);
-        assert(algo.computeAllMetapaths().contains("A | C | B"));
-
+        HashSet<String> allMetaPaths = algo.computeAllMetapaths();
+        assert(allMetaPaths.contains("A | C | B"));
+        assert(allMetaPaths.contains("A | A | B"));
+        assert(allMetaPaths.contains("A | A | C"));
+        assert(allMetaPaths.contains("A | C | C"));
+        assert(allMetaPaths.contains("A | B | A"));
+        assert(allMetaPaths.contains("A | B | C"));
+        assert(allMetaPaths.contains("A | C | A"));
+        assert(allMetaPaths.contains("B | A | A"));
+        assert(allMetaPaths.contains("B | A | C"));
+        assert(allMetaPaths.contains("B | C | A"));
+        assert(allMetaPaths.contains("B | C | B"));
+        assert(allMetaPaths.contains("B | C | C"));
+        assert(allMetaPaths.contains("C | A | A"));
+        assert(allMetaPaths.contains("C | A | B"));
+        assert(allMetaPaths.contains("C | A | C"));
+        assert(allMetaPaths.contains("C | B | A"));
+        assert(allMetaPaths.contains("C | B | C"));
+        assert(allMetaPaths.contains("C | C | A"));
+        assert(allMetaPaths.contains("C | C | B"));
+        assert(allMetaPaths.contains("A"));
+        assert(allMetaPaths.contains("B"));
+        assert(allMetaPaths.contains("C"));
+        assert(allMetaPaths.contains("A | A"));
+        assert(allMetaPaths.contains("A | B"));
+        assert(allMetaPaths.contains("A | C"));
+        assert(allMetaPaths.contains("B | A"));
+        assert(allMetaPaths.contains("B | C"));
+        assert(allMetaPaths.contains("C | A"));
+        assert(allMetaPaths.contains("C | B"));
+        assert(allMetaPaths.contains("C | C"));
+        assert(allMetaPaths.contains("B | A | B"));//this should not exist, but in this prototype its ok. we are going back to the same node we already were
+        assert(allMetaPaths.contains("A | A | A"));//this should not exist,...
+        assert(allMetaPaths.contains("C | C | C"));//this should not exist,...
+        assertEquals(33, allMetaPaths.size());//this should be 30, ...
     }
 
 }

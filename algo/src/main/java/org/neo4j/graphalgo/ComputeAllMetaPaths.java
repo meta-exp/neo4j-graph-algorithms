@@ -61,7 +61,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         HashSet<String> finalMetaPaths = computeAllMetapaths();
 
         for (String s:finalMetaPaths) {
-            System.out.println(s);
+            System.out.println(s + "\n");
         }
 
         return new Result();
@@ -116,14 +116,14 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     {
         HashSet<String> finalMetaPaths = new HashSet<>();
         for(ArrayList<String> metapath :metapaths){
-            finalMetaPaths.add(String.join(" | ", metapath ) + "\n");
+            finalMetaPaths.add(String.join(" | ", metapath ));
         }
         return finalMetaPaths;
     }
 
     private void computeMetapathFromNodeLabel(ArrayList<String> currentMetaPath, int[] currentInstances, int metaPathLength)
     {
-        if(metaPathLength == 0 || currentInstances[0] == 0)
+        if(metaPathLength == 0)
         {
             return;
         }
