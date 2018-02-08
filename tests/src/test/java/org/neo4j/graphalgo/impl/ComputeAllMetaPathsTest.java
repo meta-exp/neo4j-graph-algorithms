@@ -147,4 +147,5 @@ public class ComputeAllMetaPathsTest {
         assertEquals(33, allMetaPaths.size());//this should be 30, ...
     }
 
+
 }

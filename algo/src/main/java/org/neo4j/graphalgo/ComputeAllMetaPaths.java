@@ -9,6 +9,9 @@ import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.Direction;
 import scala.Int;
 
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,11 +36,13 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private final static int MAX_LABEL_COUNT = 50;
     private final static int MAX_INSTANCE_COUNT = 1000;
     private byte currentLabelId = 0;
+    private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
+    private PrintStream out;
 
 
     public ComputeAllMetaPaths(HeavyGraph graph,IdMapping idMapping,
                                HandyStuff handyStuff,
-                               Degrees degrees, int metaPathLength){
+                               Degrees degrees, int metaPathLength) throws IOException{
 
         this.graph = graph;
         this.handyStuff = handyStuff;
@@ -48,6 +53,9 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         this.metaPathLength = metaPathLength;
         this.initialInstances = new int[MAX_INSTANCE_COUNT][MAX_LABEL_COUNT]; //this wastes probably too much space for big graphs
         this.labelDictionary = new HashMap<>();
+        this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));//ends up in root/tests
+
+
     }
 
     private void convertIds(IdMapping idMapping, HashSet<Long> incomingIds, HashSet<Integer> convertedIds){
@@ -57,13 +65,27 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     }
 
     public Result compute() {
-
+        long startTime = System.nanoTime();
         HashSet<String> finalMetaPaths = computeAllMetapaths();
+        long endTime = System.nanoTime();
+
+        System.out.println("calculation took: " + String.valueOf(endTime-startTime));
+
+        for (String metapath : finalMetaPaths) {
+            out.println(metapath);
+        }
+
+        startTime = System.nanoTime();
+        System.out.println("Writing to disk took: " + String.valueOf(startTime-endTime));
+
+
+
+/*
 
         for (String s:finalMetaPaths) {
             System.out.println(s + "\n");
         }
-
+*/
         return new Result();
     }
 
@@ -72,7 +94,8 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         initializeLabelDictAndInitialInstances();
         computeMetapathsFromAllNodeLabels();
 
-        return collectMetapathsToStringsAndRemoveDuplicates();
+        //return collectMetapathsToStringsAndRemoveDuplicates();
+        return duplicateFreeMetaPaths;
     }
 
     private void initializeLabelDictAndInitialInstances()
@@ -94,6 +117,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             ArrayList<String> metapath = new ArrayList<>();
             metapath.add(nodeLabel);
             metapaths.add(metapath);
+            duplicateFreeMetaPaths.add(String.join(" | ", metapath));
         }
 
         int instanceIndex = 0;
@@ -149,6 +173,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 }
                 newMetaPath.add(handyStuff.getLabel(nextInstancesForLabel.get(0)));//get(0) since all have the same label. mybe rename currentMetaPath?
                 metapaths.add(newMetaPath);
+                duplicateFreeMetaPaths.add(String.join(" | ", newMetaPath ));
                 int[] recursiveInstances = new int[nextInstancesForLabel.size()];//convert ArrayList<String> to  int[] array
                 for (int j = 0; j < nextInstancesForLabel.size(); j++) {
                     recursiveInstances[j] = nextInstancesForLabel.get(j);
