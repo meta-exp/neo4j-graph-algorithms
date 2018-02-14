@@ -71,9 +71,9 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
         System.out.println("calculation took: " + String.valueOf(endTime-startTime));
 
-        for (String metapath : finalMetaPaths) {
-            out.println(metapath);
-        }
+        //for (String metapath : finalMetaPaths) {
+        //    out.println(metapath);
+        //}
 
         startTime = System.nanoTime();
         System.out.println("Writing to disk took: " + String.valueOf(startTime-endTime));
@@ -117,7 +117,14 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             ArrayList<String> metapath = new ArrayList<>();
             metapath.add(nodeLabel);
             metapaths.add(metapath);
-            duplicateFreeMetaPaths.add(String.join(" | ", metapath));
+            int oldSize = duplicateFreeMetaPaths.size();
+            String joinedMetapath = String.join(" | ", metapath);
+            duplicateFreeMetaPaths.add(joinedMetapath);
+            int newSize = duplicateFreeMetaPaths.size();
+            if(newSize > oldSize)
+            {
+                out.println(joinedMetapath);
+            }
         }
 
         int instanceIndex = 0;
@@ -173,7 +180,14 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 }
                 newMetaPath.add(handyStuff.getLabel(nextInstancesForLabel.get(0)));//get(0) since all have the same label. mybe rename currentMetaPath?
                 metapaths.add(newMetaPath);
-                duplicateFreeMetaPaths.add(String.join(" | ", newMetaPath ));
+                int oldSize = duplicateFreeMetaPaths.size();
+                String joinedMetapath = String.join(" | ", newMetaPath );
+                duplicateFreeMetaPaths.add(joinedMetapath);
+                int newSize = duplicateFreeMetaPaths.size();
+                if(newSize > oldSize)
+                {
+                    out.println(joinedMetapath);
+                }
                 int[] recursiveInstances = new int[nextInstancesForLabel.size()];//convert ArrayList<String> to  int[] array
                 for (int j = 0; j < nextInstancesForLabel.size(); j++) {
                     recursiveInstances[j] = nextInstancesForLabel.get(j);
