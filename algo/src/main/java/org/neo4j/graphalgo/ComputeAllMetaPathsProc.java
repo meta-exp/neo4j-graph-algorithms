@@ -28,10 +28,10 @@ public class ComputeAllMetaPathsProc {
     @Context
     public KernelTransaction transaction;
 
-    @Procedure("algo.calculateAllMetaPaths")
+    @Procedure("algo.computeAllMetaPaths")
     @Description("CALL algo.computeAllMetaPaths(length:int) YIELD length")
 
-    public Stream<ComputeAllMetaPathsResult> calculateAllMetaPaths(
+    public Stream<ComputeAllMetaPathsResult> computeAllMetaPaths(
             @Name(value = "length", defaultValue = "5") String lengthString) throws Exception{
         int length = Integer.valueOf(lengthString);
         System.out.println("Given length is: " + String.valueOf(length));

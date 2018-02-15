@@ -30,7 +30,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private HashMap<String, Byte> labelDictionary;
     private int[][] initialInstances;
     private final static int MAX_LABEL_COUNT = 50;
-    private final static int MAX_INSTANCE_COUNT = 1000;
+    private final static int MAX_INSTANCE_COUNT = 2060567;
     private byte currentLabelId = 0;
     private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
     private PrintStream out;
