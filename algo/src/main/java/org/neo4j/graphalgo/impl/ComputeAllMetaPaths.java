@@ -30,7 +30,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private HashMap<String, Byte> labelDictionary;
     private int[][] initialInstances;
     private final static int MAX_LABEL_COUNT = 50;
-    private final static int MAX_INSTANCE_COUNT = 1000;
+    private int max_instance_count;
     private byte currentLabelId = 0;
     private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
     private PrintStream out;
@@ -38,7 +38,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     public ComputeAllMetaPaths(HeavyGraph graph,IdMapping idMapping,
                                HandyStuff handyStuff,
-                               Degrees degrees, int metaPathLength) throws IOException{
+                               Degrees degrees, int metaPathLength, int max_label_count, int max_instance_count) throws IOException{
 
         this.graph = graph;
         this.handyStuff = handyStuff;
@@ -47,7 +47,8 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         this.metapathsWeights = new ArrayList<>();
         this.random = new Random();
         this.metaPathLength = metaPathLength;
-        this.initialInstances = new int[MAX_INSTANCE_COUNT][MAX_LABEL_COUNT]; //this wastes probably too much space for big graphs
+        this.max_instance_count = max_instance_count;
+        this.initialInstances = new int[max_instance_count][max_label_count]; //this wastes probably too much space for big graphs
         this.labelDictionary = new HashMap<>();
         this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));//ends up in root/tests
 
@@ -124,7 +125,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         }
 
         int instanceIndex = 0;
-        while(instanceIndex < MAX_INSTANCE_COUNT && initialInstances[instanceIndex][nodeLabelId] != 0) //maybe using arrays was a bad idea...
+        while(instanceIndex < max_instance_count && initialInstances[instanceIndex][nodeLabelId] != 0) //maybe using arrays was a bad idea...
         {
             instanceIndex++;
         }

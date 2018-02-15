@@ -13,6 +13,7 @@ import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.graphalgo.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import static org.mockito.Mockito.*;
 
 import java.util.*;
 
@@ -98,7 +99,7 @@ public class ComputeAllMetaPathsTest {
                 .load(HeavyGraphFactory.class);
 
 
-        algo = new ComputeAllMetaPaths(graph, graph, graph, graph,3);
+        algo = new ComputeAllMetaPaths(graph, graph, graph, graph,3, 6, 10);
 
         algo.compute();
 
@@ -144,5 +145,28 @@ public class ComputeAllMetaPathsTest {
         assertEquals(33, allMetaPaths.size());//this should be 30, ...
     }
 
+   /* @Test
+    public void testCypherQuery() throws Exception {
+        final ConsumerBool consumer = mock(ConsumerBool.class);
+        final int input = 5;
+        final String cypher = "CALL algo.computeAllMetaPaths('"+input+"')";
+        System.out.println("Executed query: " + cypher);
 
+        api.execute(cypher).accept(row -> {
+            final int integer_in = 10;//row.getNumber("length").intValue()
+            consumer.test(integer_in);
+            return true;
+        });
+
+        // 4 steps from start to end max
+        //verify(consumer, times(1)).test(eq( input));
+    }
+
+    private interface Consumer {
+        void test(boolean hasEdges);
+    }
+
+    private interface ConsumerBool {
+        void test(int integer_in);
+    }*/
 }

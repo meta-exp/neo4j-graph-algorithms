@@ -28,12 +28,14 @@ public class ComputeAllMetaPathsProc {
     @Context
     public KernelTransaction transaction;
 
-    @Procedure("algo.calculateAllMetaPaths")
-    @Description("CALL algo.computeAllMetaPaths(length:int) YIELD length")
+    @Procedure("algo.computeAllMetaPaths")
+    @Description("CALL algo.computeAllMetaPaths(length:int, max_label_count:int, max_instance_count:int) YIELD length")
 
-    public Stream<ComputeAllMetaPathsResult> calculateAllMetaPaths(
-            @Name(value = "length", defaultValue = "5") String lengthString) throws Exception{
+    public Stream<ComputeAllMetaPathsResult> computeAllMetaPaths(
+            @Name(value = "length", defaultValue = "5") String lengthString, @Name(value = "max_label_count", defaultValue = "30") String max_label_countString, @Name(value = "max_instance_count", defaultValue = "100000") String max_instance_countString) throws Exception{
         int length = Integer.valueOf(lengthString);
+        int max_label_count = Integer.valueOf(max_label_countString);
+        int max_instance_count = Integer.valueOf(max_instance_countString);
         System.out.println("Given length is: " + String.valueOf(length));
 
         final ComputeAllMetaPathsResult.Builder builder = ComputeAllMetaPathsResult.builder();
@@ -46,7 +48,7 @@ public class ComputeAllMetaPathsProc {
                 .load(HeavyGraphFactory.class);
 
 
-        final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, graph, graph, graph, length);
+        final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, graph, graph, graph, length, max_label_count, max_instance_count);
         HashSet<String> metaPaths;
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);
