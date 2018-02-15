@@ -8,10 +8,10 @@ import java.util.Vector;
  */
 public class ComputeAllMetaPathsResult{
 
-    public final Vector<String> metaPaths;
+    public final String metaPaths;
 
     private ComputeAllMetaPathsResult(Vector<String> metaPaths) {
-        this.metaPaths = metaPaths;
+        this.metaPaths = "";
     }
 
     public static Builder builder() {
