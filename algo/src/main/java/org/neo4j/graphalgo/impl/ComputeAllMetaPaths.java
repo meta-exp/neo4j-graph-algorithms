@@ -1,18 +1,14 @@
-package org.neo4j.graphalgo;
+package org.neo4j.graphalgo.impl;
 
 import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.api.HandyStuff;
 import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.impl.Algorithm;
-import org.neo4j.graphdb.Direction;
-import scala.Int;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,7 +82,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             System.out.println(s + "\n");
         }
 */
-        return new Result();
+        return new Result(finalMetaPaths);
     }
 
     public HashSet<String> computeAllMetapaths()
@@ -223,7 +219,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     }
 
     public Stream<ComputeAllMetaPaths.Result> resultStream() {
-        return IntStream.range(0, 1).mapToObj(result -> new Result());
+        return IntStream.range(0, 1).mapToObj(result -> new Result(new HashSet<>()));
     }
 
     @Override
@@ -239,14 +235,23 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
      */
     public static final class Result {
 
-        public Result() {
-
+        HashSet<String> finalMetaPaths;
+        public Result(HashSet<String> finalMetaPaths)
+        {
+            this.finalMetaPaths = finalMetaPaths;
         }
 
         @Override
         public String toString() {
             return "Result{}";
         }
+
+        public HashSet<String> getFinalMetaPaths()
+        {
+            return finalMetaPaths;
+        }
+
+
     }
 
     public void showTop(int n){
