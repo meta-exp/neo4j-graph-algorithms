@@ -34,6 +34,10 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private byte currentLabelId = 0;
     private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
     private PrintStream out;
+    private PrintStream debugOut;
+    private int printCount = 0;
+    private double estimatedCount;
+    private long startTime;
 
 
     public ComputeAllMetaPaths(HeavyGraph graph,IdMapping idMapping,
@@ -51,7 +55,8 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         this.initialInstances = new int[max_instance_count][max_label_count]; //this wastes probably too much space for big graphs
         this.labelDictionary = new HashMap<>();
         this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));//ends up in root/tests
-
+        this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Debug.txt"));
+        this.estimatedCount = Math.pow(max_label_count, metaPathLength + 1);
 
     }
 
@@ -62,11 +67,13 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     }
 
     public Result compute() {
-        long startTime = System.nanoTime();
+        startTime = System.nanoTime();
         HashSet<String> finalMetaPaths = computeAllMetapaths();
         long endTime = System.nanoTime();
 
         System.out.println("calculation took: " + String.valueOf(endTime-startTime));
+        debugOut.println("actual amount of metaPaths: " + printCount);
+        debugOut.println("total time past: " + (endTime-startTime));
 
         //for (String metapath : finalMetaPaths) {
         //    out.println(metapath);
@@ -121,6 +128,8 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             if(newSize > oldSize)
             {
                 out.println(joinedMetapath);
+                printCount++;
+                if(printCount % ((int)estimatedCount/20) == 0) debugOut.println("Metapaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
             }
         }
 
@@ -184,6 +193,8 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 if(newSize > oldSize)
                 {
                     out.println(joinedMetapath);
+                    printCount++;
+                    if(printCount % ((int)estimatedCount/20) == 0) debugOut.println("Metapaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
                 }
                 int[] recursiveInstances = new int[nextInstancesForLabel.size()];//convert ArrayList<String> to  int[] array
                 for (int j = 0; j < nextInstancesForLabel.size(); j++) {

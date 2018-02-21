@@ -3,9 +3,7 @@ package org.neo4j.graphalgo.results;
 import java.util.HashSet;
 import java.util.Vector;
 
-/**
- * @author mknblch
- */
+
 public class ComputeAllMetaPathsResult{
 
     public final String metaPaths;
