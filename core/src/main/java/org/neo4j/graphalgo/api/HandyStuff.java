@@ -6,7 +6,7 @@ import java.util.Collection;
 
 public interface HandyStuff {
 
-    int[] getAdjecentNodes(int nodeId);
+    int[] getAdjacentNodes(int nodeId);
 
     int[] getOutgoingNodes(int nodeId);
 
