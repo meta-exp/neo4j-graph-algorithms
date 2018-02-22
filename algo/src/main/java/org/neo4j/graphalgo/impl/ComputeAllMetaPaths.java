@@ -24,12 +24,9 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private IdMap mapping;
     private ArrayList<ArrayList<String>> metapaths;
     private ArrayList<Integer> metapathsWeights;
-    private Random random;
     private int metaPathLength;
-    private final static int DEFAULT_WEIGHT = 5;
     private HashMap<String, Byte> labelDictionary;
     private ArrayList<ArrayList<Integer>> initialInstances;
-    private final static int MAX_LABEL_COUNT = 50;
     private int max_instance_count;
     private byte currentLabelId = 0;
     private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
@@ -42,30 +39,27 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     public ComputeAllMetaPaths(HeavyGraph graph,IdMapping idMapping,
                                HandyStuff handyStuff,
-                               Degrees degrees, int metaPathLength, int max_label_count, int max_instance_count) throws IOException{
+                               Degrees degrees, int metaPathLength, int max_label_count, int max_instance_count) throws IOException {
 
         this.graph = graph;
         this.handyStuff = handyStuff;
         this.degrees = degrees;
         this.metapaths = new ArrayList<>();
         this.metapathsWeights = new ArrayList<>();
-        this.random = new Random();
         this.metaPathLength = metaPathLength;
         this.max_instance_count = max_instance_count;
         this.initialInstances = new ArrayList<>();
-        for(int i = 0; i < max_label_count; i++)
-        {
+        for (int i = 0; i < max_label_count; i++) {
             this.initialInstances.add(new ArrayList<>());
         }
         this.labelDictionary = new HashMap<>();
-        this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));//ends up in root/tests
+        this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));//ends up in root/tests //or in dockerhome
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Debug.txt"));
         this.estimatedCount = Math.pow(max_label_count, metaPathLength + 1);
-
     }
 
-    private void convertIds(IdMapping idMapping, HashSet<Long> incomingIds, HashSet<Integer> convertedIds){
-        for(long l : incomingIds){
+    private void convertIds(IdMapping idMapping, HashSet<Long> incomingIds, HashSet<Integer> convertedIds) {
+        for (long l : incomingIds) {
           convertedIds.add(idMapping.toMappedNodeId(l));
         }
     }
@@ -99,8 +93,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         return new Result(finalMetaPaths);
     }
 
-    public HashSet<String> computeAllMetapaths()
-    {
+    public HashSet<String> computeAllMetapaths() {
         debugOut.println("starting initializeLabelDictAndInitialInstances");
         initializeLabelDictAndInitialInstances();
         debugOut.println("finished initializeLabelDictAndInitialInstances");
@@ -112,8 +105,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         return duplicateFreeMetaPaths;
     }
 
-    private void initializeLabelDictAndInitialInstances()
-    {
+    private void initializeLabelDictAndInitialInstances() {
         currentLabelId = 0;
         graph.forEachNode(node -> initializeNode(node));
     }
@@ -125,8 +117,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         Byte nodeLabelId = labelDictionary.get(nodeLabel);
         debugOut.println("looked up nodeLabel and labelId");
 
-        if(nodeLabelId == null)
-        {
+        if (nodeLabelId == null) {
             labelDictionary.put(nodeLabel, currentLabelId);
             nodeLabelId = currentLabelId;
             currentLabelId++;
@@ -139,11 +130,12 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             duplicateFreeMetaPaths.add(joinedMetapath);
             int newSize = duplicateFreeMetaPaths.size();
             debugOut.println("tried to add metapath of length 1");
-            if(newSize > oldSize)
-            {
+            if (newSize > oldSize) {
                 out.println(joinedMetapath);
                 printCount++;
-                if(printCount % ((int)estimatedCount/20) == 0) debugOut.println("Metapaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
+                if (printCount % ((int)estimatedCount/20) == 0) {
+                    debugOut.println("Metapaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
+                }
                 debugOut.println("added a not seen before metapath");
             }
         }
@@ -155,28 +147,16 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         return true;
     }
 
-    private void computeMetapathsFromAllNodeLabels()
-    {
-        for(String nodeLabel : handyStuff.getAllLabels()) {
+    private void computeMetapathsFromAllNodeLabels() {
+        for (String nodeLabel : handyStuff.getAllLabels()) {
             debugOut.println("start computation for initial nodelabel: " + nodeLabel);
             computeMetapathFromNodeLabel(nodeLabel, metaPathLength);
             debugOut.println("finished computation for initial nodeLabel: " + nodeLabel);
         }
     }
 
-    private HashSet<String> collectMetapathsToStringsAndRemoveDuplicates()
-    {
-        HashSet<String> finalMetaPaths = new HashSet<>();
-        for(ArrayList<String> metapath :metapaths){
-            finalMetaPaths.add(String.join(" | ", metapath ));
-        }
-        return finalMetaPaths;
-    }
-
-    private void computeMetapathFromNodeLabel(ArrayList<String> currentMetaPath, int[] currentInstances, int metaPathLength)
-    {
-        if(metaPathLength == 0)
-        {
+    private void computeMetapathFromNodeLabel(ArrayList<String> currentMetaPath, int[] currentInstances, int metaPathLength) {
+        if (metaPathLength == 0) {
             debugOut.println("aborting recursion");
             return;
         }
@@ -194,10 +174,9 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         }
         debugOut.println("finished filling nextInstances");
 
-        for(int i = 0; i < nextInstances.size(); i++) { //replace with for each
-            ArrayList<Integer> nextInstancesForLabel = nextInstances.get(i);
-            if (!nextInstancesForLabel.isEmpty())
-            {
+        for (ArrayList<Integer> nextForLabel : nextInstances) {
+            ArrayList<Integer> nextInstancesForLabel = nextForLabel;
+            if (!nextInstancesForLabel.isEmpty()) {
                 ArrayList<String> newMetaPath = new ArrayList<>();
                 for (String label : currentMetaPath) {
                     newMetaPath.add(label);
@@ -210,11 +189,12 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 duplicateFreeMetaPaths.add(joinedMetapath);
                 int newSize = duplicateFreeMetaPaths.size();
                 debugOut.println("tried adding new Metapath");
-                if(newSize > oldSize)
-                {
+                if (newSize > oldSize) {
                     out.println(joinedMetapath);
                     printCount++;
-                    if(printCount % ((int)estimatedCount/50) == 0) debugOut.println("Metapaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
+                    if (printCount % ((int)estimatedCount/50) == 0) {
+                        debugOut.println("Metapaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
+                    }
                 }
                 int[] recursiveInstances = new int[nextInstancesForLabel.size()];//convert ArrayList<String> to  int[] array //maybe this ist not necessary anymore. just change param
                 for (int j = 0; j < nextInstancesForLabel.size(); j++) {
@@ -229,7 +209,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     }
 
-    private void computeMetapathFromNodeLabel(String startNodeLabel, int metaPathLength){
+    private void computeMetapathFromNodeLabel(String startNodeLabel, int metaPathLength) {
 
         ArrayList<String> initialMetaPath = new ArrayList<>();
         initialMetaPath.add(startNodeLabel);
@@ -238,8 +218,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
         int[] initialInstancesRow = new int[initialInstances.get(labelDictionary.get(startNodeLabel)).size()];
 
-        for(int i = 0; i < initialInstancesRow.length; i++)// eventuell nicht mehr nötig.
-        {
+        for (int i = 0; i < initialInstancesRow.length; i++) {// eventuell nicht mehr nötig.
             initialInstancesRow[i] = initialInstances.get(labelDictionary.get(startNodeLabel)).get(i);
         }
 
@@ -267,8 +246,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     public static final class Result {
 
         HashSet<String> finalMetaPaths;
-        public Result(HashSet<String> finalMetaPaths)
-        {
+        public Result(HashSet<String> finalMetaPaths) {
             this.finalMetaPaths = finalMetaPaths;
         }
 
@@ -277,32 +255,15 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             return "Result{}";
         }
 
-        public HashSet<String> getFinalMetaPaths()
-        {
+        public HashSet<String> getFinalMetaPaths() {
             return finalMetaPaths;
-        }
-
-
-    }
-
-    public void showTop(int n){
-        for (int i = 0; i < n; i++){
-            System.out.println(i + ". " + String.join(" | ", metapaths.get(i) ) + "  " + metapathsWeights.get(i));
         }
     }
 
     public void weight (int index, int weight) throws Exception {
-        if(weight <= 0 || weight > 10)
+        if (weight <= 0 || weight > 10) {
             throw new Exception("Weight needs to be in range (0;10]");
+        }
         metapathsWeights.set(index, weight);
     }
-
-    public float similarity (){
-        float sum = 0;
-        for (int weight: metapathsWeights){
-            sum += weight;
-        }
-        return sum/metapathsWeights.size()/10;
-    }
-
 }

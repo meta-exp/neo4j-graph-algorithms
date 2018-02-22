@@ -32,7 +32,7 @@ public class ComputeAllMetaPathsProc {
     @Description("CALL algo.computeAllMetaPaths(length:int, max_label_count:int, max_instance_count:int) YIELD length")
 
     public Stream<ComputeAllMetaPathsResult> computeAllMetaPaths(
-            @Name(value = "length", defaultValue = "5") String lengthString, @Name(value = "max_label_count", defaultValue = "30") String max_label_countString, @Name(value = "max_instance_count", defaultValue = "100000") String max_instance_countString) throws Exception{
+            @Name(value = "length", defaultValue = "5") String lengthString, @Name(value = "max_label_count", defaultValue = "30") String max_label_countString, @Name(value = "max_instance_count", defaultValue = "100000") String max_instance_countString) throws Exception {
         int length = Integer.valueOf(lengthString);
         int max_label_count = Integer.valueOf(max_label_countString);
         int max_instance_count = Integer.valueOf(max_instance_countString);
@@ -57,5 +57,4 @@ public class ComputeAllMetaPathsProc {
         //System.out.println(Stream.of(builder.build()));
         return Stream.of(builder.build());
     }
-
 }

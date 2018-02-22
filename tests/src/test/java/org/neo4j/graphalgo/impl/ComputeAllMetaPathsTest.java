@@ -79,18 +79,6 @@ public class ComputeAllMetaPathsTest {
 
     @Before
     public void setupMetapaths() throws Exception {
-        /*final Label snpLabel = Label.label("SNP");
-        final Label genLabel = Label.label("GEN");
-        final HashSet<Long> startNodeIds = new HashSet<>();
-        final HashSet<Long> endNodeIds = new HashSet<>();
-
-        try (Transaction tx = api.beginTx()) {
-            startNodeIds.add(api.findNode(snpLabel, "name", "c").getId());
-            startNodeIds.add(api.findNode(snpLabel, "name", "a").getId());
-            endNodeIds.add(api.findNode(genLabel, "name", "o").getId());
-            endNodeIds.add(api.findNode(genLabel, "name", "l").getId());
-        }
-*/
         final HeavyGraph graph;
 
         graph = (HeavyGraph) new GraphLoader(api)
@@ -108,7 +96,7 @@ public class ComputeAllMetaPathsTest {
     @Test
     public void testCalculationOfMetapaths() throws Exception {
         //assertEquals(0.5, algo.similarity(), 0);
-        HashSet<String> allMetaPaths = algo.computeAllMetapaths();
+        HashSet<String> allMetaPaths = algo.computeAllMetapaths();//this runs the code two times..
         assert(allMetaPaths.contains("A | C | B"));
         assert(allMetaPaths.contains("A | A | B"));
         assert(allMetaPaths.contains("A | A | C"));
@@ -144,7 +132,7 @@ public class ComputeAllMetaPathsTest {
         assert(allMetaPaths.contains("C | C | C"));//this should not exist,...
         assertEquals(33, allMetaPaths.size());//this should be 30, ...
     }
-
+//something is not working with the test so its commented out.
    /* @Test
     public void testCypherQuery() throws Exception {
         final ConsumerBool consumer = mock(ConsumerBool.class);

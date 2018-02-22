@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Vector;
 
 
-public class ComputeAllMetaPathsResult{
+public class ComputeAllMetaPathsResult {
 
     public final String metaPaths;
 
@@ -20,7 +20,7 @@ public class ComputeAllMetaPathsResult{
 
         private HashSet<String> metaPaths;
 
-        public void setMetaPaths(HashSet<String> metaPaths){
+        public void setMetaPaths(HashSet<String> metaPaths) {
            // this.metaPaths =  metaPaths.toArray(new String[metaPaths.size()]);
             this.metaPaths = metaPaths;
         }
