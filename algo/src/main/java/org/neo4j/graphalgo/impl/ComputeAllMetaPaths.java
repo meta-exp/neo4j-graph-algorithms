@@ -74,21 +74,9 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         debugOut.println("actual amount of metaPaths: " + printCount);
         debugOut.println("total time past: " + (endTime-startTime));
 
-        //for (String metapath : finalMetaPaths) {
-        //    out.println(metapath);
-        //}
-
         startTime = System.nanoTime();
         System.out.println("Writing to disk took: " + String.valueOf(startTime-endTime));
 
-
-
-/*
-
-        for (String s:finalMetaPaths) {
-            System.out.println(s + "\n");
-        }
-*/
         debugOut.println("finished computation");
         return new Result(finalMetaPaths);
     }
@@ -101,7 +89,6 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         computeMetapathsFromAllNodeLabels();
         debugOut.println("finished computeMetapathsFromAllNodeLabels");
 
-        //return collectMetapathsToStringsAndRemoveDuplicates();
         return duplicateFreeMetaPaths;
     }
 
@@ -110,34 +97,16 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         graph.forEachNode(node -> initializeNode(node));
     }
 
-    private boolean initializeNode(int node)
-    {
+    private boolean initializeNode(int node) {
         debugOut.println("initializing node: " + node);
         String nodeLabel = handyStuff.getLabel(node);
         Byte nodeLabelId = labelDictionary.get(nodeLabel);
         debugOut.println("looked up nodeLabel and labelId");
 
         if (nodeLabelId == null) {
-            labelDictionary.put(nodeLabel, currentLabelId);
-            nodeLabelId = currentLabelId;
-            currentLabelId++;
+            nodeLabelId = assignIdToNodeLabel(nodeLabel);
             debugOut.println("added label to labelDict and got new id");
-            ArrayList<String> metapath = new ArrayList<>();
-            metapath.add(nodeLabel);
-            metapaths.add(metapath);
-            int oldSize = duplicateFreeMetaPaths.size();
-            String joinedMetapath = String.join(" | ", metapath);
-            duplicateFreeMetaPaths.add(joinedMetapath);
-            int newSize = duplicateFreeMetaPaths.size();
-            debugOut.println("tried to add metapath of length 1");
-            if (newSize > oldSize) {
-                out.println(joinedMetapath);
-                printCount++;
-                if (printCount % ((int)estimatedCount/20) == 0) {
-                    debugOut.println("Metapaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
-                }
-                debugOut.println("added a not seen before metapath");
-            }
+            createMetaPathWithLength1(nodeLabel);
         }
 
         debugOut.println("metapath of lenght 1 handeled");
@@ -145,6 +114,33 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         initialInstances.get(nodeLabelId).add(node);
         debugOut.println("finished adding node: " + node);
         return true;
+    }
+
+    private void createMetaPathWithLength1(String nodeLabel) {
+        ArrayList<String> metapath = new ArrayList<>();
+        metapath.add(nodeLabel);
+        metapaths.add(metapath);
+        int oldSize = duplicateFreeMetaPaths.size();
+        String joinedMetapath = String.join(" | ", metapath);
+        duplicateFreeMetaPaths.add(joinedMetapath);
+        int newSize = duplicateFreeMetaPaths.size();
+        debugOut.println("tried to add metapath of length 1");
+        if (newSize > oldSize) {
+            out.println(joinedMetapath);
+            printCount++;
+            if (printCount % ((int)estimatedCount/20) == 0) {
+                debugOut.println("Metapaths found: " + printCount +
+                        " estimated Progress: " + (100*printCount/estimatedCount) +
+                        "% time passed: " + (System.nanoTime() - startTime));
+            }
+            debugOut.println("added a not seen before metapath");
+        }
+    }
+
+    private byte assignIdToNodeLabel(String nodeLabel) {
+        labelDictionary.put(nodeLabel, currentLabelId);
+        currentLabelId++;
+        return (byte) (currentLabelId - 1);
     }
 
     private void computeMetapathsFromAllNodeLabels() {

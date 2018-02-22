@@ -35,7 +35,9 @@ public class ComputeAllMetaPathsProc {
             "Max_instance_count tells how many instances a nodetype can have at most. Set to total amount of nodes in the graph to be sure it works. \n")
 
     public Stream<ComputeAllMetaPathsResult> computeAllMetaPaths(
-            @Name(value = "length", defaultValue = "5") String lengthString, @Name(value = "max_label_count", defaultValue = "30") String max_label_countString, @Name(value = "max_instance_count", defaultValue = "100000") String max_instance_countString) throws Exception {
+            @Name(value = "length", defaultValue = "5") String lengthString,
+            @Name(value = "max_label_count", defaultValue = "30") String max_label_countString,
+            @Name(value = "max_instance_count", defaultValue = "100000") String max_instance_countString) throws Exception {
         int length = Integer.valueOf(lengthString);
         int max_label_count = Integer.valueOf(max_label_countString);
         int max_instance_count = Integer.valueOf(max_instance_countString);
