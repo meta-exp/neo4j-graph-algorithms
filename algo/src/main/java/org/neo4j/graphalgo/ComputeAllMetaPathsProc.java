@@ -29,7 +29,10 @@ public class ComputeAllMetaPathsProc {
     public KernelTransaction transaction;
 
     @Procedure("algo.computeAllMetaPaths")
-    @Description("CALL algo.computeAllMetaPaths(length:int, max_label_count:int, max_instance_count:int) YIELD length")
+    @Description("CALL algo.computeAllMetaPaths(length:int, max_label_count:int, max_instance_count:int) YIELD length: \n" +
+            "Precomputes all metapaths up to a metapath-length given by 'length' and saves them to a File called 'Precomputed_MetaPaths.txt' \n" +
+            "Max_label_count is the amount of different nodetypes in the graph. \n" +
+            "Max_instance_count tells how many instances a nodetype can have at most. Set to total amount of nodes in the graph to be sure it works. \n")
 
     public Stream<ComputeAllMetaPathsResult> computeAllMetaPaths(
             @Name(value = "length", defaultValue = "5") String lengthString, @Name(value = "max_label_count", defaultValue = "30") String max_label_countString, @Name(value = "max_instance_count", defaultValue = "100000") String max_instance_countString) throws Exception {
