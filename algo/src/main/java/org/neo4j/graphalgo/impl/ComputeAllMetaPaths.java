@@ -106,7 +106,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         if (nodeLabelId == null) {
             nodeLabelId = assignIdToNodeLabel(nodeLabel);
             debugOut.println("added label to labelDict and got new id");
-            createMetaPathWithLength1(nodeLabel);
+            createMetaPathWithLengthOne(nodeLabel);
         }
 
         debugOut.println("metaPath of lenght 1 handeled");
@@ -116,7 +116,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         return true;
     }
 
-    private void createMetaPathWithLength1(String nodeLabel) {
+    private void createMetaPathWithLengthOne(String nodeLabel) {
         ArrayList<String> metaPath = new ArrayList<>();
         metaPath.add(nodeLabel);
         metaPaths.add(metaPath);
@@ -175,41 +175,14 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         }
     }
 
-    private int[] convertArrayListToIntArray(ArrayList<Integer> nextInstancesForLabel) {
-        int[] recursiveInstances = new int[nextInstancesForLabel.size()]; //convert ArrayList<String> to  int[] array //maybe this ist not necessary anymore. just change param
-        for (int j = 0; j < nextInstancesForLabel.size(); j++) {
-            recursiveInstances[j] = nextInstancesForLabel.get(j);
+    private ArrayList<ArrayList<Integer>> allocateNextInstances() {
+        ArrayList<ArrayList<Integer>> nextInstances = new ArrayList<>();
+        for (int i = 0; i < labelDictionary.size(); i++) {
+            nextInstances.add(new ArrayList<>());
         }
-        debugOut.println("converted arrayList to int-array");
+        debugOut.println("allocated nextInstances");
 
-        return recursiveInstances;
-    }
-
-    private void printMetaPathAndLog(String joinedMetaPath) {
-        out.println(joinedMetaPath);
-        printCount++;
-        if (printCount % ((int)estimatedCount/50) == 0) {
-            debugOut.println("Meta-paths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
-        }
-    }
-
-    private String addMetaPath(ArrayList<String> newMetaPath) {
-        metaPaths.add(newMetaPath);
-        String joinedMetaPath = String.join(" | ", newMetaPath );
-        duplicateFreeMetaPaths.add(joinedMetaPath);
-        debugOut.println("tried adding new Metapath");
-
-        return joinedMetaPath;
-    }
-
-    private ArrayList<String> copyMetaPath(ArrayList<String> currentMetaPath) {
-        ArrayList<String> newMetaPath = new ArrayList<>();
-        for (String label : currentMetaPath) {
-            newMetaPath.add(label);
-        }
-        debugOut.println("copied currentMetaPath");
-
-        return newMetaPath;
+        return nextInstances;
     }
 
     private ArrayList<ArrayList<Integer>> fillNextInstances(int[] currentInstances, ArrayList<ArrayList<Integer>> nextInstances) {
@@ -224,32 +197,60 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         return nextInstances;
     }
 
-    private ArrayList<ArrayList<Integer>> allocateNextInstances() {
-        ArrayList<ArrayList<Integer>> nextInstances = new ArrayList<>();
-        for (int i = 0; i < labelDictionary.size(); i++) {
-            nextInstances.add(new ArrayList<>());
+    private ArrayList<String> copyMetaPath(ArrayList<String> currentMetaPath) {
+        ArrayList<String> newMetaPath = new ArrayList<>();
+        for (String label : currentMetaPath) {
+            newMetaPath.add(label);
         }
-        debugOut.println("allocated nextInstances");
+        debugOut.println("copied currentMetaPath");
 
-        return nextInstances;
+        return newMetaPath;
+    }
+
+    private String addMetaPath(ArrayList<String> newMetaPath) {
+        metaPaths.add(newMetaPath);
+        String joinedMetaPath = String.join(" | ", newMetaPath );
+        duplicateFreeMetaPaths.add(joinedMetaPath);
+        debugOut.println("tried adding new Metapath");
+
+        return joinedMetaPath;
+    }
+
+    private void printMetaPathAndLog(String joinedMetaPath) {
+        out.println(joinedMetaPath);
+        printCount++;
+        if (printCount % ((int)estimatedCount/50) == 0) {
+            debugOut.println("Meta-paths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
+        }
+    }
+
+    private int[] convertArrayListToIntArray(ArrayList<Integer> nextInstancesForLabel) {
+        int[] recursiveInstances = new int[nextInstancesForLabel.size()]; //convert ArrayList<String> to  int[] array //maybe this ist not necessary anymore. just change param
+        for (int j = 0; j < nextInstancesForLabel.size(); j++) {
+            recursiveInstances[j] = nextInstancesForLabel.get(j);
+        }
+        debugOut.println("converted arrayList to int-array");
+
+        return recursiveInstances;
     }
 
     private void computeMetaPathFromNodeLabel(String startNodeLabel, int metaPathLength) {
         ArrayList<String> initialMetaPath = new ArrayList<>();
         initialMetaPath.add(startNodeLabel);
-
         debugOut.println("startet computing all metaPaths form label: " + startNodeLabel);
-
-        int[] initialInstancesRow = new int[initialInstances.get(labelDictionary.get(startNodeLabel)).size()];
-
-        for (int i = 0; i < initialInstancesRow.length; i++) {// eventuell nicht mehr nötig.
-            initialInstancesRow[i] = initialInstances.get(labelDictionary.get(startNodeLabel)).get(i);
-        }
-
-        debugOut.println("finished getting the instancesRow for recursion");
-
+        int[] initialInstancesRow = initInstancesRow(startNodeLabel);
         computeMetaPathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
         debugOut.println("finished recursion for: " + startNodeLabel);
+    }
+
+    private int[] initInstancesRow(String startNodeLabel) {
+        Byte labelID = labelDictionary.get(startNodeLabel);
+        int[] initialInstancesRow = new int[initialInstances.get(labelID).size()];
+        for (int i = 0; i < initialInstancesRow.length; i++) { // maybe not needed anymore
+            initialInstancesRow[i] = initialInstances.get(labelID).get(i);
+        }
+        debugOut.println("finished getting the instancesRow for recursion");
+        return initialInstancesRow;
     }
 
     public Stream<ComputeAllMetaPaths.Result> resultStream() {
