@@ -28,7 +28,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private int metaPathLength;
     private final static int DEFAULT_WEIGHT = 5;
     private HashMap<String, Byte> labelDictionary;
-    private int[][] initialInstances;
+    private ArrayList<ArrayList<Integer>> initialInstances;
     private final static int MAX_LABEL_COUNT = 50;
     private int max_instance_count;
     private byte currentLabelId = 0;
@@ -52,7 +52,11 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         this.random = new Random();
         this.metaPathLength = metaPathLength;
         this.max_instance_count = max_instance_count;
-        this.initialInstances = new int[max_instance_count][max_label_count]; //this wastes probably too much space for big graphs
+        this.initialInstances = new ArrayList<>();
+        for(int i = 0; i < max_label_count; i++)
+        {
+            this.initialInstances.add(new ArrayList<>());
+        }
         this.labelDictionary = new HashMap<>();
         this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));//ends up in root/tests
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Debug.txt"));
@@ -145,13 +149,9 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         }
 
         debugOut.println("metapath of lenght 1 handeled");
-        int instanceIndex = 0;
-        while(instanceIndex < max_instance_count && initialInstances[instanceIndex][nodeLabelId] != 0) //maybe using arrays was a bad idea...
-        {
-            instanceIndex++;
-        }
-        initialInstances[instanceIndex][nodeLabelId] = node + 1; //to avoid nodeId 0, remember to subtract 1 later
-        debugOut.println("finished searching for free space and adding node: " + node);
+
+        initialInstances.get(nodeLabelId).add(node);
+        debugOut.println("finished adding node: " + node);
         return true;
     }
 
@@ -214,9 +214,9 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 {
                     out.println(joinedMetapath);
                     printCount++;
-                    if(printCount % ((int)estimatedCount/20) == 0) debugOut.println("Metapaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
+                    if(printCount % ((int)estimatedCount/50) == 0) debugOut.println("Metapaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
                 }
-                int[] recursiveInstances = new int[nextInstancesForLabel.size()];//convert ArrayList<String> to  int[] array
+                int[] recursiveInstances = new int[nextInstancesForLabel.size()];//convert ArrayList<String> to  int[] array //maybe this ist not necessary anymore. just change param
                 for (int j = 0; j < nextInstancesForLabel.size(); j++) {
                     recursiveInstances[j] = nextInstancesForLabel.get(j);
                 }
@@ -235,21 +235,14 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         initialMetaPath.add(startNodeLabel);
 
         debugOut.println("startet computing all metapaths form label: " + startNodeLabel);
-        int instanceIndex = 0;
-        while(initialInstances[instanceIndex][labelDictionary.get(startNodeLabel)] != 0) //maybe using arrays was a bad idea...
-        {
-            instanceIndex++;
-        }
-        debugOut.println("finished getting the size of the instaces array.");
 
-        int[] initialInstancesRow = new int[instanceIndex];
+        int[] initialInstancesRow = new int[initialInstances.get(labelDictionary.get(startNodeLabel)).size()];
 
-        instanceIndex = 0;
-        while(initialInstances[instanceIndex][labelDictionary.get(startNodeLabel)] != 0) //maybe using arrays was a bad idea...
+        for(int i = 0; i < initialInstancesRow.length; i++)// eventuell nicht mehr nötig.
         {
-            initialInstancesRow[instanceIndex] = initialInstances[instanceIndex][labelDictionary.get(startNodeLabel)] - 1;// copy the initial instances of one common label
-            instanceIndex++;
+            initialInstancesRow[i] = initialInstances.get(labelDictionary.get(startNodeLabel)).get(i);
         }
+
         debugOut.println("finished getting the instancesRow for recursion");
 
         computeMetapathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
