@@ -97,39 +97,14 @@ public class ComputeAllMetaPathsTest {
     public void testCalculationOfMetapaths() throws Exception {
         //assertEquals(0.5, algo.similarity(), 0);
         HashSet<String> allMetaPaths = algo.computeAllMetapaths();//this runs the code two times..
-        assert(allMetaPaths.contains("A | C | B"));
-        assert(allMetaPaths.contains("A | A | B"));
-        assert(allMetaPaths.contains("A | A | C"));
-        assert(allMetaPaths.contains("A | C | C"));
-        assert(allMetaPaths.contains("A | B | A"));
-        assert(allMetaPaths.contains("A | B | C"));
-        assert(allMetaPaths.contains("A | C | A"));
-        assert(allMetaPaths.contains("B | A | A"));
-        assert(allMetaPaths.contains("B | A | C"));
-        assert(allMetaPaths.contains("B | C | A"));
-        assert(allMetaPaths.contains("B | C | B"));
-        assert(allMetaPaths.contains("B | C | C"));
-        assert(allMetaPaths.contains("C | A | A"));
-        assert(allMetaPaths.contains("C | A | B"));
-        assert(allMetaPaths.contains("C | A | C"));
-        assert(allMetaPaths.contains("C | B | A"));
-        assert(allMetaPaths.contains("C | B | C"));
-        assert(allMetaPaths.contains("C | C | A"));
-        assert(allMetaPaths.contains("C | C | B"));
-        assert(allMetaPaths.contains("A"));
-        assert(allMetaPaths.contains("B"));
-        assert(allMetaPaths.contains("C"));
-        assert(allMetaPaths.contains("A | A"));
-        assert(allMetaPaths.contains("A | B"));
-        assert(allMetaPaths.contains("A | C"));
-        assert(allMetaPaths.contains("B | A"));
-        assert(allMetaPaths.contains("B | C"));
-        assert(allMetaPaths.contains("C | A"));
-        assert(allMetaPaths.contains("C | B"));
-        assert(allMetaPaths.contains("C | C"));
-        assert(allMetaPaths.contains("B | A | B"));//this should not exist, but in this prototype its ok. we are going back to the same node we already were
-        assert(allMetaPaths.contains("A | A | A"));//this should not exist,...
-        assert(allMetaPaths.contains("C | C | C"));//this should not exist,...
+        HashSet<String> allExpectedMetaPaths = new HashSet<>(Arrays.asList("0", "1", "2", "0 | 0 | 0", "0 | 0 | 1", "0 | 0 | 2", "0 | 1 | 0", "0 | 1 | 2", "0 | 2 | 0", "0 | 2 | 1", "0 | 2 | 2",
+                "1 | 0 | 0", "1 | 0 | 1", "1 | 0 | 2", "1 | 2 | 0", "1 | 2 | 1", "1 | 2 | 2", "2 | 0 | 0", "2 | 0 | 1", "2 | 0 | 2", "2 | 1 | 0", "2 | 1 | 2", "2 | 2 | 0", "2 | 2 | 1", "2 | 2 | 2",
+                "0 | 1", "0 | 2", "0 | 0", "1 | 0", "1 | 2", "2 | 0", "2 | 1", "2 | 2")); //0|0|0, 1|0|1, 2|2|2 should not exist, but in this prototype its ok. we are going back to the same node we already were
+
+        for (String expectedMetaPath : allExpectedMetaPaths) {
+            assert(allMetaPaths.contains(expectedMetaPath));
+        }
+
         assertEquals(33, allMetaPaths.size());//this should be 30, ...
     }
 //something is not working with the test so its commented out.

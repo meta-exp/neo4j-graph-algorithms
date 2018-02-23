@@ -65,7 +65,7 @@ public class HeavyGraphFactory extends GraphFactory {
 
         final IdMap idMap = loadIdMap();
 
-        final HashMap<Integer, String> labelMap = loadLabelMap(idMap, setup.loadWithLabels);
+        final HashMap<Integer, Integer> labelMap = loadLabelMap(idMap, setup.loadWithLabels);
 
 
         final Supplier<WeightMapping> relWeights = () -> newWeightMap(
@@ -123,7 +123,7 @@ public class HeavyGraphFactory extends GraphFactory {
             final Supplier<WeightMapping> relWeightsSupplier,
             final Supplier<WeightMapping> nodeWeightsSupplier,
             final Supplier<WeightMapping> nodePropsSupplier,
-            final HashMap<Integer, String> labelMap,
+            final HashMap<Integer, Integer> labelMap,
             Collection<RelationshipImporter> tasks) {
         if (tasks.size() == 1) {
             RelationshipImporter importer = tasks.iterator().next();

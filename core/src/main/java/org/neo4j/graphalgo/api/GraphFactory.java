@@ -80,7 +80,7 @@ public abstract class GraphFactory {
         return nodeImporter.call();
     }
 
-    protected HashMap<Integer, String> loadLabelMap(IdMap mapping, boolean loadLabels) throws EntityNotFoundException {
+    protected HashMap<Integer, Integer> loadLabelMap(IdMap mapping, boolean loadLabels) throws EntityNotFoundException {
         if (!loadLabels){
             return null;
         }

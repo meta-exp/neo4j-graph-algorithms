@@ -333,7 +333,7 @@ final class RelationshipImporter extends StatementTask<Void, EntityNotFoundExcep
         weights.put(relId, doubleValue);
     }
 
-    Graph toGraph(final IdMap idMap, final HashMap<Integer, String> labelMap) {
+    Graph toGraph(final IdMap idMap, final HashMap<Integer, Integer> labelMap) {
         return new HeavyGraph(
                 idMap,
                 matrix,

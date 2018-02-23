@@ -6,6 +6,7 @@ import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.Direction;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -18,7 +19,7 @@ public class MetaPath extends Algorithm<MetaPath> {
     private HashSet<Integer> endNodeIds;
     private int randomWalkLength;
     private int numberOfrandomWalks;
-    private ArrayList<ArrayList<String>> metapaths;
+    private ArrayList<ArrayList<Integer>> metapaths;
     private ArrayList<Integer> metapathsWeights;
     private Random random;
     private final static int DEFAULT_WEIGHT = 5;
@@ -58,8 +59,8 @@ public class MetaPath extends Algorithm<MetaPath> {
 
         HashSet<String> finalMetaPaths = new HashSet<>();
 
-        for(ArrayList<String> metapath :metapaths){
-            finalMetaPaths.add(String.join(" | ", metapath ) + "\n");
+        for(ArrayList<Integer> metaPath :metapaths){
+            finalMetaPaths.add(metaPath.stream().map(Object::toString).collect(Collectors.joining(" | ")) + "\n");
         }
 
         for (String s:finalMetaPaths
@@ -73,7 +74,7 @@ public class MetaPath extends Algorithm<MetaPath> {
     private void computeMetapathFromNode(int startNodeId){
         for(int i=0; i < numberOfrandomWalks; i++) {
             int nodeHopId = startNodeId;
-            ArrayList<String> metapath = new ArrayList<>();
+            ArrayList<Integer> metapath = new ArrayList<>();
             metapath.add(arrayGraphInterface.getLabel(nodeHopId));
             for(int j=1; j <= randomWalkLength; j++){
                 int degree = degrees.degree(nodeHopId, Direction.OUTGOING);
@@ -123,7 +124,7 @@ public class MetaPath extends Algorithm<MetaPath> {
 
     public void showTop(int n){
         for (int i = 0; i < n; i++){
-            System.out.println(i + ". " + String.join(" | ", metapaths.get(i) ) + "  " + metapathsWeights.get(i));
+            System.out.println(i + ". " + metapaths.get(i).stream().map(Object::toString).collect(Collectors.joining(" | ")) + "  " + metapathsWeights.get(i));
         }
     }
 

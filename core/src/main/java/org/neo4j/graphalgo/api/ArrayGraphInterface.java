@@ -12,9 +12,9 @@ public interface ArrayGraphInterface {
 
     int[] getIncomingNodes(int nodeId);
 
-    String getLabel(int nodeId);
+    int getLabel(int nodeId);
 
-    Collection<String> getAllLabels();
+    Collection<Integer> getAllLabels();
 
 
 
