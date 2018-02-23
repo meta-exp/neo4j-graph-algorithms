@@ -4,7 +4,7 @@ import scala.Int;
 
 import java.util.Collection;
 
-public interface HandyStuff {
+public interface ArrayGraphInterface {
 
     int[] getAdjacentNodes(int nodeId);
 

@@ -6,13 +6,12 @@ import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.Direction;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class MetaPath extends Algorithm<MetaPath> {
 
-    private HandyStuff handyStuff;
+    private ArrayGraphInterface arrayGraphInterface;
     private Degrees degrees;
     private IdMap mapping;
     private HashSet<Integer> startNodeIds;
@@ -25,7 +24,7 @@ public class MetaPath extends Algorithm<MetaPath> {
     private final static int DEFAULT_WEIGHT = 5;
 
     public MetaPath(IdMapping idMapping,
-                    HandyStuff handyStuff,
+                    ArrayGraphInterface arrayGraphInterface,
                     Degrees degrees,
                     HashSet<Long> startNodeIds,
                     HashSet<Long> endNodeIds,
@@ -36,7 +35,7 @@ public class MetaPath extends Algorithm<MetaPath> {
         this.endNodeIds = new HashSet<>();
         convertIds(idMapping, startNodeIds, this.startNodeIds);
         convertIds(idMapping, endNodeIds, this.endNodeIds);
-        this.handyStuff = handyStuff;
+        this.arrayGraphInterface = arrayGraphInterface;
         this.degrees = degrees;
         this.numberOfrandomWalks = numberOfRandomWalks;
         this.randomWalkLength = randomWalkLength;
@@ -75,7 +74,7 @@ public class MetaPath extends Algorithm<MetaPath> {
         for(int i=0; i < numberOfrandomWalks; i++) {
             int nodeHopId = startNodeId;
             ArrayList<String> metapath = new ArrayList<>();
-            metapath.add(handyStuff.getLabel(nodeHopId));
+            metapath.add(arrayGraphInterface.getLabel(nodeHopId));
             for(int j=1; j <= randomWalkLength; j++){
                 int degree = degrees.degree(nodeHopId, Direction.OUTGOING);
                 if (endNodeIds.contains(nodeHopId)){
@@ -88,8 +87,8 @@ public class MetaPath extends Algorithm<MetaPath> {
                 }
                 else {
                     int randomEdgeIndex= random.nextInt(degree);
-                    nodeHopId = handyStuff.getOutgoingNodes(nodeHopId)[randomEdgeIndex];
-                    metapath.add(handyStuff.getLabel(nodeHopId));
+                    nodeHopId = arrayGraphInterface.getOutgoingNodes(nodeHopId)[randomEdgeIndex];
+                    metapath.add(arrayGraphInterface.getLabel(nodeHopId));
                 }
             }
         }
