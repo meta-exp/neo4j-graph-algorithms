@@ -9,7 +9,7 @@ WORKDIR /neo4j-graph-algorithms/
 RUN mvn clean install
 RUN cp algo/target/graph-algorithms-*.jar /var/lib/neo4j/plugins/
 
-EXPOSE 7474 7473 7687
+EXPOSE 7474 7473 7687 3637
 
 WORKDIR /var/lib/neo4j
 
