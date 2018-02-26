@@ -4,7 +4,7 @@ import scala.Int;
 
 import java.util.Collection;
 
-public interface HandyStuff {
+public interface ArrayGraphInterface {
 
     int[] getAdjacentNodes(int nodeId);
 
@@ -12,9 +12,9 @@ public interface HandyStuff {
 
     int[] getIncomingNodes(int nodeId);
 
-    String getLabel(int nodeId);
+    int getLabel(int nodeId);
 
-    Collection<String> getAllLabels();
+    Collection<Integer> getAllLabels();
 
 
 

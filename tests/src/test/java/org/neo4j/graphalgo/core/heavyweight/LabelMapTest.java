@@ -114,7 +114,7 @@ public class LabelMapTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        assert null != graphWithLabelMap.getLabel(1);
+        assert -1 != graphWithLabelMap.getLabel(1);
     }
 
     @Test
@@ -123,7 +123,7 @@ public class LabelMapTest {
         graphWithoutLabelMap = (HeavyGraph) new GraphLoader(api)
                 .withLabelAsProperty(false)
                 .load(HeavyGraphFactory.class);
-        assert null == graphWithoutLabelMap.getLabel(1);
+        assert -1 == graphWithoutLabelMap.getLabel(1);
     }
 
     @Test
@@ -131,7 +131,7 @@ public class LabelMapTest {
         final HeavyGraph graphWithoutLabelMap;
         graphWithoutLabelMap = (HeavyGraph) new GraphLoader(api)
                 .load(HeavyGraphFactory.class);
-        assert null == graphWithoutLabelMap.getLabel(1);
+        assert -1 == graphWithoutLabelMap.getLabel(1);
     }
 
     @Test
@@ -142,7 +142,7 @@ public class LabelMapTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        assert "PHN".equals(graphWithLabelMap.getLabel(1));
+        assert(1 == graphWithLabelMap.getLabel(1));
     }
 }
 

@@ -12,7 +12,7 @@ import org.neo4j.storageengine.api.Token;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class LabelImporter extends StatementTask<HashMap<Integer, String>, EntityNotFoundException> {
+public class LabelImporter extends StatementTask<HashMap<Integer, Integer>, EntityNotFoundException> {
     private final IdMap mapping;
 
     public LabelImporter(
@@ -23,19 +23,19 @@ public class LabelImporter extends StatementTask<HashMap<Integer, String>, Entit
     }
 
     @Override
-    public HashMap<Integer, String> apply(final Statement statement) throws
+    public HashMap<Integer, Integer> apply(final Statement statement) throws
             EntityNotFoundException {
 
         final ReadOperations readOp = statement.readOperations();
 
         Iterator<Token> labelTokens = readOp.labelsGetAllTokens();
-        HashMap<Integer, String> idLabelMap = new HashMap<>();
+        HashMap<Integer, Integer> idLabelMap = new HashMap<>();
 
         while (labelTokens.hasNext()){
             Token token = labelTokens.next();
             PrimitiveLongIterator nodesWithThisLabel = readOp.nodesGetForLabel(token.id());
             while (nodesWithThisLabel.hasNext()){
-                idLabelMap.put(mapping.toMappedNodeId(nodesWithThisLabel.next()), token.name());
+                idLabelMap.put(mapping.toMappedNodeId(nodesWithThisLabel.next()), token.id());
             }
         }
 
