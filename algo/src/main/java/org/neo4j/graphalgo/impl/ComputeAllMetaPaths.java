@@ -223,10 +223,11 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     private void printMetaPathAndLog(String joinedMetaPath) {
         printCount++;
-        if (printCount % ((int)estimatedCount/50) == 0) {
-            out.println(joinedMetaPath);
+        
+        //if (printCount % ((int)estimatedCount/50) == 0) {
+        out.println(joinedMetaPath);
             //debugOut.println("Meta-paths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
-        }
+        //}
     }
 
     private int[] convertArrayListToIntArray(ArrayList<Integer> nextInstancesForLabel) {
