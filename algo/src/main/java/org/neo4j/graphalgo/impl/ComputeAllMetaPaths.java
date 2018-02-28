@@ -166,7 +166,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 if (newSize > oldSize)
                     printMetaPathAndLog(joinedMetaPath);
                 //int[] recursiveInstances = convertArrayListToIntArray(nextInstancesForLabel);
-                nextInstances = null; // how exactly does this work?
+                //nextInstances = null; // how exactly does this work?
 
                 //debugOut.println("newSize: " + newSize);
 
