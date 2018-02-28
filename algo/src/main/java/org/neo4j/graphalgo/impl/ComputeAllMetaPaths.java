@@ -154,7 +154,8 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         ArrayList<ArrayList<Integer>> nextInstances = allocateNextInstances();
         fillNextInstances(currentInstances, nextInstances);
         currentInstances = null;
-        for (ArrayList<Integer> nextInstancesForLabel : nextInstances) {
+        for (int i = 0; i < nextInstances.size(); i++) {
+            ArrayList<Integer> nextInstancesForLabel = nextInstances.get(i);
             if (!nextInstancesForLabel.isEmpty()) {
                 ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                 int label = arrayGraphInterface.getLabel(nextInstancesForLabel.get(0)); //get(0) since all have the same label.
@@ -171,6 +172,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
                 computeMetaPathFromNodeLabel(newMetaPath, nextInstancesForLabel, metaPathLength-1);  //do somehow dp instead?
                 //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
+                nextInstances.set(i, null);
             }
         }
     }
