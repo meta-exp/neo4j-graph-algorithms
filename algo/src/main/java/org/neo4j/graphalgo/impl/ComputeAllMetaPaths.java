@@ -9,6 +9,7 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,7 +87,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         //debugOut.println("starting initializeLabelDictAndInitialInstances");
         initializeLabelDictAndInitialInstances();
         //debugOut.println("finished initializeLabelDictAndInitialInstances");
-        //ebugOut.println("starting computeMetaPathsFromAllNodeLabels");
+        //debugOut.println("starting computeMetaPathsFromAllNodeLabels");
         computeMetaPathsFromAllNodeLabels();
         //debugOut.println("finished computeMetaPathsFromAllNodeLabels");
 
@@ -145,13 +146,14 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         }
     }
 
-    private void computeMetaPathFromNodeLabel(ArrayList<Integer> currentMetaPath, int[] currentInstances, int metaPathLength) {
+    private void computeMetaPathFromNodeLabel(ArrayList<Integer> currentMetaPath, ArrayList<Integer> currentInstances, int metaPathLength) {
         if (metaPathLength == 0) {
             //debugOut.println("aborting recursion");
             return;
         }
         ArrayList<ArrayList<Integer>> nextInstances = allocateNextInstances();
-        nextInstances = fillNextInstances(currentInstances, nextInstances);
+        fillNextInstances(currentInstances, nextInstances);
+        currentInstances = null;
         for (ArrayList<Integer> nextInstancesForLabel : nextInstances) {
             if (!nextInstancesForLabel.isEmpty()) {
                 ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
@@ -162,13 +164,12 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 int newSize = duplicateFreeMetaPaths.size();
                 if (newSize > oldSize)
                     printMetaPathAndLog(joinedMetaPath);
-                int[] recursiveInstances = convertArrayListToIntArray(nextInstancesForLabel);
-                nextInstances = null;
-                nextInstancesForLabel = null;
-                currentInstances = null;
+                //int[] recursiveInstances = convertArrayListToIntArray(nextInstancesForLabel);
+                nextInstances = null; // how exactly does this work?
+
                 //debugOut.println("newSize: " + newSize);
 
-                computeMetaPathFromNodeLabel(newMetaPath, recursiveInstances, metaPathLength-1);  //do somehow dp instead?
+                computeMetaPathFromNodeLabel(newMetaPath, nextInstancesForLabel, metaPathLength-1);  //do somehow dp instead?
                 //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
             }
         }
@@ -184,10 +185,8 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         return nextInstances;
     }
 
-    private ArrayList<ArrayList<Integer>> fillNextInstances(int[] currentInstances, ArrayList<ArrayList<Integer>> nextInstances) {
+    private void fillNextInstances(ArrayList<Integer> currentInstances, ArrayList<ArrayList<Integer>> nextInstances) {
         //debugOut.println("started filling nextInstances");
-        int i = 0;
-        int k = 0;
         for (int instance : currentInstances) {
             for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) {
                 Byte labelID = labelDictionary.get(arrayGraphInterface.getLabel(nodeId)); //get the id of the label of the node
@@ -195,8 +194,6 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             }
         }
         //debugOut.println("finished filling nextInstances");
-
-        return nextInstances;
     }
 
     private ArrayList<Integer> copyMetaPath(ArrayList<Integer> currentMetaPath) {
@@ -226,7 +223,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         }
     }
 
-    private int[] convertArrayListToIntArray(ArrayList<Integer> nextInstancesForLabel) {
+    /*private int[] convertArrayListToIntArray(ArrayList<Integer> nextInstancesForLabel) {
         int[] recursiveInstances = new int[nextInstancesForLabel.size()]; //convert ArrayList<String> to  int[] array //maybe this ist not necessary anymore. just change param
         for (int j = 0; j < nextInstancesForLabel.size(); j++) {
             recursiveInstances[j] = nextInstancesForLabel.get(j);
@@ -234,25 +231,26 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         //debugOut.println("converted arrayList to int-array");
 
         return recursiveInstances;
-    }
+    }*/
 
     private void computeMetaPathFromNodeLabel(int startNodeLabel, int metaPathLength) {
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
         initialMetaPath.add(startNodeLabel);
         //debugOut.println("startet computing all metaPaths form label: " + startNodeLabel);
-        int[] initialInstancesRow = initInstancesRow(startNodeLabel);
+        ArrayList<Integer> initialInstancesRow = initInstancesRow(startNodeLabel);
         computeMetaPathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
         //debugOut.println("finished recursion for: " + startNodeLabel);
     }
 
-    private int[] initInstancesRow(int startNodeLabel) {
+    private ArrayList<Integer> initInstancesRow(int startNodeLabel) {
         Byte labelID = labelDictionary.get(startNodeLabel);
-        int[] initialInstancesRow = new int[initialInstances.get(labelID).size()];
+       /* int[] initialInstancesRow = new int[initialInstances.get(labelID).size()];
         for (int i = 0; i < initialInstancesRow.length; i++) { // maybe not needed anymore
             initialInstancesRow[i] = initialInstances.get(labelID).get(i);
         }
         //debugOut.println("finished getting the instancesRow for recursion");
-        return initialInstancesRow;
+        return initialInstancesRow;*/
+       return initialInstances.get(labelID);
     }
 //TODO------------------------------------------------------------------------------------------------------------------
     public Stream<ComputeAllMetaPaths.Result> resultStream() {
