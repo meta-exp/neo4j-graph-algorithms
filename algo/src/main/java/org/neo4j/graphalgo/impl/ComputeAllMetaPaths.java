@@ -83,12 +83,12 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     }
 
     public HashSet<String> computeAllMetapaths() {
-        debugOut.println("starting initializeLabelDictAndInitialInstances");
+        //debugOut.println("starting initializeLabelDictAndInitialInstances");
         initializeLabelDictAndInitialInstances();
-        debugOut.println("finished initializeLabelDictAndInitialInstances");
-        debugOut.println("starting computeMetaPathsFromAllNodeLabels");
+        //debugOut.println("finished initializeLabelDictAndInitialInstances");
+        //ebugOut.println("starting computeMetaPathsFromAllNodeLabels");
         computeMetaPathsFromAllNodeLabels();
-        debugOut.println("finished computeMetaPathsFromAllNodeLabels");
+        //debugOut.println("finished computeMetaPathsFromAllNodeLabels");
 
         return duplicateFreeMetaPaths;
     }
@@ -96,25 +96,25 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private void initializeLabelDictAndInitialInstances() {
         currentLabelId = 0;
         graph.forEachNode(node -> initializeNode(node));
-        debugOut.println("labelDictionary size: " + labelDictionary.size());
+        //debugOut.println("labelDictionary size: " + labelDictionary.size());
     }
 
     private boolean initializeNode(int node) {
-        debugOut.println("initializing node: " + node);
+        //debugOut.println("initializing node: " + node);
         int nodeLabel = arrayGraphInterface.getLabel(node);
         Byte nodeLabelId = labelDictionary.get(nodeLabel);
-        debugOut.println("looked up nodeLabel and labelId");
+        //debugOut.println("looked up nodeLabel and labelId");
 
         if (nodeLabelId == null) {
             nodeLabelId = assignIdToNodeLabel(nodeLabel);
-            debugOut.println("added label to labelDict and got new id");
+            //debugOut.println("added label to labelDict and got new id");
             createMetaPathWithLengthOne(nodeLabel);
         }
 
-        debugOut.println("metaPath of lenght 1 handeled");
+        //debugOut.println("metaPath of lenght 1 handeled");
 
         initialInstances.get(nodeLabelId).add(node);
-        debugOut.println("finished adding node: " + node);
+        //debugOut.println("finished adding node: " + node);
         return true;
     }
 
@@ -122,14 +122,12 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         ArrayList<Integer> metaPath = new ArrayList<>();
         metaPath.add(nodeLabel);
         int oldSize = duplicateFreeMetaPaths.size();
-        String joinedMetaPath = metaPath.stream().map(Object::toString)
-                .collect(Collectors.joining(" | "));
-        duplicateFreeMetaPaths.add(joinedMetaPath);
+        String joinedMetaPath = addMetaPath(metaPath);
         int newSize = duplicateFreeMetaPaths.size();
-        debugOut.println("tried to add metaPath of length 1");
+        //debugOut.println("tried to add metaPath of length 1");
         if (newSize > oldSize) {
             printMetaPathAndLog(joinedMetaPath);
-            debugOut.println("added a not seen before metaPath");
+            //debugOut.println("added a not seen before metaPath");
         }
     }
 
@@ -141,15 +139,15 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     private void computeMetaPathsFromAllNodeLabels() {
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-            debugOut.println("start computation for initial nodelabel: " + nodeLabel);
+            //debugOut.println("start computation for initial nodelabel: " + nodeLabel);
             computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
-            debugOut.println("finished computation for initial nodeLabel: " + nodeLabel);
+            //debugOut.println("finished computation for initial nodeLabel: " + nodeLabel);
         }
     }
 
     private void computeMetaPathFromNodeLabel(ArrayList<Integer> currentMetaPath, int[] currentInstances, int metaPathLength) {
         if (metaPathLength == 0) {
-            debugOut.println("aborting recursion");
+            //debugOut.println("aborting recursion");
             return;
         }
         ArrayList<ArrayList<Integer>> nextInstances = allocateNextInstances();
@@ -168,10 +166,10 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 nextInstances = null;
                 nextInstancesForLabel = null;
                 currentInstances = null;
-                debugOut.println("newSize: " + newSize);
+                //debugOut.println("newSize: " + newSize);
 
                 computeMetaPathFromNodeLabel(newMetaPath, recursiveInstances, metaPathLength-1);  //do somehow dp instead?
-                debugOut.println("finished recursion of length: " + (metaPathLength - 1));
+                //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
             }
         }
     }
@@ -181,13 +179,13 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         for (int i = 0; i < labelDictionary.size(); i++) {
             nextInstances.add(new ArrayList<>());
         }
-        debugOut.println("allocated nextInstances");
+        //debugOut.println("allocated nextInstances");
 
         return nextInstances;
     }
 
     private ArrayList<ArrayList<Integer>> fillNextInstances(int[] currentInstances, ArrayList<ArrayList<Integer>> nextInstances) {
-        debugOut.println("started filling nextInstances");
+        //debugOut.println("started filling nextInstances");
         int i = 0;
         int k = 0;
         for (int instance : currentInstances) {
@@ -196,7 +194,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 nextInstances.get(labelID).add(nodeId); // add the node to the corresponding instances array
             }
         }
-        debugOut.println("finished filling nextInstances");
+        //debugOut.println("finished filling nextInstances");
 
         return nextInstances;
     }
@@ -206,7 +204,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         for (int label : currentMetaPath) {
             newMetaPath.add(label);
         }
-        debugOut.println("copied currentMetaPath");
+        //debugOut.println("copied currentMetaPath");
 
         return newMetaPath;
     }
@@ -215,7 +213,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         metaPaths.add(newMetaPath);
         String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining(" | "));
         duplicateFreeMetaPaths.add(joinedMetaPath);
-        debugOut.println("tried adding new Metapath");
+        //debugOut.println("tried adding new Metapath");
 
         return joinedMetaPath;
     }
@@ -233,7 +231,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         for (int j = 0; j < nextInstancesForLabel.size(); j++) {
             recursiveInstances[j] = nextInstancesForLabel.get(j);
         }
-        debugOut.println("converted arrayList to int-array");
+        //debugOut.println("converted arrayList to int-array");
 
         return recursiveInstances;
     }
@@ -241,10 +239,10 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private void computeMetaPathFromNodeLabel(int startNodeLabel, int metaPathLength) {
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
         initialMetaPath.add(startNodeLabel);
-        debugOut.println("startet computing all metaPaths form label: " + startNodeLabel);
+        //debugOut.println("startet computing all metaPaths form label: " + startNodeLabel);
         int[] initialInstancesRow = initInstancesRow(startNodeLabel);
         computeMetaPathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
-        debugOut.println("finished recursion for: " + startNodeLabel);
+        //debugOut.println("finished recursion for: " + startNodeLabel);
     }
 
     private int[] initInstancesRow(int startNodeLabel) {
@@ -253,7 +251,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         for (int i = 0; i < initialInstancesRow.length; i++) { // maybe not needed anymore
             initialInstancesRow[i] = initialInstances.get(labelID).get(i);
         }
-        debugOut.println("finished getting the instancesRow for recursion");
+        //debugOut.println("finished getting the instancesRow for recursion");
         return initialInstancesRow;
     }
 //TODO------------------------------------------------------------------------------------------------------------------
