@@ -3,7 +3,7 @@ package org.neo4j.graphalgo;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-import org.neo4j.graphalgo.impl.ComputeAllMetaPaths;
+import org.neo4j.graphalgo.impl.computeAllMetaPaths.ComputeAllMetaPaths;
 import org.neo4j.graphalgo.results.ComputeAllMetaPathsResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;

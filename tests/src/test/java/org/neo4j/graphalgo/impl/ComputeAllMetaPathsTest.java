@@ -8,12 +8,12 @@ import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.impl.computeAllMetaPaths.ComputeAllMetaPaths;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.graphalgo.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import static org.mockito.Mockito.*;
 
 import java.util.*;
 
@@ -102,7 +102,9 @@ public class ComputeAllMetaPathsTest {
                 "0 | 1", "0 | 2", "0 | 0", "1 | 0", "1 | 2", "2 | 0", "2 | 1", "2 | 2")); //0|0|0, 1|0|1, 2|2|2 should not exist, but in this prototype its ok. we are going back to the same node we already were
 
         for (String expectedMetaPath : allExpectedMetaPaths) {
+            System.out.println("expected: " + expectedMetaPath);
             assert(allMetaPaths.contains(expectedMetaPath));
+
         }
 
         assertEquals(33, allMetaPaths.size());//this should be 30, ...

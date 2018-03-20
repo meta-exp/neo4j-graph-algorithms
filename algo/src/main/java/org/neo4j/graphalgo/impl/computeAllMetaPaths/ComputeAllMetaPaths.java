@@ -1,19 +1,18 @@
-package org.neo4j.graphalgo.impl;
+package org.neo4j.graphalgo.impl.computeAllMetaPaths;
 
 import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
+import org.neo4j.graphalgo.impl.Algorithm;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -139,10 +138,21 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     }
 
     private void computeMetaPathsFromAllNodeLabels() {
+        ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-            //debugOut.println("start computation for initial nodelabel: " + nodeLabel);
-            computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
+            //debugOut.println("start computation for initial nodeLabel: " + nodeLabel);
+            //computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
+            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-1", nodeLabel, metaPathLength);
+            thread.start();
+            threads.add(thread);
             //debugOut.println("finished computation for initial nodeLabel: " + nodeLabel);
+        }
+        for (ComputeMetaPathFromNodeLabelThread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -173,12 +183,13 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 computeMetaPathFromNodeLabel(newMetaPath, nextInstancesForLabel, metaPathLength-1);  //do somehow dp instead?
                 //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
                 nextInstances.set(i, null);
+                nextInstancesForLabel = null;
             }
         }
     }
 
     private ArrayList<ArrayList<Integer>> allocateNextInstances() {
-        ArrayList<ArrayList<Integer>> nextInstances = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> nextInstances = new ArrayList<>();//size ist schon bekannt
         for (int i = 0; i < labelDictionary.size(); i++) {
             nextInstances.add(new ArrayList<>());
         }
@@ -209,11 +220,13 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     }
 
     private String addMetaPath(ArrayList<Integer> newMetaPath) {
-        metaPaths.add(newMetaPath);
-        String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining(" | "));
-        duplicateFreeMetaPaths.add(joinedMetaPath);
-        //debugOut.println("tried adding new Metapath");
-
+        String joinedMetaPath;
+        synchronized(duplicateFreeMetaPaths) {
+            //metaPaths.add(newMetaPath);
+            joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining(" | "));
+            duplicateFreeMetaPaths.add(joinedMetaPath);
+            //debugOut.println("tried adding new Metapath");
+        }
         return joinedMetaPath;
     }
 
@@ -235,7 +248,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         return recursiveInstances;
     }*/
 
-    private void computeMetaPathFromNodeLabel(int startNodeLabel, int metaPathLength) {
+    public void computeMetaPathFromNodeLabel(int startNodeLabel, int metaPathLength) {
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
         initialMetaPath.add(startNodeLabel);
         //debugOut.println("startet computing all metaPaths form label: " + startNodeLabel);
