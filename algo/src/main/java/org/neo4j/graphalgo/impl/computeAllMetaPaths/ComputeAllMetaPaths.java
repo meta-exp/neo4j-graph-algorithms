@@ -181,7 +181,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                     ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                     int label = arrayGraphInterface.getLabel(nextInstancesForLabel.get(0)); //get(0) since all have the same label.
                     newMetaPath.add(label);
-                    //addAndLogMetaPath(newMetaPath);
+                    addAndLogMetaPath(newMetaPath);
                     //int[] recursiveInstances = convertArrayListToIntArray(nextInstancesForLabel);
                     //nextInstances = null; // how exactly does this work?
 
@@ -200,11 +200,11 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     }
 
     private void addAndLogMetaPath(ArrayList<Integer> newMetaPath) {
-        synchronized (duplicateFreeMetaPaths) { //idee diese methode entspricht der phase wo nur ein core rechnet und dauert ca. 5 min.
+        synchronized (duplicateFreeMetaPaths) {
             int oldSize = duplicateFreeMetaPaths.size();
             String joinedMetaPath = addMetaPath(newMetaPath);
             int newSize = duplicateFreeMetaPaths.size();
-            if (newSize > oldSize)//Idee: wenn man hier immer printen würde, wäre jeder cpu cyklus ein write.
+            if (newSize > oldSize)
                 printMetaPathAndLog(joinedMetaPath);
         }
     }
