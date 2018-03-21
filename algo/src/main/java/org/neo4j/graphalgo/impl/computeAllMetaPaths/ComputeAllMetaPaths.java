@@ -122,16 +122,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private void createMetaPathWithLengthOne(int nodeLabel) {
         ArrayList<Integer> metaPath = new ArrayList<>();
         metaPath.add(nodeLabel);
-        synchronized (duplicateFreeMetaPaths) {
-            int oldSize = duplicateFreeMetaPaths.size();
-            String joinedMetaPath = addMetaPath(metaPath);
-            int newSize = duplicateFreeMetaPaths.size();
-            //debugOut.println("tried to add metaPath of length 1");
-            if (newSize > oldSize) {
-                printMetaPathAndLog(joinedMetaPath);
-                //debugOut.println("added a not seen before metaPath");
-            }
-        }
+        addAndLogMetaPath(metaPath);
     }
 
     private byte assignIdToNodeLabel(int nodeLabel) {
@@ -190,13 +181,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                     ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                     int label = arrayGraphInterface.getLabel(nextInstancesForLabel.get(0)); //get(0) since all have the same label.
                     newMetaPath.add(label);
-                    synchronized (duplicateFreeMetaPaths){ //TODO: in methode auslagern
-                        int oldSize = duplicateFreeMetaPaths.size();
-                        String joinedMetaPath = addMetaPath(newMetaPath);
-                        int newSize = duplicateFreeMetaPaths.size();
-                        if (newSize > oldSize)
-                            printMetaPathAndLog(joinedMetaPath);
-                    }
+                    //addAndLogMetaPath(newMetaPath);
                     //int[] recursiveInstances = convertArrayListToIntArray(nextInstancesForLabel);
                     //nextInstances = null; // how exactly does this work?
 
@@ -213,6 +198,17 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             }
         }
     }
+
+    private void addAndLogMetaPath(ArrayList<Integer> newMetaPath) {
+        synchronized (duplicateFreeMetaPaths) { //idee diese methode entspricht der phase wo nur ein core rechnet und dauert ca. 5 min.
+            int oldSize = duplicateFreeMetaPaths.size();
+            String joinedMetaPath = addMetaPath(newMetaPath);
+            int newSize = duplicateFreeMetaPaths.size();
+            if (newSize > oldSize)//Idee: wenn man hier immer printen würde, wäre jeder cpu cyklus ein write.
+                printMetaPathAndLog(joinedMetaPath);
+        }
+    }
+
 
     private ArrayList<ArrayList<Integer>> allocateNextInstances() {
         ArrayList<ArrayList<Integer>> nextInstances = new ArrayList<>();//size ist schon bekannt
