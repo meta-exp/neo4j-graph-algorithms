@@ -121,13 +121,15 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private void createMetaPathWithLengthOne(int nodeLabel) {
         ArrayList<Integer> metaPath = new ArrayList<>();
         metaPath.add(nodeLabel);
-        int oldSize = duplicateFreeMetaPaths.size();
-        String joinedMetaPath = addMetaPath(metaPath);
-        int newSize = duplicateFreeMetaPaths.size();
-        //debugOut.println("tried to add metaPath of length 1");
-        if (newSize > oldSize) {
-            printMetaPathAndLog(joinedMetaPath);
-            //debugOut.println("added a not seen before metaPath");
+        synchronized (duplicateFreeMetaPaths) {
+            int oldSize = duplicateFreeMetaPaths.size();
+            String joinedMetaPath = addMetaPath(metaPath);
+            int newSize = duplicateFreeMetaPaths.size();
+            //debugOut.println("tried to add metaPath of length 1");
+            if (newSize > oldSize) {
+                printMetaPathAndLog(joinedMetaPath);
+                //debugOut.println("added a not seen before metaPath");
+            }
         }
     }
 
@@ -170,11 +172,13 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                 int label = arrayGraphInterface.getLabel(nextInstancesForLabel.get(0)); //get(0) since all have the same label.
                 newMetaPath.add(label);
-                int oldSize = duplicateFreeMetaPaths.size();
-                String joinedMetaPath = addMetaPath(newMetaPath);
-                int newSize = duplicateFreeMetaPaths.size();
-                if (newSize > oldSize)
-                    printMetaPathAndLog(joinedMetaPath);
+                synchronized (duplicateFreeMetaPaths){
+                    int oldSize = duplicateFreeMetaPaths.size();
+                    String joinedMetaPath = addMetaPath(newMetaPath);
+                    int newSize = duplicateFreeMetaPaths.size();
+                    if (newSize > oldSize)
+                        printMetaPathAndLog(joinedMetaPath);
+                }
                 //int[] recursiveInstances = convertArrayListToIntArray(nextInstancesForLabel);
                 //nextInstances = null; // how exactly does this work?
 
@@ -221,12 +225,12 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     private String addMetaPath(ArrayList<Integer> newMetaPath) {
         String joinedMetaPath;
-        synchronized(duplicateFreeMetaPaths) {
-            //metaPaths.add(newMetaPath);
-            joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining(" | "));
-            duplicateFreeMetaPaths.add(joinedMetaPath);
-            //debugOut.println("tried adding new Metapath");
-        }
+
+        //metaPaths.add(newMetaPath);
+        joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining(" | "));
+        duplicateFreeMetaPaths.add(joinedMetaPath);
+        //debugOut.println("tried adding new Metapath");
+
         return joinedMetaPath;
     }
 

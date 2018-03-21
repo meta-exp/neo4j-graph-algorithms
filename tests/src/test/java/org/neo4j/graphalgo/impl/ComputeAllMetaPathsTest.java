@@ -109,6 +109,8 @@ public class ComputeAllMetaPathsTest {
 
         assertEquals(33, allMetaPaths.size());//this should be 30, ...
     }
+
+    //TODO: write a test for the data written to the outputfile
 //something is not working with the test so its commented out.
    /* @Test
     public void testCypherQuery() throws Exception {
