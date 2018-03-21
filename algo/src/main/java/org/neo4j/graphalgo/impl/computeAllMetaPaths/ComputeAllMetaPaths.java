@@ -13,6 +13,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -158,36 +159,57 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         }
     }
 
-    private void computeMetaPathFromNodeLabel(ArrayList<Integer> currentMetaPath, ArrayList<Integer> currentInstances, int metaPathLength) {
-        if (metaPathLength == 0) {
-            //debugOut.println("aborting recursion");
-            return;
-        }
-        ArrayList<ArrayList<Integer>> nextInstances = allocateNextInstances();
-        fillNextInstances(currentInstances, nextInstances);
-        currentInstances = null;
-        for (int i = 0; i < nextInstances.size(); i++) {
-            ArrayList<Integer> nextInstancesForLabel = nextInstances.get(i);
-            if (!nextInstancesForLabel.isEmpty()) {
-                ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
-                int label = arrayGraphInterface.getLabel(nextInstancesForLabel.get(0)); //get(0) since all have the same label.
-                newMetaPath.add(label);
-                synchronized (duplicateFreeMetaPaths){
-                    int oldSize = duplicateFreeMetaPaths.size();
-                    String joinedMetaPath = addMetaPath(newMetaPath);
-                    int newSize = duplicateFreeMetaPaths.size();
-                    if (newSize > oldSize)
-                        printMetaPathAndLog(joinedMetaPath);
+    private void computeMetaPathFromNodeLabel(ArrayList<Integer> pCurrentMetaPath, ArrayList<Integer> pCurrentInstances, int pMetaPathLength) {
+        Stack<ArrayList<Integer>> param1 = new Stack();
+        Stack<ArrayList<Integer>> param2 = new Stack();
+        Stack<Integer> param3 = new Stack();
+        param1.push(pCurrentMetaPath);
+        param2.push(pCurrentInstances);
+        param3.push(pMetaPathLength);
+        ArrayList<Integer> currentMetaPath;
+        ArrayList<Integer> currentInstances;
+        int metaPathLength;
+
+        while(!param1.empty() && !param2.empty() && !param3.empty())
+        {
+            currentMetaPath = param1.pop();
+            currentInstances = param2.pop();
+            metaPathLength = param3.pop();
+
+
+            if (metaPathLength == 0) {
+                //debugOut.println("aborting recursion");
+                continue;
+            }
+            ArrayList<ArrayList<Integer>> nextInstances = allocateNextInstances();
+            fillNextInstances(currentInstances, nextInstances);
+            currentInstances = null;
+            for (int i = 0; i < nextInstances.size(); i++) {
+                ArrayList<Integer> nextInstancesForLabel = nextInstances.get(i);
+                if (!nextInstancesForLabel.isEmpty()) {
+                    ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
+                    int label = arrayGraphInterface.getLabel(nextInstancesForLabel.get(0)); //get(0) since all have the same label.
+                    newMetaPath.add(label);
+                    synchronized (duplicateFreeMetaPaths){ //TODO: in methode auslagern
+                        int oldSize = duplicateFreeMetaPaths.size();
+                        String joinedMetaPath = addMetaPath(newMetaPath);
+                        int newSize = duplicateFreeMetaPaths.size();
+                        if (newSize > oldSize)
+                            printMetaPathAndLog(joinedMetaPath);
+                    }
+                    //int[] recursiveInstances = convertArrayListToIntArray(nextInstancesForLabel);
+                    //nextInstances = null; // how exactly does this work?
+
+                    //debugOut.println("newSize: " + newSize);
+
+                    //computeMetaPathFromNodeLabel(newMetaPath, nextInstancesForLabel, metaPathLength-1);  //do somehow dp instead?
+                    param1.push(newMetaPath);
+                    param2.push(nextInstancesForLabel);
+                    param3.push(metaPathLength - 1);
+                    //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
+                    //nextInstances.set(i, null);
+                    //nextInstancesForLabel = null;
                 }
-                //int[] recursiveInstances = convertArrayListToIntArray(nextInstancesForLabel);
-                //nextInstances = null; // how exactly does this work?
-
-                //debugOut.println("newSize: " + newSize);
-
-                computeMetaPathFromNodeLabel(newMetaPath, nextInstancesForLabel, metaPathLength-1);  //do somehow dp instead?
-                //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
-                nextInstances.set(i, null);
-                nextInstancesForLabel = null;
             }
         }
     }
