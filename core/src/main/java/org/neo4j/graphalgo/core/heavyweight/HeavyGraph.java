@@ -84,8 +84,8 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     @Override
     public Collection<Integer> getAllLabels()
     {
-        labelMap.values().stream().distinct().collect(Collectors.toSet());//TODO: write test
-        return labelMap.values();
+        return labelMap.values().stream().distinct().collect(Collectors.toSet());//TODO: write test
+
     }
 
     @Override
