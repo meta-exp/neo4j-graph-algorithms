@@ -28,6 +28,7 @@ import org.neo4j.graphdb.Direction;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.function.IntPredicate;
+import java.util.stream.Collectors;
 
 /**
  * Heavy weighted graph built of an adjacency matrix.
@@ -83,6 +84,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     @Override
     public Collection<Integer> getAllLabels()
     {
+        labelMap.values().stream().distinct().collect(Collectors.toSet());//TODO: write test
         return labelMap.values();
     }
 
