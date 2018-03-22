@@ -133,14 +133,15 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     private void computeMetaPathsFromAllNodeLabels() {
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
+        int i = 0;
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-            //debugOut.println("start computation for initial nodeLabel: " + nodeLabel);
             //computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
-            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-1", nodeLabel, metaPathLength);
+            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, nodeLabel, metaPathLength);
             thread.start();
             threads.add(thread);
-            //debugOut.println("finished computation for initial nodeLabel: " + nodeLabel);
+            i++;
         }
+
         for (ComputeMetaPathFromNodeLabelThread thread : threads) {
             try {
                 thread.join();
@@ -167,13 +168,19 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             currentInstances = param2.pop();
             metaPathLength = param3.pop();
 
+            debugOut.println(Thread.currentThread().getName() + ": Length of currentInstances: " + currentInstances.size());
+            debugOut.println(Thread.currentThread().getName() + ": MetaPathLength: " + metaPathLength);
+            debugOut.println(Thread.currentThread().getName() + ": _________________");
 
             if (metaPathLength == 0) {
                 //debugOut.println("aborting recursion");
                 continue;
             }
             ArrayList<ArrayList<Integer>> nextInstances = allocateNextInstances();
+            long startTime = System.nanoTime();
             fillNextInstances(currentInstances, nextInstances);
+            long endTime = System.nanoTime();
+            debugOut.println(Thread.currentThread().getName() + ": Time for next instanceCalculation: " + (endTime - startTime));
             currentInstances = null;
             for (int i = 0; i < nextInstances.size(); i++) {
                 ArrayList<Integer> nextInstancesForLabel = nextInstances.get(i);
