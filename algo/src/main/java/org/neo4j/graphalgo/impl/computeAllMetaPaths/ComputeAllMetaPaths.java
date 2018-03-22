@@ -131,6 +131,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private void computeMetaPathsFromAllNodeLabels() {
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         int i = 0;
+        debugOut.println("There are " + arrayGraphInterface.getAllLabels().size() + " labels.");
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
             //computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
             ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, nodeLabel, metaPathLength);
@@ -171,11 +172,11 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 continue;
             }
 
-            debugOut.println(Thread.currentThread().getName() + ": Length of currentInstances: " + currentInstances.size());
-            debugOut.println(Thread.currentThread().getName() + ": MetaPathLength: " + metaPathLength);
-            debugOut.println(Thread.currentThread().getName() + ": _________________");
+            //debugOut.println(Thread.currentThread().getName() + ": Length of currentInstances: " + currentInstances.size());
+            //debugOut.println(Thread.currentThread().getName() + ": MetaPathLength: " + metaPathLength);
+            //debugOut.println(Thread.currentThread().getName() + ": _________________");
 
-            
+
             ArrayList<ArrayList<Integer>> nextInstances = allocateNextInstances();
             long startTime = System.nanoTime();
             fillNextInstances(currentInstances, nextInstances);
