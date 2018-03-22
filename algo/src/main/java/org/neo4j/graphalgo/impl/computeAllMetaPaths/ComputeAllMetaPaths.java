@@ -84,12 +84,9 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     }
 
     public HashSet<String> computeAllMetapaths() {
-        //debugOut.println("starting initializeLabelDictAndInitialInstances");
+
         initializeLabelDictAndInitialInstances();
-        //debugOut.println("finished initializeLabelDictAndInitialInstances");
-        //debugOut.println("starting computeMetaPathsFromAllNodeLabels");
         computeMetaPathsFromAllNodeLabels();
-        //debugOut.println("finished computeMetaPathsFromAllNodeLabels");
 
         return duplicateFreeMetaPaths;
     }
@@ -141,7 +138,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             threads.add(thread);
             i++;
         }
-
+        debugOut.println("Created " + threads.size() + " threads.");
         for (ComputeMetaPathFromNodeLabelThread thread : threads) {
             try {
                 thread.join();
@@ -168,14 +165,17 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             currentInstances = param2.pop();
             metaPathLength = param3.pop();
 
-            debugOut.println(Thread.currentThread().getName() + ": Length of currentInstances: " + currentInstances.size());
-            debugOut.println(Thread.currentThread().getName() + ": MetaPathLength: " + metaPathLength);
-            debugOut.println(Thread.currentThread().getName() + ": _________________");
 
             if (metaPathLength == 0) {
                 //debugOut.println("aborting recursion");
                 continue;
             }
+
+            debugOut.println(Thread.currentThread().getName() + ": Length of currentInstances: " + currentInstances.size());
+            debugOut.println(Thread.currentThread().getName() + ": MetaPathLength: " + metaPathLength);
+            debugOut.println(Thread.currentThread().getName() + ": _________________");
+
+            
             ArrayList<ArrayList<Integer>> nextInstances = allocateNextInstances();
             long startTime = System.nanoTime();
             fillNextInstances(currentInstances, nextInstances);
