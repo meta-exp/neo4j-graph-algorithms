@@ -172,7 +172,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 continue;
             }
 
-            //debugOut.println(Thread.currentThread().getName() + ": Length of currentInstances: " + currentInstances.size());
+            debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Length of currentInstances: " + currentInstances.size());
             //debugOut.println(Thread.currentThread().getName() + ": MetaPathLength: " + metaPathLength);
             //debugOut.println(Thread.currentThread().getName() + ": _________________");
 
@@ -181,7 +181,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             long startTime = System.nanoTime();
             fillNextInstances(currentInstances, nextInstances);
             long endTime = System.nanoTime();
-            debugOut.println(Thread.currentThread().getName() + ": Time for next instanceCalculation: " + (endTime - startTime));
+            debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Time for next instanceCalculation: " + (endTime - startTime));
             currentInstances = null;
             for (int i = 0; i < nextInstances.size(); i++) {
                 ArrayList<Integer> nextInstancesForLabel = nextInstances.get(i);

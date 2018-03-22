@@ -16,4 +16,8 @@ public class ComputeMetaPathFromNodeLabelThread extends Thread {
     public void run() {
         parent.computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
     }
+
+    public String getThreadName() {
+        return threadName;
+    }
 }
