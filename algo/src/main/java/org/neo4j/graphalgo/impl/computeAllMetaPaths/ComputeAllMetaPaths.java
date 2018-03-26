@@ -13,6 +13,7 @@ import java.io.PrintStream;
 import java.io.*;
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -71,12 +72,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
         List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
 
-        Collections.sort(finalMetaPathsAsList, (a, b) ->//TODO: write test for sort
-                (int) a.toString().charAt(0) < (int) b.toString().charAt(0) ||
-                (int) a.toString().charAt(0) == (int) b.toString().charAt(0) &&
-                        (int) a.toString().charAt(a.toString().length()-3) < (int) b.toString().charAt(b.toString().length()-3) ? -1 :
-                 (int) a.toString().charAt(0) == (int) b.toString().charAt(0) &&
-                        (int) a.toString().charAt(a.toString().length()-3) == (int) b.toString().charAt(b.toString().length()-3) ? 0 : 1);
+        Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
 
         for (String metaPath : finalMetaPathsAsList) {
             out.println(metaPath);
@@ -87,6 +83,20 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         debugOut.println("total time past: " + (endTime-startTime));
         debugOut.println("finished computation");
         return new Result(finalMetaPaths);
+    }
+
+    private int metaPathCompare(String a, String b) {
+        String[] partsInitA = a.split(Pattern.quote("\t"));
+        String[] partsInitB = b.split(Pattern.quote("\t"));
+        String[] partsA = partsInitA[0].split(Pattern.quote(" | "));
+        String[] partsB = partsInitB[0].split(Pattern.quote(" | "));
+        boolean firstLabelEqual = Integer.parseInt(partsA[0]) == Integer.parseInt(partsB[0]);
+        boolean lastLabelEqual = Integer.parseInt(partsA[partsA.length - 1]) == Integer.parseInt(partsB[partsB.length - 1]);
+        boolean firstLabelSmaller = Integer.parseInt(partsA[0]) < Integer.parseInt(partsB[0]);
+        boolean lastLabelSmaller = Integer.parseInt(partsA[partsA.length - 1]) < Integer.parseInt(partsB[partsB.length - 1]);
+
+        return  firstLabelSmaller || (firstLabelEqual && lastLabelSmaller) ? -1 :
+                firstLabelEqual && lastLabelEqual ? 0 : 1;
     }
 
     public HashSet<String> computeAllMetapaths() {
