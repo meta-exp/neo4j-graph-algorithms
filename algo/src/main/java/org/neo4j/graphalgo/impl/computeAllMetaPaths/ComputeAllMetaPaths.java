@@ -120,7 +120,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private void computeMetaPathsFromAllNodeLabels() {
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         int i = 0;
-        debugOut.println("There are " + arrayGraphInterface.getAllLabels().size() + " labels.");
+        //debugOut.println("There are " + arrayGraphInterface.getAllLabels().size() + " labels.");
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
             //computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
             ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, nodeLabel, metaPathLength);
@@ -128,7 +128,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             threads.add(thread);
             i++;
         }
-        debugOut.println("Created " + threads.size() + " threads.");
+        //debugOut.println("Created " + threads.size() + " threads.");
         for (ComputeMetaPathFromNodeLabelThread thread : threads) {
             try {
                 thread.join();
@@ -161,7 +161,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 continue;
             }
 
-            debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Length of currentInstances: " + currentInstances.size());
+            //debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Length of currentInstances: " + currentInstances.size());
             //debugOut.println(Thread.currentThread().getName() + ": MetaPathLength: " + metaPathLength);
             //debugOut.println(Thread.currentThread().getName() + ": _________________");
 
@@ -170,7 +170,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             long startTime = System.nanoTime();
             fillNextInstances(currentInstances, nextInstances);
             long endTime = System.nanoTime();
-            debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Time for next instanceCalculation: " + (endTime - startTime));
+            //debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Time for next instanceCalculation: " + (endTime - startTime));
             currentInstances = null;
             for (int i = 0; i < nextInstances.size(); i++) {
                 HashSet<Integer> nextInstancesForLabel = nextInstances.get(i);
