@@ -18,6 +18,8 @@ import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import java.util.Collection;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.neo4j.graphdb.Direction.INCOMING;
@@ -143,6 +145,17 @@ public class LabelMapTest {
                 .load(HeavyGraphFactory.class);
 
         assert(1 == graphWithLabelMap.getLabel(1));
+    }
+
+    @Test
+    public void testGetAllLabels() {
+        final HeavyGraph graphWithLabelMap;
+        graphWithLabelMap = (HeavyGraph) new GraphLoader(api)
+                .withLabelAsProperty(true)
+                .load(HeavyGraphFactory.class);
+
+        Collection<Integer> allLabels = graphWithLabelMap.getAllLabels();
+        assertEquals(3, allLabels.size());
     }
 }
 
