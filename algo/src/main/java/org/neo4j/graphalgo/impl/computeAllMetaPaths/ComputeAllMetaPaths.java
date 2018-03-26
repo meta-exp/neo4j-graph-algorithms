@@ -10,10 +10,8 @@ import org.neo4j.graphalgo.impl.Algorithm;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Stack;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -70,13 +68,22 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         HashSet<String> finalMetaPaths = computeAllMetapaths();
         long endTime = System.nanoTime();
 
+        List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
+
+        Collections.sort(finalMetaPathsAsList, (a, b) ->
+                (int) a.toString().charAt(0) < (int) b.toString().charAt(0) ||
+                (int) a.toString().charAt(0) == (int) b.toString().charAt(0) &&
+                        (int) a.toString().charAt(a.toString().length()-1) < (int) b.toString().charAt(b.toString().length()-1) ? -1 :
+                 (int) a.toString().charAt(0) == (int) b.toString().charAt(0) &&
+                        (int) a.toString().charAt(a.toString().length()-1) == (int) b.toString().charAt(b.toString().length()-1) ? 0 : 1);
+
+        for (String metaPath : finalMetaPathsAsList) {
+            out.println(metaPath);
+        }
+
         System.out.println("calculation took: " + String.valueOf(endTime-startTime));
         debugOut.println("actual amount of metaPaths: " + printCount);
         debugOut.println("total time past: " + (endTime-startTime));
-
-        startTime = System.nanoTime();
-        System.out.println("Writing to disk took: " + String.valueOf(startTime-endTime));
-
         debugOut.println("finished computation");
         return new Result(finalMetaPaths);
     }
@@ -236,7 +243,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     }
 
     private void printMetaPathAndLog(String joinedMetaPath) {
-        out.println(joinedMetaPath);
+        //out.println(joinedMetaPath);
         printCount++;
         if (printCount % ((int)estimatedCount/50) == 0) {
             debugOut.println("MetaPaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
