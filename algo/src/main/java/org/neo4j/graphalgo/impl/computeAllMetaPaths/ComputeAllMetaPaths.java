@@ -100,7 +100,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     public HashSet<String> computeAllMetaPaths() {
 
         initializeLabelDictAndInitialInstances();
-        computeMetaPathsFromAllNodeLabels();
+        //computeMetaPathsFromAllNodeLabels();
 
         return duplicateFreeMetaPaths;
     }
