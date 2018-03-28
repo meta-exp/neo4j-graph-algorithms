@@ -65,7 +65,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     public Result compute() {
         debugOut.println("started computation");
         startTime = System.nanoTime();
-        HashSet<String> finalMetaPaths = computeAllMetapaths();
+        HashSet<String> finalMetaPaths = new HashSet<>();//computeAllMetaPaths();
         long endTime = System.nanoTime();
 
         List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
