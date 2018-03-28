@@ -6,7 +6,7 @@ public class FilterMetaPathsResult {
 
     public final String filteredMetaPathsDict;
 
-    private FilterMetaPathsResult(HashMap<String, Integer> filteredMetaPathsDict) {
+    private FilterMetaPathsResult(HashMap<String, Long> filteredMetaPathsDict) {
         this.filteredMetaPathsDict = "";
     }
 
@@ -16,9 +16,9 @@ public class FilterMetaPathsResult {
 
     public static class Builder extends AbstractResultBuilder<FilterMetaPathsResult> {
 
-        private HashMap<String, Integer> filteredMetaPathsDict;
+        private HashMap<String, Long> filteredMetaPathsDict;
 
-        public void setFilteredMetaPathsDict(HashMap<String, Integer> filteredMetaPathsDict) {
+        public void setFilteredMetaPathsDict(HashMap<String, Long> filteredMetaPathsDict) {
             // this.metaPaths =  metaPaths.toArray(new String[metaPaths.size()]);
             this.filteredMetaPathsDict = filteredMetaPathsDict;
         }

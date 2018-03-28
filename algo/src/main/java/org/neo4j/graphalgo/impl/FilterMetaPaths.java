@@ -16,13 +16,13 @@ public class FilterMetaPaths extends Algorithm<FilterMetaPaths> {
 
     public Result filter(String startLabel, String endLabel)//TODO: write test for filter
     {
-        LinkedHashMap<String, Integer> metaPathDict = new LinkedHashMap<>();
+        LinkedHashMap<String, Long> metaPathDict = new LinkedHashMap<>();
         try(BufferedReader br = new BufferedReader(new FileReader("Precomputed_MetaPaths.txt"))) {
             String line = br.readLine();
 
             while (line != null) {
                 String[] parts = line.split(Pattern.quote("\t"));
-                metaPathDict.put(parts[0], Integer.parseInt(parts[1]));
+                metaPathDict.put(parts[0], Long.parseLong(parts[1]));
                 line = br.readLine();
             }
         } catch (FileNotFoundException e) {
@@ -31,7 +31,7 @@ public class FilterMetaPaths extends Algorithm<FilterMetaPaths> {
             e.printStackTrace();
         }
 
-        HashMap<String, Integer> filteredMetaPathsDict = new HashMap<>();
+        HashMap<String, Long> filteredMetaPathsDict = new HashMap<>();
         Object[] arrayMetaPaths =  metaPathDict.keySet().toArray();
         int filterIndex = Arrays.binarySearch(arrayMetaPaths, startLabel + " | " + endLabel,
                 (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
@@ -79,8 +79,8 @@ public class FilterMetaPaths extends Algorithm<FilterMetaPaths> {
      */
     public static final class Result {
 
-        HashMap<String, Integer> filteredMetaPathsDict;
-        public Result(HashMap<String, Integer> filteredMetaPathsDict) {
+        HashMap<String, Long> filteredMetaPathsDict;
+        public Result(HashMap<String, Long> filteredMetaPathsDict) {
             this.filteredMetaPathsDict = filteredMetaPathsDict;
         }
 
@@ -89,7 +89,7 @@ public class FilterMetaPaths extends Algorithm<FilterMetaPaths> {
             return "Result{}";
         }
 
-        public HashMap<String, Integer> getFilteredMetaPathsDict() {
+        public HashMap<String, Long> getFilteredMetaPathsDict() {
             return filteredMetaPathsDict;
         }
     }

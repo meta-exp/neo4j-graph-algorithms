@@ -45,7 +45,7 @@ public class FilterMetaPathsProc {
                 .load(HeavyGraphFactory.class);
 
         final FilterMetaPaths algo = new FilterMetaPaths();
-        HashMap<String, Integer> filteredMetaPathsDict;
+        HashMap<String, Long> filteredMetaPathsDict;
         filteredMetaPathsDict = algo.filter(startLabelString, endLabelString).getFilteredMetaPathsDict();
         builder.setFilteredMetaPathsDict(filteredMetaPathsDict);
         graph.release();

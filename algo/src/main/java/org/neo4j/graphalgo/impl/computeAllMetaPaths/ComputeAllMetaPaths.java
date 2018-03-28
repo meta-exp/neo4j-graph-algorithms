@@ -121,7 +121,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
         int nodeLabel = arrayGraphInterface.getLabel(node);
         labelCountDict.put(nodeLabel, 1 + (labelCountDict.get(nodeLabel) == null ? 0 : labelCountDict.get(nodeLabel)));
 
-        Integer nodeLabelId = labelDictionary.get(nodeLabel);
+        Integer nodeLabelId = labelDictionary.get(nodeLabel);//probably not the best way to initialize labelDictionary
         if (nodeLabelId == null) {
             nodeLabelId = assignIdToNodeLabel(nodeLabel);
         }
