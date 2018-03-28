@@ -116,10 +116,10 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     private boolean initializeNode(int node, HashMap<Integer, Integer> labelCountDict) {
 
-        int nodeLabel = arrayGraphInterface.getLabel(node);
+        //int nodeLabel = arrayGraphInterface.getLabel(node);
         //labelCountDict.put(nodeLabel, 1 + (labelCountDict.get(nodeLabel) == null ? 0 : labelCountDict.get(nodeLabel)));//TODO: find error: index out of bound 14/13
 
-        initialInstances.get(nodeLabel).add(node);
+        //initialInstances.get(nodeLabel).add(node);
         return true;
     }
 
