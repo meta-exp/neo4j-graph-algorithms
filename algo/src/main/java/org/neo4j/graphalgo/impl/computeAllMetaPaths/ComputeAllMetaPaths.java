@@ -65,12 +65,12 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     public Result compute() {
         debugOut.println("started computation");
         startTime = System.nanoTime();
-        HashSet<String> finalMetaPaths = new HashSet<>();//computeAllMetaPaths();
+        HashSet<String> finalMetaPaths = computeAllMetaPaths();
         long endTime = System.nanoTime();
 
         List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
 
-        Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
+        //Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
 
         for (String metaPath : finalMetaPathsAsList) {
             out.println(metaPath);
@@ -97,7 +97,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
                 firstLabelEqual && lastLabelEqual ? 0 : 1;
     }
 
-    public HashSet<String> computeAllMetapaths() {
+    public HashSet<String> computeAllMetaPaths() {
 
         initializeLabelDictAndInitialInstances();
         computeMetaPathsFromAllNodeLabels();
