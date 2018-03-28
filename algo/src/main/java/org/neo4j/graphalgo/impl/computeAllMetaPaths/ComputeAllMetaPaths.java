@@ -70,7 +70,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
         List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
 
-        //Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
+        Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
 
         for (String metaPath : finalMetaPathsAsList) {
             out.println(metaPath);
@@ -99,13 +99,13 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     public HashSet<String> computeAllMetaPaths() {
 
-        //initializeLabelDictAndInitialInstances();
+        initializeLabelDictAndInitialInstances();
         //computeMetaPathsFromAllNodeLabels();
 
         return duplicateFreeMetaPaths;
     }
 
-    private void initializeLabelDictAndInitialInstances() {
+    private void initializeLabelDictAndInitialInstances() {//TODO: find error: index out of bound 14/13
         currentLabelId = 0;
         HashMap<Integer, Integer> labelCountDict = new HashMap<>();
         graph.forEachNode(node -> initializeNode(node, labelCountDict));
@@ -117,7 +117,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private boolean initializeNode(int node, HashMap<Integer, Integer> labelCountDict) {
 
         int nodeLabel = arrayGraphInterface.getLabel(node);
-        labelCountDict.put(nodeLabel, 1 + (labelCountDict.get(nodeLabel) == null ? 0 : labelCountDict.get(nodeLabel)));
+        //labelCountDict.put(nodeLabel, 1 + (labelCountDict.get(nodeLabel) == null ? 0 : labelCountDict.get(nodeLabel)));
 
         initialInstances.get(nodeLabel).add(node);
         return true;
