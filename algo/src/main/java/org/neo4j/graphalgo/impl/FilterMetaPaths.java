@@ -1,32 +1,20 @@
 package org.neo4j.graphalgo.impl;
 
-import org.neo4j.cypher.internal.frontend.v2_3.ast.functions.Has;
-import org.neo4j.graphalgo.api.Degrees;
-import org.neo4j.graphalgo.api.ArrayGraphInterface;
-import org.neo4j.graphalgo.api.IdMapping;
-import org.neo4j.graphalgo.core.IdMap;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.impl.Algorithm;
-import org.neo4j.graphalgo.impl.computeAllMetaPaths.ComputeAllMetaPaths;
-
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class FilterMetaPaths extends Algorithm<FilterMetaPaths> {
 
-    public FilterMetaPaths()
-    {
+    private PrintStream out;
 
+    public FilterMetaPaths() throws FileNotFoundException {
+        this.out = new PrintStream(new FileOutputStream("Filtered_MetaPaths.txt"));//ends up in root/tests //or in dockerhome
     }
 
-    public Result filter(String startLabel, String endLabel)
+    public Result filter(String startLabel, String endLabel)//TODO: write test for filter
     {
         LinkedHashMap<String, Integer> metaPathDict = new LinkedHashMap<>();
         try(BufferedReader br = new BufferedReader(new FileReader("Precomputed_MetaPaths.txt"))) {
@@ -43,15 +31,27 @@ public class FilterMetaPaths extends Algorithm<FilterMetaPaths> {
             e.printStackTrace();
         }
 
-        HashMap<String, Integer> filteredDict = new HashMap<>();
+        HashMap<String, Integer> filteredMetaPathsDict = new HashMap<>();
         Object[] arrayMetaPaths =  metaPathDict.keySet().toArray();
         int filterIndex = Arrays.binarySearch(arrayMetaPaths, startLabel + " | " + endLabel,
                 (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
 
         if(filterIndex < 0) filterIndex = -filterIndex-1;
-        if(Integer.parseInt(arrayMetaPaths[filterIndex].toString().split(Pattern.quote(" | "))[0]) == 1 );//TODO: hier weitermachen. in umgebung alles rausprinten in filtered dict.
+        while(filterIndex >= 0 && metaPathCompare(startLabel + " | " + endLabel, arrayMetaPaths[filterIndex].toString()) == 0)
+        {
+            filterIndex--;
+        }
+        filterIndex++;
 
-        return new Result(0);
+        while(filterIndex < arrayMetaPaths.length && metaPathCompare(startLabel + " | " + endLabel, arrayMetaPaths[filterIndex].toString()) == 0)
+        {
+            String metaPath = arrayMetaPaths[filterIndex].toString();
+            filteredMetaPathsDict.put(metaPath, metaPathDict.get(metaPath));
+            out.println(metaPath + "\t" + metaPathDict.get(metaPath));
+            filterIndex++;
+        }
+
+        return new Result(filteredMetaPathsDict);
     }
 
     private int metaPathCompare(String a, String b) {
@@ -79,9 +79,9 @@ public class FilterMetaPaths extends Algorithm<FilterMetaPaths> {
      */
     public static final class Result {
 
-        int finalMetaPaths;
-        public Result(int x) {
-            this.finalMetaPaths = finalMetaPaths;
+        HashMap<String, Integer> filteredMetaPathsDict;
+        public Result(HashMap<String, Integer> filteredMetaPathsDict) {
+            this.filteredMetaPathsDict = filteredMetaPathsDict;
         }
 
         @Override
@@ -89,8 +89,8 @@ public class FilterMetaPaths extends Algorithm<FilterMetaPaths> {
             return "Result{}";
         }
 
-        public int getFinalMetaPaths() {
-            return finalMetaPaths;
+        public HashMap<String, Integer> getFilteredMetaPathsDict() {
+            return filteredMetaPathsDict;
         }
     }
 }
