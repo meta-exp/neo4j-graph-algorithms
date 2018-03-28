@@ -1,5 +1,7 @@
 package org.neo4j.graphalgo.results;
 
+import com.google.gson.Gson;
+
 import java.util.HashMap;
 
 public class FilterMetaPathsResult {
@@ -7,7 +9,8 @@ public class FilterMetaPathsResult {
     public final String filteredMetaPathsDict;
 
     private FilterMetaPathsResult(HashMap<String, Long> filteredMetaPathsDict) {
-        this.filteredMetaPathsDict = "";
+        Gson gson = new Gson();
+        this.filteredMetaPathsDict = gson.toJson(filteredMetaPathsDict);
     }
 
     public static FilterMetaPathsResult.Builder builder() {
