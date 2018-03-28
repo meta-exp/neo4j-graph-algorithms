@@ -49,7 +49,7 @@ public class FilterMetaPaths extends Algorithm<FilterMetaPaths> {
                 (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
 
         if(filterIndex < 0) filterIndex = -filterIndex-1;
-        if(Integer.parseInt(arrayMetaPaths[filterIndex].toString().split(Pattern.quote(" | "))[0]) == 1 );
+        if(Integer.parseInt(arrayMetaPaths[filterIndex].toString().split(Pattern.quote(" | "))[0]) == 1 );//TODO: hier weitermachen. in umgebung alles rausprinten in filtered dict.
 
         return new Result(0);
     }

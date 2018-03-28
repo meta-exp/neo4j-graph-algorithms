@@ -28,7 +28,6 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
     private ArrayList<Integer> metaPathsWeights;
     private int metaPathLength;
     private ArrayList<HashSet<Integer>> initialInstances;
-    private long max_instance_count; //TODO in this iteration of the code, there is no fixed amount of max_instances.
     private byte currentLabelId = 0;
     private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
     private PrintStream out;
@@ -40,21 +39,20 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
 
     public ComputeAllMetaPaths(HeavyGraph graph,IdMapping idMapping,
                                ArrayGraphInterface arrayGraphInterface,
-                               Degrees degrees, int metaPathLength, long max_label_count, long max_instance_count) throws IOException {
+                               Degrees degrees, int metaPathLength) throws IOException {
         this.graph = graph;
         this.arrayGraphInterface = arrayGraphInterface;
         this.degrees = degrees;
         this.metaPaths = new ArrayList<>();
         this.metaPathsWeights = new ArrayList<>();
         this.metaPathLength = metaPathLength;
-        this.max_instance_count = max_instance_count;
         this.initialInstances = new ArrayList<>();
         for (int i = 0; i < arrayGraphInterface.getAllLabels().size(); i++) {
             this.initialInstances.add(new HashSet<>());
         }
         this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));//ends up in root/tests //or in dockerhome
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Debug.txt"));
-        this.estimatedCount = Math.pow(max_label_count, metaPathLength + 1);
+        this.estimatedCount = Math.pow(arrayGraphInterface.getAllLabels().size(), metaPathLength + 1);
 
     }
 
@@ -171,7 +169,7 @@ public class ComputeAllMetaPaths extends Algorithm<ComputeAllMetaPaths> {
             currentInstances = param2.pop();
             metaPathLength = param3.pop();
 
-            if (metaPathLength == 0) {
+            if (metaPathLength <= 0) {
                 //debugOut.println("aborting recursion");
                 continue;
             }
