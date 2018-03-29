@@ -25,6 +25,7 @@ import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.utils.RawValues;
 import org.neo4j.graphdb.Direction;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.function.IntPredicate;
@@ -43,7 +44,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     private WeightMapping nodeWeights;
     private WeightMapping nodeProperties;
     // Watch Out! There is no default value. If The nodeId does not exist as key, null will be returned.
-    private HashMap<Integer, Integer> labelMap;
+    private HashMap<Integer, ArrayList<Object>> labelMap;
 
     HeavyGraph(
             IdMap nodeIdMap,
@@ -64,7 +65,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
             final WeightMapping relationshipWeights,
             final WeightMapping nodeWeights,
             final WeightMapping nodeProperties,
-            final HashMap<Integer, Integer> labelMap) {
+            final HashMap<Integer, ArrayList<Object>> labelMap) {
         this.nodeIdMap = nodeIdMap;
         this.container = container;
         this.relationshipWeights = relationshipWeights;
@@ -78,13 +79,24 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
         if (labelMap == null){
             return -1;
         }
-        return labelMap.get(nodeId);
+        return (int)labelMap.get(nodeId).get(0);
     }
 
     @Override
     public Collection<Integer> getAllLabels()
     {
-        return labelMap.values().stream().distinct().collect(Collectors.toSet());
+        return labelMap.values().stream().map(i -> (int)i.get(0)).collect(Collectors.toSet());
+    }
+
+    @Override
+    public HashMap<Integer, String> getLabelIdToNameDict()
+    {
+        HashMap<Integer, String> labelIdToNameDict = new HashMap<>();
+        for (ArrayList<Object> pair : labelMap.values()) {
+            labelIdToNameDict.put((int)pair.get(0), (String)pair.get(1));
+        }
+
+        return labelIdToNameDict;
     }
 
     @Override

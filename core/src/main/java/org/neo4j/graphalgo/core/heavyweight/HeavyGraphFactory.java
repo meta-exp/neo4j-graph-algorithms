@@ -32,6 +32,7 @@ import org.neo4j.helpers.Exceptions;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.function.Supplier;
@@ -65,7 +66,7 @@ public class HeavyGraphFactory extends GraphFactory {
 
         final IdMap idMap = loadIdMap();
 
-        final HashMap<Integer, Integer> labelMap = loadLabelMap(idMap, setup.loadWithLabels);
+        final HashMap<Integer, ArrayList<Object>> labelMap = loadLabelMap(idMap, setup.loadWithLabels);
 
 
         final Supplier<WeightMapping> relWeights = () -> newWeightMap(
@@ -123,7 +124,7 @@ public class HeavyGraphFactory extends GraphFactory {
             final Supplier<WeightMapping> relWeightsSupplier,
             final Supplier<WeightMapping> nodeWeightsSupplier,
             final Supplier<WeightMapping> nodePropsSupplier,
-            final HashMap<Integer, Integer> labelMap,
+            final HashMap<Integer, ArrayList<Object>> labelMap,
             Collection<RelationshipImporter> tasks) {
         if (tasks.size() == 1) {
             RelationshipImporter importer = tasks.iterator().next();

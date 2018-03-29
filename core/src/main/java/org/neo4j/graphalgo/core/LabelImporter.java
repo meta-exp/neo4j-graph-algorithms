@@ -9,10 +9,11 @@ import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.storageengine.api.Token;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class LabelImporter extends StatementTask<HashMap<Integer, Integer>, EntityNotFoundException> {
+public class LabelImporter extends StatementTask<HashMap<Integer, ArrayList<Object>>, EntityNotFoundException> {
     private final IdMap mapping;
 
     public LabelImporter(
@@ -23,19 +24,22 @@ public class LabelImporter extends StatementTask<HashMap<Integer, Integer>, Enti
     }
 
     @Override
-    public HashMap<Integer, Integer> apply(final Statement statement) throws
+    public HashMap<Integer, ArrayList<Object>> apply(final Statement statement) throws
             EntityNotFoundException {
 
         final ReadOperations readOp = statement.readOperations();
 
         Iterator<Token> labelTokens = readOp.labelsGetAllTokens();
-        HashMap<Integer, Integer> idLabelMap = new HashMap<>();
+        HashMap<Integer, ArrayList<Object>> idLabelMap = new HashMap<>();
 
         while (labelTokens.hasNext()){
             Token token = labelTokens.next();
             PrimitiveLongIterator nodesWithThisLabel = readOp.nodesGetForLabel(token.id());
             while (nodesWithThisLabel.hasNext()){
-                idLabelMap.put(mapping.toMappedNodeId(nodesWithThisLabel.next()), token.id());
+                ArrayList<Object> idAndName = new ArrayList<>();
+                idAndName.add(token.id());
+                idAndName.add(token.name());
+                idLabelMap.put(mapping.toMappedNodeId(nodesWithThisLabel.next()), idAndName);
             }
         }
 
