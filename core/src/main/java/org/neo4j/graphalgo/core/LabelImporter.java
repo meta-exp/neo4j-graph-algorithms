@@ -41,6 +41,7 @@ public class LabelImporter extends StatementTask<HashMap<Integer, ArrayList<Obje
             readOp.nodeGetRelationships(0, Direction.BOTH).next();
             readOp.nodeGetRelationshipTypes(0);
             readOp.relationshipsGetAll();
+
             RawValues.combineIntInt(Direction.BOTH, 0, 0);
         }
 
