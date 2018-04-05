@@ -69,6 +69,11 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
 
     private void initializeLabelDictAndInitialInstances() {
         currentLabelId = 0;
+
+        for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
+            assignIdToNodeLabel(nodeLabel);
+        }
+
         for (int node : startNodes) {
             initializeNode(node);
         }
@@ -76,12 +81,8 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
 
     private boolean initializeNode(int node) {
         int nodeLabel = arrayGraphInterface.getLabel(node);
-        createMetaPathWithLengthOne(nodeLabel);
-
+        //createMetaPathWithLengthOne(nodeLabel);
         Integer nodeLabelId = labelDictionary.get(nodeLabel);//probably not the best way to initialize labelDictionary
-        if (nodeLabelId == null) {
-            nodeLabelId = assignIdToNodeLabel(nodeLabel);
-        }
         initialInstances.get(nodeLabelId).add(node);
         return true;
     }
@@ -103,10 +104,11 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         int i = 0;
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, nodeLabel, metaPathLength);
+            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread--" + i, nodeLabel, metaPathLength);
             thread.start();
             threads.add(thread);
             i++;
+
         }
 
         for (ComputeMetaPathFromNodeLabelThread thread : threads) {
@@ -229,10 +231,10 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     }
 
     public void computeMetaPathFromNodeLabel(int startNodeLabel, int metaPathLength) {
-        ArrayList<Integer> initialMetaPath = new ArrayList<>();
-        initialMetaPath.add(startNodeLabel);
-        HashSet<Integer> initialInstancesRow = initInstancesRow(startNodeLabel);
-        computeMetaPathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
+            ArrayList<Integer> initialMetaPath = new ArrayList<>();
+            initialMetaPath.add(startNodeLabel);
+            HashSet<Integer> initialInstancesRow = initInstancesRow(startNodeLabel);
+            computeMetaPathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
     }
 
     private HashSet<Integer> initInstancesRow(int startNodeLabel) {
