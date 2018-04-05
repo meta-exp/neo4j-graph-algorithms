@@ -11,6 +11,7 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.multiTypes.MultiTypes;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -26,8 +27,8 @@ public class MultiTypeTest {
 
     private static GraphDatabaseAPI api;
     private static MultiTypes algo;
-    private static List<Label> labelsBefore;
-    private static List<Label> labelsAfter;
+    private static List<String> labelsBefore;
+    private static List<String> labelsAfter;
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -88,8 +89,6 @@ public class MultiTypeTest {
 
     @Test
     public void testHasLabels() throws Exception {
-        algo.compute();
-
         String[] expectedLabels = {"Node", "Type", "b", "c"};
         String[] actualLabels = labelsAfter.toArray(new String[0]);
 
@@ -99,7 +98,32 @@ public class MultiTypeTest {
         assertArrayEquals("New labels should be added.", actualLabels, expectedLabels);
     }
 
-    private static List listLabels() {
+
+    @Test
+    public void testNodeHasLabels() throws Exception {
+        try(Transaction transaction = api.beginTx()) {
+            Node a = api.findNode(Label.label("Node"), "name", "a");
+            assertTrue(a.hasLabel(Label.label("b"))
+                    && a.hasLabel(Label.label("c"))
+                    && a.hasLabel(Label.label("Node")));
+
+            transaction.success();
+        }
+    }
+
+    @Test
+    public void testTypeHasLabels() throws Exception {
+        try(Transaction transaction = api.beginTx()) {
+
+            Node b = api.findNode(Label.label("Type"), "name", "b");
+            assertTrue(b.hasLabel(Label.label("c"))
+                    && b.hasLabel(Label.label("Type")));
+
+            transaction.success();
+        }
+    }
+
+    private static List<String> listLabels() {
         List<String> labels = new ArrayList<>();
         try(Transaction transaction = api.beginTx()) {
             for (Label label : api.getAllLabels())
