@@ -33,7 +33,7 @@ public class MultiTypes extends Algorithm<MultiTypes> {
 
     }
 
-    public void compute() {
+    public long compute() {
         long startTime = System.currentTimeMillis();
 
         try(Transaction transaction = db.beginTx()) {
@@ -41,8 +41,7 @@ public class MultiTypes extends Algorithm<MultiTypes> {
             transaction.success();
         }
 
-        // TODO: Remove debug output
-        System.out.println("Finished calculation in milliseconds " + String.valueOf((System.currentTimeMillis()-startTime)));
+        return System.currentTimeMillis() - startTime;
     }
 
     private boolean updateNode(int nodeId) {
