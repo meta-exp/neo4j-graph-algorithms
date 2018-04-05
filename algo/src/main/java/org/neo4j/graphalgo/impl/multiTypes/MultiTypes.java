@@ -5,6 +5,7 @@ import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,25 +28,30 @@ public class MultiTypes extends Algorithm<MultiTypes> {
         this.graph = graph;
         this.edgeType = edgeType;
         this.typeLabel = typeLabel;
+        this.db = db;
         this.nodeLabelMap = new HashMap<>();
 
     }
 
     public void compute() {
-        long startTime = System.nanoTime();
-        graph.forEachNode(this::updateNode);
+        long startTime = System.currentTimeMillis();
 
+        try(Transaction transaction = db.beginTx()) {
+            graph.forEachNode(this::updateNode);
+            transaction.success();
+        }
 
-        System.out.println("Finished calculation in seconds " + String.valueOf(System.nanoTime()-startTime));
+        // TODO: Remove debug output
+        System.out.println("Finished calculation in milliseconds " + String.valueOf((System.currentTimeMillis()-startTime)));
     }
 
     private boolean updateNode(int nodeId) {
         if (isTypeNode(nodeId))
             return true;
 
-        Node nodeInstance = db.getNodeById(((Number)nodeId).longValue());
+        Node nodeInstance = db.getNodeById((long) nodeId);
 
-        for (int neighborId : graph.getAdjacentNodes(nodeId)) {
+        for (int neighborId : graph.getOutgoingNodes(nodeId)) {
             if (isTypeNode(neighborId)) {
                 nodeInstance.addLabel(getOrCreateLabel(neighborId));
             }
