@@ -1,11 +1,7 @@
 package org.neo4j.graphalgo.core;
 
 import org.neo4j.collection.primitive.PrimitiveLongIterator;
-import org.neo4j.graphalgo.core.utils.ImportProgress;
-import org.neo4j.graphalgo.core.utils.RawValues;
 import org.neo4j.graphalgo.core.utils.StatementTask;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.Statement;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
@@ -33,16 +29,6 @@ public class LabelImporter extends StatementTask<HashMap<Integer, ArrayList<Obje
         final ReadOperations readOp = statement.readOperations();
 
         Iterator<Token> labelTokens = readOp.labelsGetAllTokens();
-        Iterator<Token> relationshipTokens = readOp.relationshipTypesGetAllTokens();
-
-        while (relationshipTokens.hasNext()){
-            Token token = relationshipTokens.next();
-            PrimitiveLongIterator nodes =  readOp.nodesGetAll();
-            readOp.nodeGetRelationships(0, Direction.BOTH).next();
-            readOp.nodeGetRelationshipTypes(0);
-            readOp.relationshipsGetAll();
-            RawValues.combineIntInt(Direction.BOTH, 0, 0);
-        }
 
         HashMap<Integer, ArrayList<Object>> idLabelMap = new HashMap<>();
         while (labelTokens.hasNext()){

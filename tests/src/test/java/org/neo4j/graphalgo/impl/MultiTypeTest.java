@@ -15,17 +15,34 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 public class MultiTypeTest {
 
     private static GraphDatabaseAPI api;
-    private MultiTypes algo;
+    private static MultiTypes algo;
+    private static List<Label> labelsBefore;
+    private static List<Label> labelsAfter;
 
     @BeforeClass
     public static void setup() throws Exception {
+        setupData();
+        setupAlgo();
+    }
+
+    @AfterClass
+    public static void shutdownGraph() throws Exception {
+        api.shutdown();
+    }
+
+    private static void setupData() throws Exception {
         final String cypher =
-                        "CREATE (a:Node {name:'a'})\n" +
+                "CREATE (a:Node {name:'a'})\n" +
                         "CREATE (b:Type {name:'b'})\n" +
                         "CREATE (c:Type {name:'c'})\n" +
 
@@ -46,13 +63,7 @@ public class MultiTypeTest {
         }
     }
 
-    @AfterClass
-    public static void shutdownGraph() throws Exception {
-        api.shutdown();
-    }
-
-    @Test
-    public void testConversion() throws Exception {
+    private static void setupAlgo() throws Exception {
         final HeavyGraph graph;
 
         graph = (HeavyGraph) new GraphLoader(api)
@@ -64,26 +75,37 @@ public class MultiTypeTest {
 
         algo = new MultiTypes(graph, api, "OF_TYPE", "Type");
 
-        int i = 0;
-        int j = 0;
+        labelsBefore = listLabels();
+        algo.compute();
+        labelsAfter = listLabels();
+    }
 
-        // TODO: Clean up the test
-        try(Transaction transaction = api.beginTx()) {
-            for (Object o : api.getAllLabels())
-                i++;
-            transaction.success();
-        }
+    @Test
+    public void testAddLabels() throws Exception {
+        assertTrue("There should have been more labels than before.",
+                labelsBefore.size() < labelsAfter.size());
+    }
 
+    @Test
+    public void testHasLabels() throws Exception {
         algo.compute();
 
+        String[] expectedLabels = {"Node", "Type", "b", "c"};
+        String[] actualLabels = labelsAfter.toArray(new String[0]);
+
+        Arrays.sort(actualLabels);
+        Arrays.sort(expectedLabels);
+
+        assertArrayEquals("New labels should be added.", actualLabels, expectedLabels);
+    }
+
+    private static List listLabels() {
+        List<String> labels = new ArrayList<>();
         try(Transaction transaction = api.beginTx()) {
-            for (Label o : api.getAllLabels()) {
-                System.out.println(o.name());
-                j++;
-            }
+            for (Label label : api.getAllLabels())
+                labels.add(label.name());
             transaction.success();
         }
-
-        assertTrue("There should have been more labels than before.", j > i);
+        return labels;
     }
 }
