@@ -13,7 +13,7 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.UserFunction;
 
-public final class MultiTypesProc {
+public class MultiTypesFunc {
 
     @Context
     public GraphDatabaseAPI api;
@@ -21,8 +21,8 @@ public final class MultiTypesProc {
     @Context
     public GraphDatabaseService db;
 
-    @UserFunction
-    @Description("algo.multiTypes(edgeType:string, typeLabel:string)" +
+    @UserFunction("algo.multiTypes")
+    @Description("algo.multiTypes(edgeType:String, typeLabel:String)" +
             "- Convert a graph in that labels are nodes to which entities have an edge to " +
             "to a graph where each node has their label in the label attribute.")
     public boolean multiTypes(
