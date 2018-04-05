@@ -8,12 +8,11 @@ import org.neo4j.graphalgo.results.ComputeAllMetaPathsResult;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.procedure.Context;
-import org.neo4j.procedure.Description;
-import org.neo4j.procedure.Name;
-import org.neo4j.procedure.UserFunction;
+import org.neo4j.procedure.*;
 
-public class MultiTypesFunc {
+import java.util.stream.Stream;
+
+public class MultiTypesProc {
 
     @Context
     public GraphDatabaseAPI api;
@@ -21,11 +20,11 @@ public class MultiTypesFunc {
     @Context
     public GraphDatabaseService db;
 
-    @UserFunction("algo.multiTypes")
-    @Description("algo.multiTypes(edgeType:String, typeLabel:String)" +
+    @Procedure(value = "algo.multiTypes", mode = Mode.WRITE)
+    @Description("algo.multiTypes(edgeType:String, typeLabel:String) YIELD success" +
             "- Convert a graph in that labels are nodes to which entities have an edge to " +
             "to a graph where each node has their label in the label attribute.")
-    public boolean multiTypes(
+    public Stream<Boolean> multiTypes(
             @Name(value = "edgeType", defaultValue = "/type/object/type") String edgeType,
             @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
 
@@ -43,6 +42,6 @@ public class MultiTypesFunc {
 
         graph.release();
 
-        return true;
+        return Stream.of(true);
     }
 }
