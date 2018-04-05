@@ -33,9 +33,9 @@ public class LabelImporter extends StatementTask<HashMap<Integer, ArrayList<Obje
         final ReadOperations readOp = statement.readOperations();
 
         Iterator<Token> labelTokens = readOp.labelsGetAllTokens();
-        Iterator<Token> relationshipTokens = readOp.relationshipTypesGetAllTokens();
+        //Iterator<Token> relationshipTokens = readOp.relationshipTypesGetAllTokens();
 
-        while (relationshipTokens.hasNext()){
+        /*while (relationshipTokens.hasNext()){
             Token token = relationshipTokens.next();
             PrimitiveLongIterator nodes =  readOp.nodesGetAll();
             readOp.nodeGetRelationships(0, Direction.BOTH).next();
@@ -43,7 +43,7 @@ public class LabelImporter extends StatementTask<HashMap<Integer, ArrayList<Obje
             readOp.relationshipsGetAll();
 
             RawValues.combineIntInt(Direction.BOTH, 0, 0);
-        }
+        }*/
 
         HashMap<Integer, ArrayList<Object>> idLabelMap = new HashMap<>();
         while (labelTokens.hasNext()){
