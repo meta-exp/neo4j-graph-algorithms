@@ -12,6 +12,8 @@ import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
+
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -34,7 +36,7 @@ public class ComputeAllMetaPathsForInstancesProc {
     public Stream<ComputeAllMetaPathsResult> computeAllMetaPaths(
             @Name(value = "startNodes", defaultValue = "{}") String startNodesString,
             @Name(value = "endNodes", defaultValue = "{}") String endNodesString,
-            @Name(value = "length", defaultValue = "5") String lengthString) throws Exception {
+            @Name(value = "length", defaultValue = "5") String lengthString) throws IOException {
 
         int length = Integer.valueOf(lengthString);
 

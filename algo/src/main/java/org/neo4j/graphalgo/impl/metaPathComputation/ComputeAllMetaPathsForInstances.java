@@ -215,7 +215,6 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
 
     private String addMetaPath(ArrayList<Integer> newMetaPath) {
         String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining(" | "));
-        joinedMetaPath += "\t";
         duplicateFreeMetaPaths.add(joinedMetaPath);
 
         return joinedMetaPath;
