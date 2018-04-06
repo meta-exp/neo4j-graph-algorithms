@@ -34,6 +34,7 @@ public class ComputeAllMetaPathsTest {
 
     private static GraphDatabaseAPI api;
     private ComputeAllMetaPaths algo;
+    private HeavyGraph graph;
 
     @BeforeClass
     public static void setup() throws KernelException, Exception {
@@ -79,8 +80,6 @@ public class ComputeAllMetaPathsTest {
 
     @Before
     public void setupMetapaths() throws Exception {
-        final HeavyGraph graph;
-
         graph = (HeavyGraph) new GraphLoader(api)
                 .asUndirected(true)
                 .withLabelAsProperty(true)
@@ -88,13 +87,10 @@ public class ComputeAllMetaPathsTest {
 
 
         algo = new ComputeAllMetaPaths(graph, graph, graph, graph,3);
-
-        algo.compute();
-
     }
 
     @Test
-    public void testCalculationOfMetapaths() throws Exception {
+    public void testCalculationOfMetapaths() {
         //assertEquals(0.5, algo.similarity(), 0);
         HashSet<String> allMetaPaths = algo.computeAllMetaPaths();//this runs the code two times..
         HashSet<String> allExpectedMetaPaths = new HashSet<>(Arrays.asList("0\t4", "1\t2", "2\t2", "0 | 0 | 0\t2", "0 | 0 | 1\t2", "0 | 0 | 2\t3", "0 | 1 | 0\t4", "0 | 1 | 2\t4", "0 | 2 | 0\t13", "0 | 2 | 1\t7", "0 | 2 | 2\t5",
@@ -106,9 +102,26 @@ public class ComputeAllMetaPathsTest {
             assert(allMetaPaths.contains(expectedMetaPath));
 
         }
+        for (String mpath : allMetaPaths) {
+            System.out.println(mpath);
+        }
 
         assertEquals(33, allMetaPaths.size());//this should be 30, ...
+
     }
+
+    /*@Test
+    public void testIdConversion()
+    {
+        HashSet<Long> inputHashSet = new HashSet<>();
+        inputHashSet.add(1370370L);
+        inputHashSet.add(1568363L);
+        inputHashSet.add(311488608L);
+        inputHashSet.add(152628242L);
+        HashSet<Integer> outputHashSet = new HashSet<>();
+        algo.convertIds(graph, inputHashSet,outputHashSet);
+        System.out.println(outputHashSet);
+    }*/
 
     //TODO: write a test for the data written to the outputfile
 //something is not working with the test so its commented out.
