@@ -45,9 +45,8 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     }
 
     private boolean updateNode(int nodeId) {
-//        TODO: Should type nodes also be labeled?
-//        if (isTypeNode(nodeId))
-//            return true;
+        if (isTypeNode(nodeId))
+            return true;
 
         Node nodeInstance = db.getNodeById((long) nodeId);
 

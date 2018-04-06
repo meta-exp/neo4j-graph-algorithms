@@ -43,7 +43,8 @@ public class MultiTypeTest {
 
     private static void setupData() throws Exception {
         final String cypher =
-                "CREATE (a:Node {name:'a'})\n" +
+                        "CREATE (a:Node {name:'a'})\n" +
+                        "CREATE (d:Node {name:'d'})\n" +
                         "CREATE (b:Type {name:'b'})\n" +
                         "CREATE (c:Type {name:'c'})\n" +
 
@@ -100,24 +101,32 @@ public class MultiTypeTest {
 
 
     @Test
-    public void testNodeHasLabels() throws Exception {
-        try(Transaction transaction = api.beginTx()) {
-            Node a = api.findNode(Label.label("Node"), "name", "a");
-            assertTrue(a.hasLabel(Label.label("b"))
-                    && a.hasLabel(Label.label("c"))
-                    && a.hasLabel(Label.label("Node")));
-
-            transaction.success();
-        }
+    public void testNodeAHasCorrectLabels() throws Exception {
+        String[] labels = {"Node", "b", "c"};
+        testCorrectLabels("a", "Node", Arrays.asList(labels));
     }
 
     @Test
-    public void testTypeHasLabels() throws Exception {
+    public void testNodeDCorrectLabels() throws Exception {
+        String[] labels = {"Node"};
+        testCorrectLabels("d", "Node", Arrays.asList(labels));
+    }
+
+    @Test
+    public void testTypeHasCorrectLabels() throws Exception {
+        String[] labels = {"Type"};
+        testCorrectLabels("b", "Type", Arrays.asList(labels));
+        testCorrectLabels("c", "Type", Arrays.asList(labels));
+    }
+
+    private void testCorrectLabels(String name, String type, List<String> expectedLabels) {
         try(Transaction transaction = api.beginTx()) {
 
-            Node b = api.findNode(Label.label("Type"), "name", "b");
-            assertTrue(b.hasLabel(Label.label("c"))
-                    && b.hasLabel(Label.label("Type")));
+            Node node = api.findNode(Label.label(type), "name", name);
+
+            for (Label label : node.getLabels()) {
+                assertTrue(expectedLabels.contains(label.name()));
+            }
 
             transaction.success();
         }
