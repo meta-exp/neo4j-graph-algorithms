@@ -87,10 +87,9 @@ public class ComputeAllMetaPathsTest {
                 .load(HeavyGraphFactory.class);
 
 
-        algo = new ComputeAllMetaPaths(graph, graph, graph, graph,3);
+        algo = new ComputeAllMetaPaths(graph, graph, graph, api, graph,3);
 
         algo.compute();
-
     }
 
     @Test
@@ -136,4 +135,5 @@ public class ComputeAllMetaPathsTest {
     private interface ConsumerBool {
         void test(int integer_in);
     }*/
+
 }
