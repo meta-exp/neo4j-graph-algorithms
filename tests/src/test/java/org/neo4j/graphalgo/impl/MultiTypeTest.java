@@ -51,7 +51,8 @@ public class MultiTypeTest {
                         "CREATE" +
                         " (a)-[:OF_TYPE {cost:5, blue: 1}]->(b),\n" +
                         " (a)-[:OF_TYPE {cost:10, blue: 1}]->(c),\n" +
-                        " (b)-[:OF_TYPE {cost:5, blue: 1}]->(c)";
+                        " (b)-[:OF_TYPE {cost:5, blue: 1}]->(c), \n" +
+                        " (c)-[:DIFFERENT {cost:2, blue: 0}]->(b)";
 
         api = TestDatabaseCreator.createTestDatabase();
 
@@ -114,9 +115,16 @@ public class MultiTypeTest {
 
     @Test
     public void testTypeHasCorrectLabels() throws Exception {
-        String[] labels = {"Type"};
-        testCorrectLabels("b", "Type", Arrays.asList(labels));
-        testCorrectLabels("c", "Type", Arrays.asList(labels));
+        String[] labelsB = {"Type", "c"};
+        testCorrectLabels("b", "Type", Arrays.asList(labelsB));
+
+        String[] labelsC = {"Type"};
+        testCorrectLabels("c", "Type", Arrays.asList(labelsC));
+    }
+
+    @Test
+    public void testSingleNode() throws Exception {
+
     }
 
     private void testCorrectLabels(String name, String type, List<String> expectedLabels) {

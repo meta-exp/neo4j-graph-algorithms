@@ -32,6 +32,7 @@ public class MultiTypesProc {
         graph = (HeavyGraph) new GraphLoader(api)
                 .withDirection(Direction.OUTGOING)
                 .withLabelAsProperty(true)
+                .withLabel(typeLabel)
                 .load(HeavyGraphFactory.class);
 
         final MultiTypes algo = new MultiTypes(graph, db, edgeType, typeLabel);

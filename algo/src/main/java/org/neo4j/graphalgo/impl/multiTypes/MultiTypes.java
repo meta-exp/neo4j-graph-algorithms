@@ -2,10 +2,7 @@ package org.neo4j.graphalgo.impl.multiTypes;
 
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.impl.Algorithm;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,13 +10,13 @@ import java.util.Map;
 
 public class MultiTypes extends Algorithm<MultiTypes> {
 
+    private static final String LABEL_NAME_PROPERTY = "name";
     private HeavyGraph graph;
     private String edgeType;
     private String typeLabel;
     private GraphDatabaseService db;
     private Map<Integer, Label> nodeLabelMap;
-
-    private static final String LABEL_NAME_PROPERTY = "name";
+    private RelationshipType relationType;
 
     public MultiTypes(HeavyGraph graph,
                       GraphDatabaseService db,
@@ -30,30 +27,42 @@ public class MultiTypes extends Algorithm<MultiTypes> {
         this.typeLabel = typeLabel;
         this.db = db;
         this.nodeLabelMap = new HashMap<>();
+        this.relationType = findRelationType(edgeType);
+    }
 
+    private RelationshipType findRelationType(String edgeType) {
+        try (Transaction transaction = db.beginTx()) {
+            for (RelationshipType type : db.getAllRelationshipTypes()) {
+                if (type.name().equals(edgeType)) {
+                    return type;
+                }
+            }
+            transaction.success();
+        }
+        return null;
     }
 
     public long compute() {
         long startTime = System.currentTimeMillis();
 
-        try(Transaction transaction = db.beginTx()) {
-            graph.forEachNode(this::updateNode);
-            transaction.success();
-        }
+        graph.forEachNode(this::updateNodeNeighbors);
 
         return System.currentTimeMillis() - startTime;
     }
 
-    private boolean updateNode(int nodeId) {
-        if (isTypeNode(nodeId))
+    private boolean updateNodeNeighbors(int nodeId) {
+        if (!isTypeNode(nodeId))
             return true;
 
-        Node nodeInstance = db.getNodeById((long) nodeId);
+        try (Transaction transaction = db.beginTx()) {
+            Node nodeInstance = db.getNodeById((long) nodeId);
+            Label label = getOrCreateLabel(nodeId);
 
-        for (int neighborId : graph.getOutgoingNodes(nodeId)) {
-            if (isTypeNode(neighborId)) {
-                nodeInstance.addLabel(getOrCreateLabel(neighborId));
+            for (Relationship relation : nodeInstance.getRelationships(this.relationType, Direction.INCOMING)) {
+                relation.getStartNode().addLabel(label);
             }
+
+            transaction.success();
         }
         return true;
     }
@@ -70,7 +79,7 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     }
 
     private void createLabel(int labelNodeId) {
-        Node labelNodeInstance = db.getNodeById(((Number)labelNodeId).longValue());
+        Node labelNodeInstance = db.getNodeById(((Number) labelNodeId).longValue());
         String name = Integer.toString(labelNodeId);
         if (labelNodeInstance.hasProperty(LABEL_NAME_PROPERTY))
             name = (String) labelNodeInstance.getProperty(LABEL_NAME_PROPERTY);
@@ -79,10 +88,11 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     }
 
 
-
     /* Things I don't understand */
     @Override
-    public MultiTypes me() { return this; }
+    public MultiTypes me() {
+        return this;
+    }
 
     @Override
     public MultiTypes release() {
