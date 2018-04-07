@@ -122,11 +122,6 @@ public class MultiTypeTest {
         testCorrectLabels("c", "Type", Arrays.asList(labelsC));
     }
 
-    @Test
-    public void testSingleNode() throws Exception {
-
-    }
-
     private void testCorrectLabels(String name, String type, List<String> expectedLabels) {
         try(Transaction transaction = api.beginTx()) {
 

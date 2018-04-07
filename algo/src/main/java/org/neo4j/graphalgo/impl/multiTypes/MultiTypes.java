@@ -31,15 +31,17 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     }
 
     private RelationshipType findRelationType(String edgeType) {
+        RelationshipType returnType = null;
         try (Transaction transaction = db.beginTx()) {
             for (RelationshipType type : db.getAllRelationshipTypes()) {
                 if (type.name().equals(edgeType)) {
-                    return type;
+                    returnType = type;
+                    break;
                 }
             }
             transaction.success();
         }
-        return null;
+        return returnType;
     }
 
     public long compute() {
@@ -50,7 +52,7 @@ public class MultiTypes extends Algorithm<MultiTypes> {
         return System.currentTimeMillis() - startTime;
     }
 
-    private boolean updateNodeNeighbors(int nodeId) {
+    public boolean updateNodeNeighbors(int nodeId) {
         if (!isTypeNode(nodeId))
             return true;
 

@@ -43,6 +43,31 @@ public class MultiTypesProc {
         return Stream.of(new Result(true, executionTime));
     }
 
+
+    @Procedure(value = "algo.multiTypesSingleNode", mode = Mode.WRITE)
+    @Description("algo.multiTypesSingleNode(nodeId:Number, edgeType:String, typeLabel:String) YIELD success, executionTime" +
+            "- Add name of this node as type to all neighbors.")
+    public Stream<Result> multiTypesSingleNode(
+            @Name(value = "nodeId") Number nodeId,
+            @Name(value = "edgeType", defaultValue = "/type/object/type") String edgeType,
+            @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
+
+        final HeavyGraph graph;
+
+        graph = (HeavyGraph) new GraphLoader(api)
+                .withDirection(Direction.OUTGOING)
+                .withLabelAsProperty(true)
+                .withLabel(typeLabel)
+                .load(HeavyGraphFactory.class);
+
+        final MultiTypes algo = new MultiTypes(graph, db, edgeType, typeLabel);
+        algo.updateNodeNeighbors(nodeId.intValue());
+
+        graph.release();
+
+        return Stream.of(new Result(true, -1));
+    }
+
     public class Result {
         public boolean success;
         public long executionTime;
