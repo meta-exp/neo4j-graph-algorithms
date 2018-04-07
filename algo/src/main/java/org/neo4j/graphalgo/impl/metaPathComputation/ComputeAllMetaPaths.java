@@ -1,18 +1,15 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-import org.neo4j.graphalgo.api.*;
+import org.neo4j.graphalgo.api.Degrees;
+import org.neo4j.graphalgo.api.ArrayGraphInterface;
+import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.impl.Algorithm;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.ResourceIterable;
-import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -37,11 +34,10 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private double estimatedCount;
     private long startTime;
     private HashMap<Integer, Integer> labelDictionary;
-    GraphDatabaseAPI api;
 
-    public ComputeAllMetaPaths(HeavyGraph graph, IdMapping idMapping,
+
+    public ComputeAllMetaPaths(HeavyGraph graph,IdMapping idMapping,
                                ArrayGraphInterface arrayGraphInterface,
-                               GraphDatabaseAPI api,
                                Degrees degrees, int metaPathLength) throws IOException {
         this.graph = graph;
         this.arrayGraphInterface = arrayGraphInterface;
@@ -57,25 +53,22 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Debug.txt"));
         this.estimatedCount = Math.pow(arrayGraphInterface.getAllLabels().size(), metaPathLength + 1);
         this.labelDictionary = new HashMap<>();
-        this.api = api;
 
     }
 
     private void convertIds(IdMapping idMapping, HashSet<Long> incomingIds, HashSet<Integer> convertedIds) {
         for (long l : incomingIds) {
-            convertedIds.add(idMapping.toMappedNodeId(l));
+          convertedIds.add(idMapping.toMappedNodeId(l));
         }
     }
 
     public Result compute() {
-        List<Integer> maxDegreeNodes = getMaxDegreeNodes();
+        debugOut.println("started computation");
+        startTime = System.nanoTime();
+        HashSet<String> finalMetaPaths = computeAllMetaPaths();
+        long endTime = System.nanoTime();
 
-        /*debugOut.println("started computation");
-        startTime = System.nanoTime();*/
-        HashSet<String> finalMetaPaths = new HashSet<>();
-        /*long endTime = System.nanoTime();
-
-        List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths);
+        List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
 
         Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
 
@@ -83,28 +76,11 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             out.println(metaPath);
         }
 
-        System.out.println("calculation took: " + String.valueOf(endTime - startTime));
+        System.out.println("calculation took: " + String.valueOf(endTime-startTime));
         debugOut.println("actual amount of metaPaths: " + printCount);
-        debugOut.println("total time past: " + (endTime - startTime));
-        debugOut.println("finished computation");*/
+        debugOut.println("total time past: " + (endTime-startTime));
+        debugOut.println("finished computation");
         return new Result(finalMetaPaths);
-    }
-
-
-    private List<Integer> getMaxDegreeNodes() {
-        ArrayList<Integer> list = new ArrayList();
-        List<Integer> maxDegreeNodes;
-        Iterator<Node> nodes;
-        graph.forEachNode(list::add);
-        list.sort(new DegreeComparator(graph)); //TODO Use Array instead of list?
-
-
-        maxDegreeNodes = list.subList((int) (list.size() - Math.ceil((double) list.size() / 100)), list.size());
-        for (int nodeID : maxDegreeNodes) { //TODO always consecutive? (without gap)
-            debugOut.println("nodeID: " + nodeID + "; degree: " + graph.degree(nodeID, Direction.BOTH) + "; label: " + graph.getLabel(nodeID));
-
-        }
-        return maxDegreeNodes;
     }
 
     private int metaPathCompare(String a, String b) {
@@ -117,7 +93,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         boolean firstLabelSmaller = Integer.parseInt(partsA[0]) < Integer.parseInt(partsB[0]);
         boolean lastLabelSmaller = Integer.parseInt(partsA[partsA.length - 1]) < Integer.parseInt(partsB[partsB.length - 1]);
 
-        return firstLabelSmaller || (firstLabelEqual && lastLabelSmaller) ? -1 :
+        return  firstLabelSmaller || (firstLabelEqual && lastLabelSmaller) ? -1 :
                 firstLabelEqual && lastLabelEqual ? 0 : 1;
     }
 
@@ -194,7 +170,8 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         HashMap<Integer, Integer> currentInstances;
         int metaPathLength;
 
-        while (!param1.empty() && !param2.empty() && !param3.empty()) {
+        while(!param1.empty() && !param2.empty() && !param3.empty())
+        {
             currentMetaPath = param1.pop();
             currentInstances = param2.pop();
             metaPathLength = param3.pop();
@@ -294,8 +271,8 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private void printMetaPathAndLog(String joinedMetaPath) {
         //out.println(joinedMetaPath);
         printCount++;
-        if (printCount % ((int) estimatedCount / 50) == 0) {
-            debugOut.println("MetaPaths found: " + printCount + " estimated Progress: " + (100 * printCount / estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
+        if (printCount % ((int)estimatedCount/50) == 0) {
+            debugOut.println("MetaPaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
         }
     }
 
@@ -317,7 +294,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         //debugOut.println("finished recursion for: " + startNodeLabel);
     }
 
-    private HashMap<Integer, Integer> initInstancesRow(int startNodeLabel) {
+    private HashMap<Integer,Integer> initInstancesRow(int startNodeLabel) {
         int startNodeLabelId = labelDictionary.get(startNodeLabel);
         HashSet<Integer> row = initialInstances.get(startNodeLabelId);
         HashMap<Integer, Integer> dictRow = new HashMap<>();
@@ -327,15 +304,13 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         return dictRow;
     }
 
-    //TODO------------------------------------------------------------------------------------------------------------------
+//TODO------------------------------------------------------------------------------------------------------------------
     public Stream<ComputeAllMetaPaths.Result> resultStream() {
         return IntStream.range(0, 1).mapToObj(result -> new Result(new HashSet<>()));
     }
 
     @Override
-    public ComputeAllMetaPaths me() {
-        return this;
-    }
+    public ComputeAllMetaPaths me() { return this; }
 
     @Override
     public ComputeAllMetaPaths release() {
@@ -348,7 +323,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     public static final class Result {
 
         HashSet<String> finalMetaPaths;
-
         public Result(HashSet<String> finalMetaPaths) {
             this.finalMetaPaths = finalMetaPaths;
         }
@@ -363,23 +337,10 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         }
     }
 
-    public void weight(int index, int weight) throws Exception {
+    public void weight (int index, int weight) throws Exception {
         if (weight <= 0 || weight > 10) {
             throw new Exception("Weight needs to be in range (0;10]");
         }
         metaPathsWeights.set(index, weight);
-    }
-}
-
-class DegreeComparator implements Comparator<Integer> {
-    HeavyGraph graph;
-
-    DegreeComparator(HeavyGraph graph) {
-        this.graph = graph;
-    }
-
-    @Override
-    public int compare(Integer a, Integer b) {
-        return Integer.compare(graph.degree(a, Direction.BOTH), graph.degree(b, Direction.BOTH));
     }
 }

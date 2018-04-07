@@ -52,6 +52,7 @@ public class MetaPath extends Algorithm<MetaPath> {
     }
 
     public Result compute() {
+
         for (int nodeId : startNodeIds) {
             computeMetapathFromNode(nodeId);
         }

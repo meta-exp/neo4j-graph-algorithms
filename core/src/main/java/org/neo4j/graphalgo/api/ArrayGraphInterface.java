@@ -11,15 +11,11 @@ public interface ArrayGraphInterface {
 
     int[] getOutgoingNodes(int nodeId);
 
-    long nodeCount();
-
     int[] getIncomingNodes(int nodeId);
 
     int getLabel(int nodeId);
 
     Collection<Integer> getAllLabels();
-
-    double valueOf(final int nodeId, final double defaultValue);
 
     HashMap<Integer, String> getLabelIdToNameDict();
 }

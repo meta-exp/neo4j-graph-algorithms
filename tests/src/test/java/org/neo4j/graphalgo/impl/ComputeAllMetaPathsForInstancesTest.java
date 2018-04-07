@@ -90,7 +90,7 @@ public class ComputeAllMetaPathsForInstancesTest {
         Integer[] startNodes = {0, 4};
         Integer[] endNodes = {1, 5};
 
-        algo = new ComputeAllMetaPathsForInstances(graph, graph, graph, 4, startNodes, endNodes);
+        algo = new ComputeAllMetaPathsForInstances(graph, graph, 4, startNodes, endNodes);
 
     }
 
