@@ -4,7 +4,7 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsForInstances;
-import org.neo4j.graphalgo.results.ComputeAllMetaPathsResult;
+import org.neo4j.graphalgo.results.ComputeAllMetaPathsForInstancesResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -14,6 +14,7 @@ import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -33,7 +34,7 @@ public class ComputeAllMetaPathsForInstancesProc {
     @Description("CALL algo.computeAllMetaPathsForInstances(startNodes:int[], endNodes:int[], length:int) YIELD length: \n" +
             "Compute all metaPaths up to a metapath-length given by 'length' that start with a startNode and end with a endNOde and saves them to a File called 'Precomputed_MetaPaths_Instances.txt' \n")
 
-    public Stream<ComputeAllMetaPathsResult> computeAllMetaPaths(
+    public Stream<ComputeAllMetaPathsForInstancesResult> computeAllMetaPaths(
             @Name(value = "startNodes", defaultValue = "{}") String startNodesString,
             @Name(value = "endNodes", defaultValue = "{}") String endNodesString,
             @Name(value = "length", defaultValue = "5") String lengthString) throws IOException {
@@ -52,7 +53,7 @@ public class ComputeAllMetaPathsForInstancesProc {
             startNodes[i] = Integer.parseInt(startNodesAsStrings[i]);
         }
 
-        final ComputeAllMetaPathsResult.Builder builder = ComputeAllMetaPathsResult.builder();
+        final ComputeAllMetaPathsForInstancesResult.Builder builder = ComputeAllMetaPathsForInstancesResult.builder();
 
         final HeavyGraph graph;
 
@@ -63,7 +64,7 @@ public class ComputeAllMetaPathsForInstancesProc {
 
 
         final ComputeAllMetaPathsForInstances algo = new ComputeAllMetaPathsForInstances(graph, graph, graph, length);
-        HashSet<String> metaPaths;
+        HashMap<String, HashSet<Integer>> metaPaths = new HashMap<>();
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);
         graph.release();
