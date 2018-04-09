@@ -1,11 +1,9 @@
 package org.neo4j.graphalgo;
 
-import org.neo4j.graphalgo.core.GraphLoader;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.multiTypes.MultiTypes;
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.procedure.*;
 
@@ -27,18 +25,8 @@ public class MultiTypesProc {
             @Name(value = "edgeType", defaultValue = "/type/object/type") String edgeType,
             @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
 
-        final HeavyGraph graph;
-
-        graph = (HeavyGraph) new GraphLoader(api)
-                .withDirection(Direction.OUTGOING)
-                .withLabelAsProperty(true)
-                .withLabel(typeLabel)
-                .load(HeavyGraphFactory.class);
-
-        final MultiTypes algo = new MultiTypes(graph, db, edgeType, typeLabel);
+        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel);
         long executionTime = algo.compute();
-
-        graph.release();
 
         return Stream.of(new Result(true, executionTime));
     }
@@ -52,18 +40,12 @@ public class MultiTypesProc {
             @Name(value = "edgeType", defaultValue = "/type/object/type") String edgeType,
             @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
 
-        final HeavyGraph graph;
-
-        graph = (HeavyGraph) new GraphLoader(api)
-                .withDirection(Direction.OUTGOING)
-                .withLabelAsProperty(true)
-                .withLabel(typeLabel)
-                .load(HeavyGraphFactory.class);
-
-        final MultiTypes algo = new MultiTypes(graph, db, edgeType, typeLabel);
-        algo.updateNodeNeighbors(nodeId.intValue());
-
-        graph.release();
+        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel);
+        try (Transaction transaction = api.beginTx()) {
+            Node node = api.getNodeById(nodeId.longValue());
+            algo.updateNodeNeighbors(node);
+            transaction.success();
+        }
 
         return Stream.of(new Result(true, -1));
     }

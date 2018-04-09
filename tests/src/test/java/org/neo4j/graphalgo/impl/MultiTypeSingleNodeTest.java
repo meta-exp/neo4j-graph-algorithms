@@ -12,14 +12,12 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
-public class MultiTypeTest {
+public class MultiTypeSingleNodeTest {
 
     private static GraphDatabaseAPI api;
     private static MultiTypes algo;
@@ -39,7 +37,7 @@ public class MultiTypeTest {
 
     private static void setupData() throws Exception {
         final String cypher =
-                        "CREATE (a:Node {name:'a'})\n" +
+                "CREATE (a:Node {name:'a'})\n" +
                         "CREATE (d:Node {name:'d'})\n" +
                         "CREATE (b:Type {name:'b'})\n" +
                         "CREATE (c:Type {name:'c'})\n" +
@@ -64,54 +62,29 @@ public class MultiTypeTest {
 
     private static void setupAlgo() throws Exception {
 
-        algo = new MultiTypes( api, "OF_TYPE", "Type");
-
-        labelsBefore = listLabels();
-        algo.compute();
-        labelsAfter = listLabels();
+        algo = new MultiTypes(api, "OF_TYPE", "Type");
+        try (Transaction transaction = api.beginTx()) {
+            Node node = api.findNode(Label.label("Type"), "name", "b");
+            algo.updateNodeNeighbors(node);
+            transaction.success();
+        }
     }
-
-    @Test
-    public void testAddLabels() throws Exception {
-        assertTrue("There should have been more labels than before.",
-                labelsBefore.size() < labelsAfter.size());
-    }
-
-    @Test
-    public void testHasLabels() throws Exception {
-        String[] expectedLabels = {"Node", "Type", "b", "c"};
-        String[] actualLabels = labelsAfter.toArray(new String[0]);
-
-        Arrays.sort(actualLabels);
-        Arrays.sort(expectedLabels);
-
-        assertArrayEquals("New labels should be added.", actualLabels, expectedLabels);
-    }
-
 
     @Test
     public void testNodeAHasCorrectLabels() throws Exception {
-        String[] labels = {"Node", "b", "c"};
+        String[] labels = {"Node", "b"};
         testCorrectLabels("a", "Node", Arrays.asList(labels));
     }
 
     @Test
-    public void testNodeDCorrectLabels() throws Exception {
-        String[] labels = {"Node"};
-        testCorrectLabels("d", "Node", Arrays.asList(labels));
-    }
-
-    @Test
     public void testTypeHasCorrectLabels() throws Exception {
-        String[] labelsB = {"Type", "c"};
-        testCorrectLabels("b", "Type", Arrays.asList(labelsB));
-
-        String[] labelsC = {"Type"};
-        testCorrectLabels("c", "Type", Arrays.asList(labelsC));
+        String[] labels = {"Type"};
+        testCorrectLabels("b", "Type", Arrays.asList(labels));
+        testCorrectLabels("c", "Type", Arrays.asList(labels));
     }
 
     private void testCorrectLabels(String name, String type, List<String> expectedLabels) {
-        try(Transaction transaction = api.beginTx()) {
+        try (Transaction transaction = api.beginTx()) {
 
             Node node = api.findNode(Label.label(type), "name", name);
 
@@ -121,15 +94,5 @@ public class MultiTypeTest {
 
             transaction.success();
         }
-    }
-
-    private static List<String> listLabels() {
-        List<String> labels = new ArrayList<>();
-        try(Transaction transaction = api.beginTx()) {
-            for (Label label : api.getAllLabels())
-                labels.add(label.name());
-            transaction.success();
-        }
-        return labels;
     }
 }
