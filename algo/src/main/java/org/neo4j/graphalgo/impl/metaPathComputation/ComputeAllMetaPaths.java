@@ -68,7 +68,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
     public Result compute() {
-        List<Integer> maxDegreeNodes = getMaxDegreeNodes();
+       // List<Integer> maxDegreeNodes = getMaxDegreeNodes();
 
         /*debugOut.println("started computation");
         startTime = System.nanoTime();*/
@@ -91,21 +91,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
 
-    private List<Integer> getMaxDegreeNodes() {
-        ArrayList<Integer> list = new ArrayList();
-        List<Integer> maxDegreeNodes;
-        Iterator<Node> nodes;
-        graph.forEachNode(list::add);
-        list.sort(new DegreeComparator(graph)); //TODO Use Array instead of list?
 
-
-        maxDegreeNodes = list.subList((int) (list.size() - Math.ceil((double) list.size() / 100)), list.size());
-        for (int nodeID : maxDegreeNodes) { //TODO always consecutive? (without gap)
-            debugOut.println("nodeID: " + nodeID + "; degree: " + graph.degree(nodeID, Direction.BOTH) + "; label: " + graph.getLabel(nodeID));
-
-        }
-        return maxDegreeNodes;
-    }
 
     private int metaPathCompare(String a, String b) {
         String[] partsInitA = a.split(Pattern.quote("\t"));
@@ -368,18 +354,5 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             throw new Exception("Weight needs to be in range (0;10]");
         }
         metaPathsWeights.set(index, weight);
-    }
-}
-
-class DegreeComparator implements Comparator<Integer> {
-    HeavyGraph graph;
-
-    DegreeComparator(HeavyGraph graph) {
-        this.graph = graph;
-    }
-
-    @Override
-    public int compare(Integer a, Integer b) {
-        return Integer.compare(graph.degree(a, Direction.BOTH), graph.degree(b, Direction.BOTH));
     }
 }

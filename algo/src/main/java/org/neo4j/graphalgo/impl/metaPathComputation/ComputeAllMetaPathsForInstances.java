@@ -4,6 +4,7 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
         import org.neo4j.graphalgo.api.Degrees;
         import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
         import org.neo4j.graphdb.Direction;
+        import org.neo4j.graphdb.Node;
 
         import java.io.FileOutputStream;
         import java.io.PrintStream;
@@ -22,18 +23,16 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private int metaPathLength;
     private ArrayList<HashSet<Integer>> initialInstances;
     private int currentLabelId = 0;
-    private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
+    private HashMap<String, Integer> duplicateFreeMetaPaths = new HashMap<>();
     private PrintStream out;
     private PrintStream debugOut;
     private int printCount = 0;
     private double estimatedCount;
     private long startTime;
     private HashMap<Integer, Integer> labelDictionary;
-    Integer[] startNodes;
-    List<Integer> endNodes;
 
 
-    public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, Degrees degrees, int metaPathLength, Integer[] startNodes, Integer[] endNodes) throws IOException {
+    public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, Degrees degrees, int metaPathLength) throws IOException {
         this.graph = graph;
         this.arrayGraphInterface = arrayGraphInterface;
         this.metaPathsWeights = new ArrayList<>();
@@ -46,13 +45,10 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Instances_Debug.txt"));
         this.estimatedCount = Math.pow(arrayGraphInterface.getAllLabels().size(), metaPathLength + 1);
         this.labelDictionary = new HashMap<>();
-        this.startNodes = startNodes;
-        this.endNodes = Arrays.asList(endNodes);
         this.degrees = degrees;
     }
 
     public Result compute() {
-        debugOut.println(getMaxDegreeNodes().toArray().toString());
         debugOut.println("started computation");
         startTime = System.nanoTime();
         HashSet<String> finalMetaPaths = computeAllMetaPaths();
@@ -70,24 +66,8 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         initializeLabelDictAndInitialInstances();
         computeMetaPathsFromAllRelevantNodeLabels();
 
+        out.println(duplicateFreeMetaPaths);
         return duplicateFreeMetaPaths;
-    }
-
-    private ArrayList<Integer> getMaxDegreeNodes(){
-        ArrayList<Integer> maxNode = new ArrayList<>();
-        ArrayList<Long> maxDegree = new ArrayList<>();
-        for (int i = 0; i < arrayGraphInterface.nodeCount(); i++){
-            long degree = degrees.degree(i, Direction.BOTH);
-            if (degree >= maxDegree.get(maxDegree.size()-1)){
-                maxDegree.add(degree);
-                maxNode.add(i);
-            }
-            if (maxDegree.size() > 100){
-                maxDegree.remove(0); //TODO is 0 the first every time?
-                maxNode.remove(0);
-            }
-        }
-        return maxNode;
     }
 
     private void initializeLabelDictAndInitialInstances() {
@@ -96,8 +76,9 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
             assignIdToNodeLabel(nodeLabel);
         }
-
-        for (int node : startNodes) {
+        List<Integer> maxDegreeNodes = getMaxDegreeNodes();
+        for (int node : maxDegreeNodes) {
+            out.print(node + ":");
             initializeNode(node);
         }
     }
@@ -181,13 +162,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
                     ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                     int label = arrayGraphInterface.getLabel(nextInstancesForLabel.iterator().next()); //first element since all have the same label.
                     newMetaPath.add(label);
-
-                    for(int node : nextInstancesForLabel) {
-                        if(endNodes.contains(node)) {
-                            addAndLogMetaPath(newMetaPath);
-                            break;
-                        }
-                    }
+                    addAndLogMetaPath(newMetaPath);
 
                     //nextInstances = null; // how exactly does this work?
                     param1.push(newMetaPath);
@@ -239,14 +214,14 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     }
 
     private String addMetaPath(ArrayList<Integer> newMetaPath) {
-        String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining(" | "));
+        String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
         duplicateFreeMetaPaths.add(joinedMetaPath);
 
         return joinedMetaPath;
     }
 
     private void printMetaPathAndLog(String joinedMetaPath) {
-        out.println(joinedMetaPath);
+        out.print(joinedMetaPath); //TODO add end nodes
         printCount++;
         if (printCount % ((int)estimatedCount/50) == 0) {
             debugOut.println("MetaPaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
@@ -304,5 +279,35 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
             throw new Exception("Weight needs to be in range (0;10]");
         }
         metaPathsWeights.set(index, weight);
+    }
+
+    private List<Integer> getMaxDegreeNodes() {
+        ArrayList<Integer> list = new ArrayList();
+        List<Integer> maxDegreeNodes;
+        Iterator<Node> nodes;
+        graph.forEachNode(list::add);
+        list.sort(new DegreeComparator(graph)); //TODO Use Array instead of list?
+
+
+        maxDegreeNodes = list.subList((int) (list.size() - Math.ceil((double) list.size() / 1000)), list.size());
+        for (int nodeID : maxDegreeNodes) { //TODO always consecutive? (without gap)
+            debugOut.println("nodeID: " + nodeID + "; degree: " + graph.degree(nodeID, Direction.BOTH) + "; label: " + graph.getLabel(nodeID));
+
+        }
+        return maxDegreeNodes;
+    }
+}
+
+
+class DegreeComparator implements Comparator<Integer> {
+    HeavyGraph graph;
+
+    DegreeComparator(HeavyGraph graph) {
+        this.graph = graph;
+    }
+
+    @Override
+    public int compare(Integer a, Integer b) {
+        return Integer.compare(graph.degree(a, Direction.BOTH), graph.degree(b, Direction.BOTH));
     }
 }
