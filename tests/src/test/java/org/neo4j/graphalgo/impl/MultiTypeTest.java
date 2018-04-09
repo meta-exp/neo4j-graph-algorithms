@@ -64,7 +64,7 @@ public class MultiTypeTest {
 
     private static void setupAlgo() throws Exception {
 
-        algo = new MultiTypes( api, "OF_TYPE", "Type");
+        algo = new MultiTypes( api, "OF_TYPE", "Type", null);
 
         labelsBefore = listLabels();
         algo.compute();

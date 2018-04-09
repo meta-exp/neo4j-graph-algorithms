@@ -2,8 +2,10 @@ package org.neo4j.graphalgo.impl.multiTypes;
 
 import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.*;
+import org.neo4j.logging.Log;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.function.Consumer;
 
 public class MultiTypes extends Algorithm<MultiTypes> {
@@ -12,10 +14,13 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     private String typeLabel;
     private GraphDatabaseService db;
     private RelationshipType relationType;
+    public Log log;
 
     public MultiTypes(GraphDatabaseService db,
                       String edgeType,
-                      String typeLabel) throws IOException {
+                      String typeLabel,
+                      Log log) throws IOException {
+        this.log = log;
         this.typeLabel = typeLabel;
         this.db = db;
         this.relationType = findRelationType(edgeType);
@@ -39,12 +44,20 @@ public class MultiTypes extends Algorithm<MultiTypes> {
         long startTime = System.currentTimeMillis();
 
         try (Transaction transaction = db.beginTx()) {
-
+            LinkedList<Thread> threads = new LinkedList<>();
             ResourceIterator<Node> allNodes = db.findNodes(Label.label(typeLabel));
             while (allNodes.hasNext()) {
                 Node node = allNodes.next();
-                new LabelingThread(this::updateNodeNeighbors, node).run();
-//                this.updateNodeNeighbors(node);
+                Thread thread = new LabelingThread(this::updateNodeNeighbors, node);
+                threads.add(thread);
+                thread.run();
+            }
+            for (Thread thread : threads) {
+                try {
+                    thread.join();
+                } catch (Exception e) {
+                    log.error(e.getLocalizedMessage());
+                }
             }
             allNodes.close();
 

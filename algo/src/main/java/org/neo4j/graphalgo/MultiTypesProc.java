@@ -5,6 +5,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.logging.Log;
 import org.neo4j.procedure.*;
 
 import java.util.stream.Stream;
@@ -17,6 +18,9 @@ public class MultiTypesProc {
     @Context
     public GraphDatabaseService db;
 
+    @Context
+    public Log log;
+
     @Procedure(value = "algo.multiTypes", mode = Mode.WRITE)
     @Description("algo.multiTypes(edgeType:String, typeLabel:String) YIELD success, executionTime" +
             "- Convert a graph in that labels are nodes to which entities have an edge to " +
@@ -25,7 +29,7 @@ public class MultiTypesProc {
             @Name(value = "edgeType", defaultValue = "/type/object/type") String edgeType,
             @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
 
-        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel);
+        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel, log);
         long executionTime = algo.compute();
 
         return Stream.of(new Result(true, executionTime));
@@ -40,7 +44,7 @@ public class MultiTypesProc {
             @Name(value = "edgeType", defaultValue = "/type/object/type") String edgeType,
             @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
 
-        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel);
+        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel, log);
         try (Transaction transaction = api.beginTx()) {
             Node node = api.getNodeById(nodeId.longValue());
             algo.updateNodeNeighbors(node);
