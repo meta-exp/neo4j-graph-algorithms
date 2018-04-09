@@ -13,7 +13,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
 //TODO test correctness!
+
 public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
 
     private Degrees degrees;
@@ -58,8 +60,8 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         debugOut.println("actual amount of metaPaths: " + printCount);
         debugOut.println("total time past: " + (endTime - startTime));
         debugOut.println("finished computation");
-        duplicateFreeMetaPaths.forEach((a,b) -> out.print(a + "=" + b.stream().map(Object::toString).collect(Collectors.joining(",")) + "-"));
-        out.print("\n");
+
+        out.println(endTime - startTime);
         return new Result(finalMetaPaths);
     }
 
@@ -79,7 +81,6 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         }
         List<Integer> maxDegreeNodes = getMaxDegreeNodes();
         for (int node : maxDegreeNodes) {
-            out.print(node + ":");
             initializeNode(node);
         }
     }
@@ -197,7 +198,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
 
     private void fillNextInstances(HashSet<Integer> currentInstances, ArrayList<HashSet<Integer>> nextInstances) {
         for (int instance : currentInstances) {
-            for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) { //TODO: check if getAdjecentNodes works
+            for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) { //TODO: check if getAdjacentNodes works
                 int label = arrayGraphInterface.getLabel(nodeId); //get the id of the label of the node
                 int labelID = labelDictionary.get(label);
                 nextInstances.get(labelID).add(nodeId); // add the node to the corresponding instances array
@@ -232,8 +233,17 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     public void computeMetaPathFromNodeLabel(int startNodeLabel, int metaPathLength) {
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
         initialMetaPath.add(startNodeLabel);
-        HashSet<Integer> initialInstancesRow = initInstancesRow(startNodeLabel);
-        computeMetaPathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
+        HashSet<Integer> initialInstancesRow = initInstancesRow(startNodeLabel); //Not evenly distributed?
+        for (int instance : initialInstancesRow) {  //TODO less hacky
+            out.print(instance + ":");
+
+            HashSet<Integer> instanceHS = new HashSet<>();
+            instanceHS.add(instance);
+            computeMetaPathFromNodeLabel(initialMetaPath, instanceHS, metaPathLength - 1);
+
+            duplicateFreeMetaPaths.forEach((a, b) -> out.print(a + "=" + b.stream().map(Object::toString).collect(Collectors.joining(",")) + "-"));
+            out.print("\n");
+        }
     }
 
     private HashSet<Integer> initInstancesRow(int startNodeLabel) {
@@ -293,7 +303,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         list.sort(new DegreeComparator(graph)); //TODO Use Array instead of list?
 
 
-        maxDegreeNodes = list.subList((int) (list.size() - Math.ceil((double) list.size() / 1000)), list.size());
+        maxDegreeNodes = list.subList((int) (list.size() - Math.ceil((double) list.size() / 10000000)), list.size());
         for (int nodeID : maxDegreeNodes) { //TODO always consecutive? (without gap)
             debugOut.println("nodeID: " + nodeID + "; degree: " + graph.degree(nodeID, Direction.BOTH) + "; label: " + graph.getLabel(nodeID));
 
