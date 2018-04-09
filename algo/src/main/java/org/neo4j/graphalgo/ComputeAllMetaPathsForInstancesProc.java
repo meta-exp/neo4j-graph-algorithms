@@ -31,27 +31,13 @@ public class ComputeAllMetaPathsForInstancesProc {
     public KernelTransaction transaction;
 
     @Procedure("algo.computeAllMetaPathsForInstances")
-    @Description("CALL algo.computeAllMetaPathsForInstances(startNodes:int[], endNodes:int[], length:int) YIELD length: \n" +
-            "Compute all metaPaths up to a metapath-length given by 'length' that start with a startNode and end with a endNOde and saves them to a File called 'Precomputed_MetaPaths_Instances.txt' \n")
+    @Description("CALL algo.computeAllMetaPathsForInstances(length:int) YIELD length: \n" +
+            "Compute all metaPaths up to a metapath-length given by 'length' that start with a startNode and end with a endNode and saves them to a File called 'Precomputed_MetaPaths_Instances.txt' \n")
 
     public Stream<ComputeAllMetaPathsForInstancesResult> computeAllMetaPaths(
-            @Name(value = "startNodes", defaultValue = "{}") String startNodesString,
-            @Name(value = "endNodes", defaultValue = "{}") String endNodesString,
             @Name(value = "length", defaultValue = "5") String lengthString) throws IOException {
 
         int length = Integer.valueOf(lengthString);
-
-        String[] endNodesAsStrings = endNodesString.substring(1,endNodesString.length()-1).split(Pattern.quote(", "));
-        Integer[] endNodes = new Integer[endNodesAsStrings.length];
-        for (int i = 0; i < endNodesAsStrings.length; i++) {
-            endNodes[i] = Integer.parseInt(endNodesAsStrings[i]);
-        }
-
-        String[] startNodesAsStrings = startNodesString.substring(1,startNodesString.length()-1).split(Pattern.quote(", "));
-        Integer[] startNodes = new Integer[startNodesAsStrings.length];
-        for (int i = 0; i < startNodesAsStrings.length; i++) {
-            startNodes[i] = Integer.parseInt(startNodesAsStrings[i]);
-        }
 
         final ComputeAllMetaPathsForInstancesResult.Builder builder = ComputeAllMetaPathsForInstancesResult.builder();
 
