@@ -7,6 +7,7 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
         import java.io.PrintStream;
         import java.io.*;
         import java.util.*;
+        import java.util.regex.Pattern;
         import java.util.stream.Collectors;
         import java.util.stream.IntStream;
         import java.util.stream.Stream;
@@ -45,8 +46,9 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         this.estimatedCount = Math.pow(arrayGraphInterface.getAllLabels().size(), metaPathLength + 1);
         this.labelDictionary = new HashMap<>();
         this.startNodes = startNodes;
+        this.highDegreeIndex = new HashMap<>();
         this.endNodes = Arrays.asList(endNodes);
-        this.highDegreeIndex = new HashMap<>();//TODO: implement
+        readPrecomputedData();
     }
 
     public Result compute() {
@@ -63,11 +65,46 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     }
 
     public HashSet<String> computeAllMetaPaths() {
-
         initializeLabelDictAndInitialInstances();
         computeMetaPathsFromAllRelevantNodeLabels();
 
         return duplicateFreeMetaPaths;
+    }
+
+    private void readPrecomputedData() {
+        try(BufferedReader br = new BufferedReader(new FileReader("Precomputed_MetaPaths_Instances_Index.txt"))) {
+            String line = br.readLine();
+
+            while (line != null) {
+                String[] parts = line.split(Pattern.quote(":"));
+                String[] partsForInstance = parts[1].split(Pattern.quote("-"));
+                HashSet<Pair<ArrayList<Integer>, ArrayList<Integer>>> precomputedForInstance = new HashSet<>();
+                for (String part : partsForInstance) {
+                    String[] pair = part.split(Pattern.quote(";"));
+
+                    String[] pathElements = pair[0].split(Pattern.quote("|"));
+                    ArrayList<Integer> pair0 = new ArrayList<>();
+                    for (String pathElement : pathElements) {
+                        pair0.add(Integer.valueOf(pathElement));
+                    }
+                    String[] endElements = pair[1].split(Pattern.quote(","));
+                    ArrayList<Integer> pair1 = new ArrayList<>();
+                    for (String endElement : endElements) {
+                        pair1.add(Integer.valueOf(endElement));
+                    }
+
+                    Pair<ArrayList<Integer>, ArrayList<Integer>> resultPair = new Pair<>(pair0, pair1);
+                    precomputedForInstance.add(resultPair);
+                }
+
+                highDegreeIndex.put(Integer.valueOf(parts[0]), precomputedForInstance);
+                line = br.readLine();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initializeLabelDictAndInitialInstances() {
