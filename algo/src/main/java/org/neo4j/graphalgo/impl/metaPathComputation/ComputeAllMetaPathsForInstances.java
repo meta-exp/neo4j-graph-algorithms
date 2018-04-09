@@ -1,5 +1,6 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
+        import javafx.util.Pair;
         import org.neo4j.graphalgo.api.ArrayGraphInterface;
         import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
         import java.io.FileOutputStream;
@@ -27,6 +28,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private HashMap<Integer, Integer> labelDictionary;
     Integer[] startNodes;
     List<Integer> endNodes;
+    HashMap<Integer, HashSet<Pair<ArrayList<Integer>, ArrayList<Integer>>>> highDegreeIndex;
 
 
     public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, int metaPathLength, Integer[] startNodes, Integer[] endNodes) throws IOException {
@@ -44,6 +46,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         this.labelDictionary = new HashMap<>();
         this.startNodes = startNodes;
         this.endNodes = Arrays.asList(endNodes);
+        this.highDegreeIndex = new HashMap<>();//TODO: implement
     }
 
     public Result compute() {
@@ -142,15 +145,8 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
                 continue;
             }
 
-            //debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Length of currentInstances: " + currentInstances.size());
-            //debugOut.println(Thread.currentThread().getName() + ": MetaPathLength: " + metaPathLength);
-            //debugOut.println(Thread.currentThread().getName() + ": _________________");
-
             ArrayList<HashSet<Integer>> nextInstances = allocateNextInstances();
-            //long startTime = System.nanoTime();
-            fillNextInstances(currentInstances, nextInstances);
-            //long endTime = System.nanoTime();
-            //debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Time for next instanceCalculation: " + (endTime - startTime));
+            fillNextInstances(currentInstances, nextInstances, currentMetaPath, metaPathLength);
             currentInstances = null;//not sure if this helps or not
             for (int i = 0; i < nextInstances.size(); i++) {
                 HashSet<Integer> nextInstancesForLabel = nextInstances.get(i);
@@ -197,12 +193,28 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         return nextInstances;
     }
 
-    private void fillNextInstances(HashSet<Integer> currentInstances, ArrayList<HashSet<Integer>> nextInstances) {
+    private void fillNextInstances(HashSet<Integer> currentInstances, ArrayList<HashSet<Integer>> nextInstances, ArrayList<Integer> currentMetaPath, int metaPathLength) {
         for (int instance : currentInstances) {
             for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) { //TODO: check if getAdjecentNodes works
                 int label = arrayGraphInterface.getLabel(nodeId); //get the id of the label of the node
-                int labelID = labelDictionary.get(label);
-                nextInstances.get(labelID).add(nodeId); // add the node to the corresponding instances array
+                if (!highDegreeIndex.containsKey(nodeId)) {
+                    int labelID = labelDictionary.get(label);
+                    nextInstances.get(labelID).add(nodeId); // add the node to the corresponding instances array
+                }
+                else
+                {
+                    for (Pair<ArrayList<Integer>, ArrayList<Integer>> metaPathWithEnds : highDegreeIndex.get(nodeId)){
+                        ArrayList<Integer> endCopy = (ArrayList<Integer>) metaPathWithEnds.getValue().clone();
+                        endCopy.retainAll(endNodes);
+                        if(!endCopy.isEmpty() && metaPathLength >= metaPathWithEnds.getKey().size())//TODO: test if this works
+                        {
+                            ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
+                            newMetaPath.add(label);
+                            newMetaPath.addAll(metaPathWithEnds.getKey());
+                            addAndLogMetaPath(newMetaPath);
+                        }
+                    }
+                }
             }
         }
     }
