@@ -1,6 +1,5 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-        import javafx.util.Pair;
         import org.neo4j.graphalgo.api.ArrayGraphInterface;
         import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
         import java.io.FileOutputStream;
@@ -29,7 +28,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private HashMap<Integer, Integer> labelDictionary;
     Integer[] startNodes;
     List<Integer> endNodes;
-    HashMap<Integer, HashSet<Pair<ArrayList<Integer>, ArrayList<Integer>>>> highDegreeIndex;
+    HashMap<Integer, HashSet<AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>>>> highDegreeIndex;
 
 
     public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, int metaPathLength, Integer[] startNodes, Integer[] endNodes) throws IOException {
@@ -78,7 +77,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
             while (line != null) {
                 String[] parts = line.split(Pattern.quote(":"));
                 String[] partsForInstance = parts[1].split(Pattern.quote("-"));
-                HashSet<Pair<ArrayList<Integer>, ArrayList<Integer>>> precomputedForInstance = new HashSet<>();
+                HashSet<AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>>> precomputedForInstance = new HashSet<>();
                 for (String part : partsForInstance) {
                     String[] pair = part.split(Pattern.quote(";"));
 
@@ -93,7 +92,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
                         pair1.add(Integer.valueOf(endElement));
                     }
 
-                    Pair<ArrayList<Integer>, ArrayList<Integer>> resultPair = new Pair<>(pair0, pair1);
+                    AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>> resultPair = new AbstractMap.SimpleEntry<>(pair0, pair1);
                     precomputedForInstance.add(resultPair);
                 }
 
@@ -240,7 +239,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
                 }
                 else
                 {
-                    for (Pair<ArrayList<Integer>, ArrayList<Integer>> metaPathWithEnds : highDegreeIndex.get(nodeId)){
+                    for (AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>> metaPathWithEnds : highDegreeIndex.get(nodeId)){
                         ArrayList<Integer> endCopy = (ArrayList<Integer>) metaPathWithEnds.getValue().clone();
                         endCopy.retainAll(endNodes);
                         if(!endCopy.isEmpty() && metaPathLength >= metaPathWithEnds.getKey().size())//TODO: test if this works
