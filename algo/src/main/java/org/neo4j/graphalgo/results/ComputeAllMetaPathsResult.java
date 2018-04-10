@@ -8,7 +8,7 @@ import java.util.Vector;
 
 public class ComputeAllMetaPathsResult {
 
-    final String metaPaths;
+    public final String metaPaths;
 
     private ComputeAllMetaPathsResult(Vector<String> metaPaths) {
         this.metaPaths = "";
