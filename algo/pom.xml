@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.neo4j</groupId>
         <artifactId>graph-algorithms-parent</artifactId>
-        <version>3.2.5.2</version>
+        <version>3.3.0.0</version>
     </parent>
 
     <artifactId>graph-algorithms-algo</artifactId>
@@ -27,14 +27,6 @@
             <groupId>com.carrotsearch</groupId>
             <artifactId>hppc</artifactId>
             <version>0.7.2</version>
-        </dependency>
-
-        <!--  Gson: Java to Json conversion -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.8.2</version>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>

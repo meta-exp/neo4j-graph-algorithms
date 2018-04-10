@@ -73,7 +73,7 @@ public class GraphSetup {
      * batchSize for parallel compuation
      */
     public final int batchSize;
-
+    // TODO
     public final boolean accumulateWeights;
     // tells whether the underlying array should be sorted during import
     public final boolean sort;
