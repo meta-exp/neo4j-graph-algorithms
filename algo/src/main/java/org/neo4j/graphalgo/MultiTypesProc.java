@@ -2,8 +2,6 @@ package org.neo4j.graphalgo;
 
 import org.neo4j.graphalgo.impl.multiTypes.MultiTypes;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.*;
@@ -30,7 +28,10 @@ public class MultiTypesProc {
             @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
 
         final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel, log);
-        long executionTime = algo.compute();
+
+        long startTime = System.currentTimeMillis();
+        algo.compute();
+        long executionTime = System.currentTimeMillis() - startTime;
 
         return Stream.of(new Result(true, executionTime));
     }
@@ -45,13 +46,15 @@ public class MultiTypesProc {
             @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
 
         final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel, log);
-        try (Transaction transaction = api.beginTx()) {
-            Node node = api.getNodeById(nodeId.longValue());
-            algo.updateNodeNeighbors(node);
-            transaction.success();
-        }
+        long startTime = System.currentTimeMillis();
+//        try (Transaction transaction = api.beginTx()) {
+//            Node node = api.getNodeById(nodeId.longValue());
+            algo.updateNodeNeighbors(nodeId.longValue());
+//            transaction.success();
+//        }
+        long executionTime = System.currentTimeMillis() - startTime;
 
-        return Stream.of(new Result(true, -1));
+        return Stream.of(new Result(true, executionTime));
     }
 
     public class Result {

@@ -6,15 +6,16 @@ import org.neo4j.logging.Log;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class MultiTypes extends Algorithm<MultiTypes> {
 
     private static final String LABEL_NAME_PROPERTY = "name";
+    public Log log;
     private String typeLabel;
     private GraphDatabaseService db;
     private RelationshipType relationType;
-    public Log log;
 
     public MultiTypes(GraphDatabaseService db,
                       String edgeType,
@@ -40,38 +41,53 @@ public class MultiTypes extends Algorithm<MultiTypes> {
         return returnType;
     }
 
-    public long compute() {
-        long startTime = System.currentTimeMillis();
+    public void compute() {
+
+        LinkedList<Thread> threads = new LinkedList<>();
+
+        for (long nodeId : getTypeNodeIds()) {
+            Thread thread = new LabelingThread(this::updateNodeNeighbors, nodeId);
+            threads.add(thread);
+            thread.run();
+        }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (Exception e) {
+                log.error(e.getLocalizedMessage());
+            }
+        }
+    }
+
+    private List<Long> getTypeNodeIds() {
+        LinkedList<Long> typeNodeIds = new LinkedList<>();
 
         try (Transaction transaction = db.beginTx()) {
-            LinkedList<Thread> threads = new LinkedList<>();
             ResourceIterator<Node> allNodes = db.findNodes(Label.label(typeLabel));
             while (allNodes.hasNext()) {
                 Node node = allNodes.next();
-                Thread thread = new LabelingThread(this::updateNodeNeighbors, node);
-                threads.add(thread);
-                thread.run();
-            }
-            for (Thread thread : threads) {
-                try {
-                    thread.join();
-                } catch (Exception e) {
-                    log.error(e.getLocalizedMessage());
-                }
+                typeNodeIds.add(node.getId());
             }
             allNodes.close();
 
             transaction.success();
         }
-        return System.currentTimeMillis() - startTime;
+
+        return typeNodeIds;
     }
 
-    public boolean updateNodeNeighbors(Node nodeInstance) {
 
-        Label label = getLabel(nodeInstance);
+    public boolean updateNodeNeighbors(long nodeId) {
+        try (Transaction transaction = db.beginTx()) {
+            Node nodeInstance = db.getNodeById(nodeId);
 
-        for (Relationship relation : nodeInstance.getRelationships(this.relationType, Direction.INCOMING)) {
-            relation.getStartNode().addLabel(label);
+            Label label = getLabel(nodeInstance);
+
+            for (Relationship relation : nodeInstance.getRelationships(this.relationType, Direction.INCOMING)) {
+                relation.getStartNode().addLabel(label);
+            }
+            transaction.success();
         }
 
         return true;
@@ -97,10 +113,10 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     }
 
     class LabelingThread extends Thread {
-        private Consumer<Node> updateMethod;
-        private Node typeNode;
+        private Consumer<Long> updateMethod;
+        private long typeNode;
 
-        LabelingThread(Consumer<Node> updateMethod, Node typeNode) {
+        LabelingThread(Consumer<Long> updateMethod, long typeNode) {
             this.updateMethod = updateMethod;
             this.typeNode = typeNode;
         }

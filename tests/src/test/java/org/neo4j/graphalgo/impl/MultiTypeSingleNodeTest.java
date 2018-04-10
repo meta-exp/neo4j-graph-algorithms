@@ -65,7 +65,7 @@ public class MultiTypeSingleNodeTest {
         algo = new MultiTypes(api, "OF_TYPE", "Type", null);
         try (Transaction transaction = api.beginTx()) {
             Node node = api.findNode(Label.label("Type"), "name", "b");
-            algo.updateNodeNeighbors(node);
+            algo.updateNodeNeighbors(node.getId());
             transaction.success();
         }
     }
