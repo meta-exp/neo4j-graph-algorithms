@@ -1,6 +1,6 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-import javafx.util.Pair;
+
 import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.api.IdMapping;
@@ -36,7 +36,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private double estimatedCount;
     private long startTime;
     private HashMap<Integer, Integer> labelDictionary;
-    private HashMap<Pair<Integer, Integer>, HashSet<Integer>> metaPathIndex;
+    private HashMap<AbstractMap.SimpleEntry<Integer, Integer>, HashSet<Integer>> metaPathIndex;
 
 
     public ComputeAllMetaPaths(HeavyGraph graph,IdMapping idMapping,
@@ -81,7 +81,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             out.println(metaPath);
         }
 
-        for (Pair<Integer, Integer> pair: metaPathIndex.keySet()) {
+        for (AbstractMap.SimpleEntry<Integer, Integer> pair: metaPathIndex.keySet()) {
             indexOut.println(pair + "\t" + metaPathIndex.get(pair));
         }
 
@@ -168,16 +168,16 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         }
     }
 
-    private void computeMetaPathFromNodeLabel(ArrayList<Integer> pCurrentMetaPath, HashMap<Integer,Pair<ArrayList<Integer>, Integer>> pCurrentInstances, int pMetaPathLength) {
+    private void computeMetaPathFromNodeLabel(ArrayList<Integer> pCurrentMetaPath, HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>> pCurrentInstances, int pMetaPathLength) {
         Stack<ArrayList<Integer>> param1 = new Stack();
-        Stack<HashMap<Integer,Pair<ArrayList<Integer>, Integer>>> param2 = new Stack();
+        Stack<HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>>> param2 = new Stack();
         Stack<Integer> param3 = new Stack();
         param1.push(pCurrentMetaPath);
         param2.push(pCurrentInstances);
         param3.push(pMetaPathLength);
 
         ArrayList<Integer> currentMetaPath;
-        HashMap<Integer,Pair<ArrayList<Integer>, Integer>> currentInstances;
+        HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>> currentInstances;
         int metaPathLength;
 
         while(!param1.empty() && !param2.empty() && !param3.empty())
@@ -191,17 +191,17 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
                 continue;
             }
 
-            ArrayList<HashMap<Integer,Pair<ArrayList<Integer>, Integer>>> nextInstances = allocateNextInstances();
+            ArrayList<HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>>> nextInstances = allocateNextInstances();
             fillNextInstances(currentInstances, nextInstances);
             currentInstances = null;//not sure if this helps or not
             for (int i = 0; i < nextInstances.size(); i++) {
-                HashMap<Integer,Pair<ArrayList<Integer>, Integer>> nextInstancesForLabel = nextInstances.get(i);
+                HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>> nextInstancesForLabel = nextInstances.get(i);
                 if (!nextInstancesForLabel.isEmpty()) {
                     ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                     int label = arrayGraphInterface.getLabel(nextInstancesForLabel.keySet().iterator().next()); //first element since all have the same label.
                     newMetaPath.add(label);
                     long instanceCountSum = 0;
-                    for (Pair<ArrayList<Integer>, Integer> pair : nextInstancesForLabel.values()) {//refactor to stream?
+                    for (AbstractMap.SimpleEntry<ArrayList<Integer>, Integer> pair : nextInstancesForLabel.values()) {//refactor to stream?
                         instanceCountSum += pair.getValue();
                     }
 
@@ -236,7 +236,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
     private void addMetaPathToIndex(int startInstance, int endInstance, int metaPathId) {
-        Pair<Integer, Integer> key = new Pair<>(startInstance, endInstance);
+        AbstractMap.SimpleEntry<Integer, Integer> key = new AbstractMap.SimpleEntry<>(startInstance, endInstance);
         HashSet<Integer> metaPathIds  = metaPathIndex.get(key);
         if (metaPathIds == null) metaPathIds = new HashSet<>();
         metaPathIds.add(metaPathId);
@@ -244,8 +244,8 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
 
-    private ArrayList<HashMap<Integer,Pair<ArrayList<Integer>, Integer>>> allocateNextInstances() {
-        ArrayList<HashMap<Integer,Pair<ArrayList<Integer>, Integer>>> nextInstances = new ArrayList<>(arrayGraphInterface.getAllLabels().size());
+    private ArrayList<HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>>> allocateNextInstances() {
+        ArrayList<HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>>> nextInstances = new ArrayList<>(arrayGraphInterface.getAllLabels().size());
         for (int i = 0; i < arrayGraphInterface.getAllLabels().size(); i++) {
             nextInstances.add(new HashMap<>());
         }
@@ -253,7 +253,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         return nextInstances;
     }
 
-    private void fillNextInstances(HashMap<Integer,Pair<ArrayList<Integer>, Integer>> currentInstances, ArrayList<HashMap<Integer,Pair<ArrayList<Integer>, Integer>>> nextInstances) {
+    private void fillNextInstances(HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>> currentInstances, ArrayList<HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>>> nextInstances) {
         for (int instance : currentInstances.keySet()) {
             for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) { //TODO: check if getAdjecentNodes works
                 int label = arrayGraphInterface.getLabel(nodeId); //get the id of the label of the node
@@ -267,7 +267,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
                 sources.addAll((incrementMissing ? new ArrayList<>() : nextInstances.get(labelID).get(nodeId).getKey()));
                 int count = oldCount + (incrementMissing ? 0 : nextInstances.get(labelID).get(nodeId).getValue());
 
-                nextInstances.get(labelID).put(nodeId, new Pair<>(sources, count)); // add the node to the corresponding instances array
+                nextInstances.get(labelID).put(nodeId, new AbstractMap.SimpleEntry<>(sources, count)); // add the node to the corresponding instances array
             }
         }
     }
@@ -318,19 +318,19 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     public void computeMetaPathFromNodeLabel(int startNodeLabel, int metaPathLength) {
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
         initialMetaPath.add(startNodeLabel);
-        HashMap<Integer,Pair<ArrayList<Integer>, Integer>> initialInstancesRow = initInstancesRow(startNodeLabel);
+        HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>> initialInstancesRow = initInstancesRow(startNodeLabel);
         computeMetaPathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
         //debugOut.println("finished recursion for: " + startNodeLabel);
     }
 
-    private HashMap<Integer,Pair<ArrayList<Integer>, Integer>> initInstancesRow(int startNodeLabel) {
+    private HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>> initInstancesRow(int startNodeLabel) {
         int startNodeLabelId = labelDictionary.get(startNodeLabel);
         HashSet<Integer> row = initialInstances.get(startNodeLabelId);
-        HashMap<Integer,Pair<ArrayList<Integer>, Integer>> dictRow = new HashMap<>();
+        HashMap<Integer,AbstractMap.SimpleEntry<ArrayList<Integer>, Integer>> dictRow = new HashMap<>();
         for (int instance : row) {
             ArrayList<Integer> sources = new ArrayList<>();
             sources.add(instance);
-            dictRow.put(instance, new Pair<>(sources ,1));
+            dictRow.put(instance, new AbstractMap.SimpleEntry<>(sources ,1));
         }
         return dictRow;
     }
