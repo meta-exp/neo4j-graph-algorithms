@@ -2,8 +2,6 @@ package org.neo4j.graphalgo.results;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Vector;
-
 
 public class ComputeAllMetaPathsForInstancesResult {
 

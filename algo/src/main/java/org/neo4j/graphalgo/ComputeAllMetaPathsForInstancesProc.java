@@ -31,13 +31,15 @@ public class ComputeAllMetaPathsForInstancesProc {
     public KernelTransaction transaction;
 
     @Procedure("algo.computeAllMetaPathsForInstances")
-    @Description("CALL algo.computeAllMetaPathsForInstances(length:int) YIELD length: \n" +
+    @Description("CALL algo.computeAllMetaPathsForInstances(length:int, ratioHighDegreeNodes:int) YIELD length: \n" +
             "Compute all metaPaths up to a metapath-length given by 'length' that start with a startNode and end with a endNode and saves them to a File called 'Precomputed_MetaPaths_Instances.txt' \n")
 
     public Stream<ComputeAllMetaPathsForInstancesResult> computeAllMetaPaths(
-            @Name(value = "length", defaultValue = "5") String lengthString) throws IOException {
+            @Name(value = "length", defaultValue = "5") String lengthString,
+            @Name(value = "ratioHighDegreeNodes", defaultValue = "1000000") String ratioHighDegreeNodesString) throws IOException {
 
         int length = Integer.valueOf(lengthString);
+        int ratioHighDegreeNodes = Integer.valueOf(ratioHighDegreeNodesString);
 
         final ComputeAllMetaPathsForInstancesResult.Builder builder = ComputeAllMetaPathsForInstancesResult.builder();
 
@@ -49,7 +51,7 @@ public class ComputeAllMetaPathsForInstancesProc {
                 .load(HeavyGraphFactory.class);
 
 
-        final ComputeAllMetaPathsForInstances algo = new ComputeAllMetaPathsForInstances(graph, graph, graph, length);
+        final ComputeAllMetaPathsForInstances algo = new ComputeAllMetaPathsForInstances(graph, graph, graph, length, ratioHighDegreeNodes);
         HashMap<String, HashSet<Integer>> metaPaths = new HashMap<>();
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);

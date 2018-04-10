@@ -23,7 +23,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private ArrayGraphInterface arrayGraphInterface;
     private ArrayList<Integer> metaPathsWeights;
     private int metaPathLength;
-    private ArrayList<HashSet<Integer>> initialInstances;
+    //private ArrayList<HashSet<Integer>> initialInstances;
     private int currentLabelId = 0;
     private HashMap<String, HashSet<Integer>> duplicateFreeMetaPaths = new HashMap<>();
     private PrintStream out;
@@ -32,27 +32,31 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private double estimatedCount;
     private long startTime;
     private HashMap<Integer, Integer> labelDictionary;
+    private int ratioHighDegreeNodes;
+    private List<Integer> maxDegreeNodes;
 
 
-    public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, Degrees degrees, int metaPathLength) throws IOException {
+    public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, Degrees degrees, int metaPathLength, int ratioHighDegreeNodes) throws IOException {
         this.graph = graph;
         this.arrayGraphInterface = arrayGraphInterface;
         this.metaPathsWeights = new ArrayList<>();
         this.metaPathLength = metaPathLength;
-        this.initialInstances = new ArrayList<>();
-        for (int i = 0; i < arrayGraphInterface.getAllLabels().size(); i++) {
+        //this.initialInstances = new ArrayList<>();
+        /*for (int i = 0; i < arrayGraphInterface.getAllLabels().size(); i++) {
             this.initialInstances.add(new HashSet<>());
-        }
+        }*/
         this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Instances.txt"));//ends up in root/tests //or in dockerhome
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Instances_Debug.txt"));
         this.estimatedCount = Math.pow(arrayGraphInterface.getAllLabels().size(), metaPathLength + 1);
         this.labelDictionary = new HashMap<>();
         this.degrees = degrees;
+        this.ratioHighDegreeNodes = ratioHighDegreeNodes;
     }
 
     public Result compute() {
         debugOut.println("started computation");
         startTime = System.nanoTime();
+        maxDegreeNodes = getMaxDegreeNodes();
         HashMap<String, HashSet<Integer>> finalMetaPaths = computeAllMetaPaths();
         long endTime = System.nanoTime();
 
@@ -79,18 +83,6 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
             assignIdToNodeLabel(nodeLabel);
         }
-        List<Integer> maxDegreeNodes = getMaxDegreeNodes();
-        for (int node : maxDegreeNodes) {
-            initializeNode(node);
-        }
-    }
-
-    private boolean initializeNode(int node) {
-        int nodeLabel = arrayGraphInterface.getLabel(node);
-        //createMetaPathWithLengthOne(nodeLabel);
-        Integer nodeLabelId = labelDictionary.get(nodeLabel);//probably not the best way to initialize labelDictionary
-        initialInstances.get(nodeLabelId).add(node);
-        return true;
     }
 
     private int assignIdToNodeLabel(int nodeLabel) {
@@ -109,8 +101,8 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private void computeMetaPathsFromAllRelevantNodeLabels() {//TODO: rework for Instances
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         int i = 0;
-        for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread--" + i, nodeLabel, metaPathLength);
+        for (int nodeID : maxDegreeNodes) {
+            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread--" + i, nodeID, metaPathLength);
             thread.start();
             threads.add(thread);
             i++;
@@ -230,27 +222,24 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         }
     }
 
-    public void computeMetaPathFromNodeLabel(int startNodeLabel, int metaPathLength) {
+    public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) {
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
-        initialMetaPath.add(startNodeLabel);
-        HashSet<Integer> initialInstancesRow = initInstancesRow(startNodeLabel); //Not evenly distributed?
-        for (int instance : initialInstancesRow) {  //TODO less hacky
-            out.print(instance + ":");
+        initialMetaPath.add(arrayGraphInterface.getLabel(nodeID));
+        //TODO less hacky
+        out.print(nodeID + ":");
+        HashSet<Integer> instanceHS = new HashSet<>();
+        instanceHS.add(nodeID);
+        computeMetaPathFromNodeLabel(initialMetaPath, instanceHS, metaPathLength - 1);
 
-            HashSet<Integer> instanceHS = new HashSet<>();
-            instanceHS.add(instance);
-            computeMetaPathFromNodeLabel(initialMetaPath, instanceHS, metaPathLength - 1);
-
-            duplicateFreeMetaPaths.forEach((a, b) -> out.print(a + "=" + b.stream().map(Object::toString).collect(Collectors.joining(",")) + "-"));
-            out.print("\n");
-        }
+        duplicateFreeMetaPaths.forEach((a, b) -> out.print(a + "=" + b.stream().map(Object::toString).collect(Collectors.joining(",")) + "-"));
+        out.print("\n");
     }
-
+/*
     private HashSet<Integer> initInstancesRow(int startNodeLabel) {
         int startNodeLabelId = labelDictionary.get(startNodeLabel);
         HashSet<Integer> row = initialInstances.get(startNodeLabelId);
         return row;
-    }
+    }*/
 
     //TODO------------------------------------------------------------------------------------------------------------------
     public Stream<org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths.Result> resultStream() {
@@ -303,7 +292,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         list.sort(new DegreeComparator(graph)); //TODO Use Array instead of list?
 
 
-        maxDegreeNodes = list.subList((int) (list.size() - Math.ceil((double) list.size() / 10000000)), list.size());
+        maxDegreeNodes = list.subList((int) (list.size() - Math.ceil((double) list.size() / ratioHighDegreeNodes)), list.size());
         for (int nodeID : maxDegreeNodes) { //TODO always consecutive? (without gap)
             debugOut.println("nodeID: " + nodeID + "; degree: " + graph.degree(nodeID, Direction.BOTH) + "; label: " + graph.getLabel(nodeID));
 
