@@ -11,9 +11,9 @@ public class ComputeAllMetaPathsResult {
     final String metaPaths;
 
     private ComputeAllMetaPathsResult(Vector<String> metaPaths) {
-
-        Gson gson = new Gson();
-        this.metaPaths = gson.toJson(metaPaths);
+        this.metaPaths = "";
+        //Gson gson = new Gson();
+        //this.metaPaths = gson.toJson(metaPaths);
     }
 
     public static Builder builder() {
