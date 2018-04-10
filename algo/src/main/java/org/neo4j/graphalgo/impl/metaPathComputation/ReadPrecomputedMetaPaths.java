@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class ReadPrecomputedMetaPaths extends MetaPathComputation {
 
-    public ReadPrecomputedMetaPaths() throws FileNotFoundException {
+    public ReadPrecomputedMetaPaths() {
 
     }
 

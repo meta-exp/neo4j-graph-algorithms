@@ -1,8 +1,5 @@
-package org.neo4j.graphalgo;
+package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import org.neo4j.graphalgo.core.GraphLoader;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.metaPathComputation.ReadPrecomputedMetaPaths;
 import org.neo4j.graphalgo.results.metaPathComputationResults.MetaPathComputationResult;
 import org.neo4j.kernel.api.KernelTransaction;
@@ -36,18 +33,10 @@ public class ReadPrecomputedMetaPathsProc {
 
         final MetaPathComputationResult.Builder builder = MetaPathComputationResult.builder();
 
-        final HeavyGraph graph;
-
-        graph = (HeavyGraph) new GraphLoader(api)
-                .asUndirected(true)
-                .withLabelAsProperty(true)
-                .load(HeavyGraphFactory.class);
-
         final ReadPrecomputedMetaPaths algo = new ReadPrecomputedMetaPaths();
         HashMap<String, Long> metaPathsDict;
         metaPathsDict = algo.readMetaPaths(filePath).getMetaPathsDict();
         builder.setMetaPathsDict(metaPathsDict);
-        graph.release();
         return Stream.of(builder.build());
     }
 

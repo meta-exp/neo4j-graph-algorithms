@@ -1,8 +1,5 @@
-package org.neo4j.graphalgo;
+package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import org.neo4j.graphalgo.core.GraphLoader;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.FilterMetaPaths;
 import org.neo4j.graphalgo.results.metaPathComputationResults.MetaPathComputationResult;
 import org.neo4j.kernel.api.KernelTransaction;
@@ -37,18 +34,10 @@ public class FilterMetaPathsProc {
 
         final MetaPathComputationResult.Builder builder = MetaPathComputationResult.builder();
 
-        final HeavyGraph graph;
-
-        graph = (HeavyGraph) new GraphLoader(api)
-                .asUndirected(true)
-                .withLabelAsProperty(true)
-                .load(HeavyGraphFactory.class);
-
         final FilterMetaPaths algo = new FilterMetaPaths();
         HashMap<String, Long> filteredMetaPathsDict;
         filteredMetaPathsDict = algo.filter(startLabelString, endLabelString).getFilteredMetaPathsDict();
         builder.setMetaPathsDict(filteredMetaPathsDict);
-        graph.release();
         return Stream.of(builder.build());
     }
 }

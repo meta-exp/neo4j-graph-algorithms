@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo.impl;
+package org.neo4j.graphalgo.metaPathComputationProcs;
 
 import org.neo4j.graphalgo.api.Graph;
 import org.neo4j.graphalgo.core.GraphLoader;
@@ -6,6 +6,7 @@ import org.neo4j.graphalgo.core.ProcedureConfiguration;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
+import org.neo4j.graphalgo.impl.GettingStarted;
 import org.neo4j.graphalgo.results.metaPathComputationResults.GettingStartedResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -18,7 +19,7 @@ import org.neo4j.procedure.Procedure;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class MetaPathProc {
+public class GettingStartedProc {
     @Context
     public GraphDatabaseAPI api;
 
@@ -28,8 +29,8 @@ public class MetaPathProc {
     @Context
     public KernelTransaction transaction;
 
-    @Procedure("algo.metaPath.stream")
-    @Description("CALL algo.metaPath.stream(startNode:int, endNode:int, {defaultValue:false, concurrency:4}) " +
+    @Procedure("algo.gettingStarted.stream")
+    @Description("CALL algo.gettingStarted.stream({defaultValue:false, concurrency:4}) " +
             "YIELD hasEdge - yields a stream of {hasEdge}")
 
     public Stream<GettingStarted.Result> gettingStartedStream(
@@ -52,8 +53,8 @@ public class MetaPathProc {
         return algo.resultStream();
     }
 
-    @Procedure("algo.metaPath")
-    @Description("CALL algo.metaPath({defaultValue:false, concurrency:4}) " +
+    @Procedure("algo.gettingStarted")
+    @Description("CALL algo.gettingStarted({defaultValue:false, concurrency:4}) " +
             "YIELD loadMillis, writeMillis, computeMillis, hasEdge - yields evaluation details")
 
     public Stream<GettingStartedResult> gettingStarted(

@@ -1,26 +1,22 @@
-package org.neo4j.graphalgo.impl;
+package org.neo4j.graphalgo.impl.metaPathComputationTests;
 
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.neo4j.graphalgo.MetaPath;
+import org.neo4j.graphalgo.impl.metaPathComputation.MetaPath;
 import org.neo4j.graphalgo.TestDatabaseCreator;
-import org.neo4j.graphalgo.api.Graph;
-import org.neo4j.graphalgo.api.NodeIterator;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.graphalgo.GettingStartedProc;
+import org.neo4j.graphalgo.metaPathComputationProcs.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
 
 
