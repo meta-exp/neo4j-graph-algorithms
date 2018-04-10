@@ -3,7 +3,7 @@ package org.neo4j.graphalgo;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-import org.neo4j.graphalgo.impl.FilterMetaPaths;
+import org.neo4j.graphalgo.impl.metaPathComputation.ReadPrecomputedMetaPaths;
 import org.neo4j.graphalgo.results.metaPathComputationResults.MetaPathComputationResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -13,11 +13,11 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
-public class FilterMetaPathsProc {
-
+public class ReadPrecomputedMetaPathsProc {
     @Context
     public GraphDatabaseAPI api;
 
@@ -27,13 +27,12 @@ public class FilterMetaPathsProc {
     @Context
     public KernelTransaction transaction;
 
-    @Procedure("algo.filterMetaPaths")
-    @Description("CALL algo.filterAllMetaPaths(startLabel:int, endLabel:int) YIELD length: \n" +
-            "Finds all metaPaths with the specified start and end label and saves them to a File called 'Filtered_MetaPaths.txt' \n")
+    @Procedure("algo.readPrecomputedMetaPaths")
+    @Description("CALL algo.readPrecomputedMetaPaths(filePath: String) YIELD metaPaths: \n" +
+            "Reads the metaPaths and their counts from the file 'filePath' \n")
 
-    public Stream<MetaPathComputationResult> filterAllMetaPaths(
-            @Name(value = "startLabel", defaultValue = "0") String startLabelString,
-            @Name(value = "endLabel", defaultValue = "0") String endLabelString) throws Exception {
+    public Stream<MetaPathComputationResult> readMetaPaths (
+            @Name(value = "filePath", defaultValue = "Precomputed_MetaPaths") String filePath) throws FileNotFoundException {
 
         final MetaPathComputationResult.Builder builder = MetaPathComputationResult.builder();
 
@@ -44,11 +43,12 @@ public class FilterMetaPathsProc {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        final FilterMetaPaths algo = new FilterMetaPaths();
-        HashMap<String, Long> filteredMetaPathsDict;
-        filteredMetaPathsDict = algo.filter(startLabelString, endLabelString).getFilteredMetaPathsDict();
-        builder.setMetaPathsDict(filteredMetaPathsDict);
+        final ReadPrecomputedMetaPaths algo = new ReadPrecomputedMetaPaths();
+        HashMap<String, Long> metaPathsDict;
+        metaPathsDict = algo.readMetaPaths(filePath).getMetaPathsDict();
+        builder.setMetaPathsDict(metaPathsDict);
         graph.release();
         return Stream.of(builder.build());
     }
+
 }

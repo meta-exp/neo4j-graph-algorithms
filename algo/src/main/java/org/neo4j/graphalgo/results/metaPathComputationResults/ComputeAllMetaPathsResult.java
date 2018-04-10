@@ -1,6 +1,6 @@
-package org.neo4j.graphalgo.results;
+package org.neo4j.graphalgo.results.metaPathComputationResults;
 
-import com.google.gson.Gson;
+import org.neo4j.graphalgo.results.AbstractResultBuilder;
 
 import java.util.HashSet;
 import java.util.Vector;
