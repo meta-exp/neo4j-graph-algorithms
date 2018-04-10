@@ -44,8 +44,7 @@ public final class NodeImporter extends StatementTask<IdMap, EntityNotFoundExcep
     }
 
     @Override
-    public IdMap apply(final Statement statement) throws
-            EntityNotFoundException {
+    public IdMap apply(final Statement statement) throws EntityNotFoundException {
         final IdMap mapping = new IdMap(nodeCount);
         final ReadOperations readOp = statement.readOperations();
         final PrimitiveLongIterator nodeIds = labelId == ReadOperations.ANY_LABEL
