@@ -1,15 +1,19 @@
 package org.neo4j.graphalgo.results;
 
+import com.google.gson.Gson;
+
 import java.util.HashSet;
 import java.util.Vector;
 
 
 public class ComputeAllMetaPathsResult {
 
-    public final String metaPaths;
+    final String metaPaths;
 
     private ComputeAllMetaPathsResult(Vector<String> metaPaths) {
-        this.metaPaths = "";
+
+        Gson gson = new Gson();
+        this.metaPaths = gson.toJson(metaPaths);
     }
 
     public static Builder builder() {
