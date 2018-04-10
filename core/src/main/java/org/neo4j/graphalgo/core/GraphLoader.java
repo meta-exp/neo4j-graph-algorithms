@@ -457,6 +457,11 @@ public class GraphLoader {
         return this;
     }
 
+    public GraphLoader withParams(Map<String,Object> params) {
+        this.params.putAll(params);
+        return this;
+    }
+
     /**
      * Loads the graph using the provided GraphFactory, passing the built
      * configuration as parameters.
@@ -492,12 +497,16 @@ public class GraphLoader {
                 nodeWeightDefault,
                 nodeProp,
                 nodePropDefault,
+                params,
                 executorService,
                 concurrency,
                 batchSize,
                 accumulateWeights,
                 log,
                 logMillis,
+                sort,
+                loadAsUndirected,
+                loadWithLabels,
                 tracker);
 
         try {

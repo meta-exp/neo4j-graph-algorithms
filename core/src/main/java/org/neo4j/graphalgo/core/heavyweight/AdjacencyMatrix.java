@@ -91,15 +91,6 @@ class AdjacencyMatrix {
             inCombiner = RawValues.OUTGOING;
             isBoth = false;
         }
-        if (withOutgoing && withIncoming) {
-            outCombiner = RawValues.BOTH;
-            inCombiner = RawValues.BOTH;
-            isBoth = true;
-        } else {
-            outCombiner = RawValues.OUTGOING;
-            inCombiner = RawValues.OUTGOING;
-            isBoth = false;
-        }
     }
 
     public int[] getAdjacentNodes(int nodeId){

@@ -1,5 +1,5 @@
 FROM neo4j:3.3-enterprise as neo4j
-RUN apk --update add maven openjdk8
+RUN apk --update add maven openjdk8 
 RUN echo "dbms.connectors.default_listen_address=0.0.0.0" >> /var/lib/neo4j/conf/neo4j.conf
 RUN echo "dbms.connector.http.listen_address=0.0.0.0:7474" >> /var/lib/neo4j/conf/neo4j.conf
 RUN echo "dbms.connector.https.listen_address=0.0.0.0:7473" >> /var/lib/neo4j/conf/neo4j.conf
