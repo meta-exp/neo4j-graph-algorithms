@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo.impl;
+package org.neo4j.graphalgo.impl.metaPathComputationTests;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -13,7 +13,7 @@ import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathPrecomputeHighDegree
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.graphalgo.GettingStartedProc;
+import org.neo4j.graphalgo.metaPathComputationProcs.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.*;

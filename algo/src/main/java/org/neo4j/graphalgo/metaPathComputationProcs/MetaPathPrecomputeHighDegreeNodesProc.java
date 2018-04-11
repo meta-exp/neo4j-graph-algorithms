@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo;
+package org.neo4j.graphalgo.metaPathComputationProcs;
 
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
