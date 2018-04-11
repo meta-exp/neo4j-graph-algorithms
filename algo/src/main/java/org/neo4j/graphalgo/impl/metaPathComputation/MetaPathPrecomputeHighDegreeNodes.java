@@ -103,17 +103,17 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
 
 
     private void computeMetaPathsFromAllRelevantNodeLabels() {//TODO: rework for Instances
-        ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
+        ArrayList<ComputeMetaPathFromNodeThread> threads = new ArrayList<>();
         int i = 0;
         for (int nodeID : maxDegreeNodes) {
-            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, String.valueOf(nodeID), nodeID, metaPathLength);
+            ComputeMetaPathFromNodeThread thread = new ComputeMetaPathFromNodeThread(this, "thread--" + i, nodeID, metaPathLength);
             thread.start();
             threads.add(thread);
             i++;
 
         }
 
-        for (ComputeMetaPathFromNodeLabelThread thread : threads) {
+        for (ComputeMetaPathFromNodeThread thread : threads) {
             try {
                 thread.join();
             } catch (InterruptedException e) {
@@ -143,7 +143,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
                 continue;
             }
 
-            //debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Length of currentInstances: " + currentInstances.size());
+            //debugOut.println(((ComputeMetaPathFromNodeThread) Thread.currentThread()).getThreadName() + ": Length of currentInstances: " + currentInstances.size());
             //debugOut.println(Thread.currentThread().getName() + ": MetaPathLength: " + metaPathLength);
             //debugOut.println(Thread.currentThread().getName() + ": _________________");
 
@@ -151,7 +151,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
             //long startTime = System.nanoTime();
             fillNextInstances(currentInstances, nextInstances);
             //long endTime = System.nanoTime();
-            //debugOut.println(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getThreadName() + ": Time for next instanceCalculation: " + (endTime - startTime));
+            //debugOut.println(((ComputeMetaPathFromNodeThread) Thread.currentThread()).getThreadName() + ": Time for next instanceCalculation: " + (endTime - startTime));
             currentInstances = null;//not sure if this helps or not
             for (int i = 0; i < nextInstances.size(); i++) {
                 HashSet<Integer> nextInstancesForLabel = nextInstances.get(i);
@@ -212,7 +212,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
 
     private String addMetaPath(ArrayList<Integer> newMetaPath, HashSet<Integer> nextInstancesForLabel) {
         String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
-        int nodeID = Integer.valueOf(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getNodeID());
+        int nodeID = Integer.valueOf(((ComputeMetaPathFromNodeThread) Thread.currentThread()).getNodeID());
         duplicateFreeMetaPaths.get(nodeID).putIfAbsent(joinedMetaPath, nextInstancesForLabel);
         duplicateFreeMetaPaths.get(nodeID).get(joinedMetaPath).addAll(nextInstancesForLabel);
 
