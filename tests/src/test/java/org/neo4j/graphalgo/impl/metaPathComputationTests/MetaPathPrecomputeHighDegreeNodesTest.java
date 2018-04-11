@@ -90,7 +90,12 @@ public class MetaPathPrecomputeHighDegreeNodesTest {
         algo = new MetaPathPrecomputeHighDegreeNodes(graph, graph, graph, 2, 0.25f);
 
     }
-    
+
+    @Test
+    public void compute(){
+        algo.compute();
+    }
+
     @Ignore
     @Test
     public void testCalculationOfMetaPaths(){

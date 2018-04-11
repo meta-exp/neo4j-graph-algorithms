@@ -30,7 +30,7 @@ public class MetaPathPrecomputeHighDegreeNodesProc {
     public KernelTransaction transaction;
 
     @Procedure("algo.metaPathPrecomputeHighDegreeNodes")
-    @Description("CALL algo.metaPathPrecomputeHighDegreeNodes(length:int, ratioHighDegreeNodes:int) YIELD length: \n" +
+    @Description("CALL algo.metaPathPrecomputeHighDegreeNodes(length:int, ratioHighDegreeNodes:float) YIELD length: \n" +
             "Compute for a certain amount of nodes, given by 'ratioHighDegreeNodes', with the highest degrees their meta-paths up to a meta-path-length given by 'length' and save their nodeID, meta-paths and the end-nodes of these meta-paths in a file called 'Precomputed_MetaPaths_HighDegree.txt' \n")
 
     public Stream<MetaPathPrecomputeHighDegreeNodesResult> computeAllMetaPaths(
@@ -38,7 +38,7 @@ public class MetaPathPrecomputeHighDegreeNodesProc {
             @Name(value = "ratioHighDegreeNodes", defaultValue = "0.0000001") String ratioHighDegreeNodesString) throws IOException {
 
         int length = Integer.valueOf(lengthString);
-        float ratioHighDegreeNodes = Integer.valueOf(ratioHighDegreeNodesString);
+        float ratioHighDegreeNodes = Float.valueOf(ratioHighDegreeNodesString);
 
         final MetaPathPrecomputeHighDegreeNodesResult.Builder builder = MetaPathPrecomputeHighDegreeNodesResult.builder();
 
