@@ -26,7 +26,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private int metaPathLength;
     //private ArrayList<HashSet<Integer>> initialInstances;
     private int currentLabelId = 0;
-    private HashMap<String, HashSet<Integer>> duplicateFreeMetaPaths = new HashMap<>();
+    private HashMap<Integer, HashMap<String, HashSet<Integer>>> duplicateFreeMetaPaths;
     private PrintStream out;
     private PrintStream debugOut;
     private int printCount = 0;
@@ -52,25 +52,26 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         this.labelDictionary = new HashMap<>();
         this.degrees = degrees;
         this.ratioHighDegreeNodes = ratioHighDegreeNodes;
+        this.duplicateFreeMetaPaths = new HashMap<Integer, HashMap<String, HashSet<Integer>>>();
     }
 
     public Result compute() {
         debugOut.println("started computation");
         startTime = System.nanoTime();
         maxDegreeNodes = getMaxDegreeNodes();
-        HashMap<String, HashSet<Integer>> finalMetaPaths = computeAllMetaPaths();
+        HashMap<Integer, HashMap<String, HashSet<Integer>>> finalMetaPaths = computeAllMetaPaths();
         long endTime = System.nanoTime();
 
-        System.out.println("calculation took: " + String.valueOf(endTime - startTime));
+        debugOut.println("calculation took: " + String.valueOf(endTime - startTime));
         debugOut.println("actual amount of metaPaths: " + printCount);
         debugOut.println("total time past: " + (endTime - startTime));
         debugOut.println("finished computation");
 
-        out.println(endTime - startTime);
+        debugOut.println(endTime - startTime);
         return new Result(finalMetaPaths);
     }
 
-    public HashMap<String, HashSet<Integer>> computeAllMetaPaths() {
+    public HashMap<Integer, HashMap<String, HashSet<Integer>>> computeAllMetaPaths() {
 
         initializeLabelDictAndInitialInstances();
         computeMetaPathsFromAllRelevantNodeLabels();
@@ -103,7 +104,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         int i = 0;
         for (int nodeID : maxDegreeNodes) {
-            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread--" + i, nodeID, metaPathLength);
+            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, String.valueOf(nodeID), nodeID, metaPathLength);
             thread.start();
             threads.add(thread);
             i++;
@@ -209,8 +210,9 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
 
     private String addMetaPath(ArrayList<Integer> newMetaPath, HashSet<Integer> nextInstancesForLabel) {
         String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
-        duplicateFreeMetaPaths.putIfAbsent(joinedMetaPath, nextInstancesForLabel);
-        duplicateFreeMetaPaths.get(joinedMetaPath).addAll(nextInstancesForLabel);
+        int nodeID = Integer.valueOf(((ComputeMetaPathFromNodeLabelThread) Thread.currentThread()).getNodeID());
+        duplicateFreeMetaPaths.get(nodeID).putIfAbsent(joinedMetaPath, nextInstancesForLabel);
+        duplicateFreeMetaPaths.get(nodeID).get(joinedMetaPath).addAll(nextInstancesForLabel);
 
         return joinedMetaPath;
     }
@@ -224,15 +226,15 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     }
 
     public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) {
+        duplicateFreeMetaPaths.put(nodeID, new HashMap<>());
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
         initialMetaPath.add(arrayGraphInterface.getLabel(nodeID));
         //TODO less hacky
-        out.print(nodeID + ":");
         HashSet<Integer> instanceHS = new HashSet<>();
         instanceHS.add(nodeID);
         computeMetaPathFromNodeLabel(initialMetaPath, instanceHS, metaPathLength - 1);
 
-        duplicateFreeMetaPaths.forEach((a, b) -> out.print(a + "=" + b.stream().map(Object::toString).collect(Collectors.joining(",")) + "-"));
+        duplicateFreeMetaPaths.forEach((a, b) -> {out.print(a + ":  "); b.forEach((c, d) -> out.print(c + "=" + d.stream().map(Object::toString).collect(Collectors.joining(",")) + "-")); out.print("\n");});
         out.print("\n");
     }
 /*
@@ -262,9 +264,9 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
      */
     public static final class Result {
 
-        HashMap<String, HashSet<Integer>> finalMetaPaths;
+        HashMap<Integer, HashMap<String, HashSet<Integer>>> finalMetaPaths;
 
-        public Result(HashMap<String, HashSet<Integer>> finalMetaPaths) {
+        public Result(HashMap<Integer, HashMap<String, HashSet<Integer>>> finalMetaPaths) {
             this.finalMetaPaths = finalMetaPaths;
         }
 
@@ -273,7 +275,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
             return "Result{}";
         }
 
-        public HashMap<String, HashSet<Integer>> getFinalMetaPaths() {
+        public HashMap<Integer, HashMap<String, HashSet<Integer>>> getFinalMetaPaths() {
             return finalMetaPaths;
         }
     }

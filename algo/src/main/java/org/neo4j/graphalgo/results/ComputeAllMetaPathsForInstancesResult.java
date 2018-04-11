@@ -7,7 +7,7 @@ public class ComputeAllMetaPathsForInstancesResult {
 
     public final String metaPaths;
 
-    private ComputeAllMetaPathsForInstancesResult(HashMap<String, HashSet<Integer>> metaPaths) {
+    private ComputeAllMetaPathsForInstancesResult(HashMap<Integer, HashMap<String, HashSet<Integer>>> metaPaths) {
         this.metaPaths = "";
     }
 
@@ -17,9 +17,9 @@ public class ComputeAllMetaPathsForInstancesResult {
 
     public static class Builder extends AbstractResultBuilder<ComputeAllMetaPathsForInstancesResult> {
 
-        private HashMap<String, HashSet<Integer>> metaPaths;
+        private HashMap<Integer, HashMap<String, HashSet<Integer>>> metaPaths;
 
-        public void setMetaPaths(HashMap<String, HashSet<Integer>> metaPaths) {
+        public void setMetaPaths(HashMap<Integer, HashMap<String, HashSet<Integer>>> metaPaths) {
             // this.metaPaths =  metaPaths.toArray(new String[metaPaths.size()]);
             this.metaPaths = metaPaths;
         }

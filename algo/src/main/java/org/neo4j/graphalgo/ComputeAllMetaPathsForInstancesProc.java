@@ -52,7 +52,7 @@ public class ComputeAllMetaPathsForInstancesProc {
 
 
         final ComputeAllMetaPathsForInstances algo = new ComputeAllMetaPathsForInstances(graph, graph, graph, length, ratioHighDegreeNodes);
-        HashMap<String, HashSet<Integer>> metaPaths = new HashMap<>();
+        HashMap<Integer, HashMap<String, HashSet<Integer>>> metaPaths = new HashMap<>();
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);
         graph.release();
