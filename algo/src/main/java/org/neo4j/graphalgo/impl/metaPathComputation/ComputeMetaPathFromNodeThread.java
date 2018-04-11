@@ -1,23 +1,27 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-public class ComputeMetaPathFromNodeLabelThread extends Thread {
+public class ComputeMetaPathFromNodeThread extends Thread {
     MetaPathComputation parent;
     String threadName;
-    int nodeLabel;
+    int nodeID;
     int metaPathLength;
 
-    ComputeMetaPathFromNodeLabelThread(MetaPathComputation parent, String threadName, int nodeLabel, int metaPathLength) {
+    ComputeMetaPathFromNodeThread(MetaPathComputation parent, String threadName, int nodeID, int metaPathLength) {
         this.parent = parent;
         this.threadName = threadName;
-        this.nodeLabel = nodeLabel;
+        this.nodeID = nodeID;
         this.metaPathLength = metaPathLength;
     }
 
     public void run() {
-        parent.computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
+        parent.computeMetaPathFromNodeLabel(nodeID, metaPathLength);
     }
 
     public String getThreadName() {
         return threadName;
+    }
+
+    public int getNodeID() {
+        return nodeID;
     }
 }
