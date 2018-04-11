@@ -38,7 +38,7 @@ public class MetaPathPrecomputeHighDegreeNodesProc {
             @Name(value = "ratioHighDegreeNodes", defaultValue = "0.0000001") String ratioHighDegreeNodesString) throws IOException {
 
         int length = Integer.valueOf(lengthString);
-        int ratioHighDegreeNodes = Integer.valueOf(ratioHighDegreeNodesString);
+        float ratioHighDegreeNodes = Integer.valueOf(ratioHighDegreeNodesString);
 
         final MetaPathPrecomputeHighDegreeNodesResult.Builder builder = MetaPathPrecomputeHighDegreeNodesResult.builder();
 
