@@ -4,7 +4,7 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathPrecomputeHighDegreeNodes;
-import org.neo4j.graphalgo.results.MetaPathPrecomputeHighDegreeNodesResult;
+import org.neo4j.graphalgo.results.metaPathComputationResults.MetaPathPrecomputeHighDegreeNodesResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -16,7 +16,6 @@ import org.neo4j.procedure.Procedure;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class MetaPathPrecomputeHighDegreeNodesProc {
