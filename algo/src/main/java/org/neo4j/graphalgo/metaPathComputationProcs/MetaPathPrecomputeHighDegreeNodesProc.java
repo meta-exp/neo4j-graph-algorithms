@@ -31,11 +31,11 @@ public class MetaPathPrecomputeHighDegreeNodesProc {
 
     @Procedure("algo.metaPathPrecomputeHighDegreeNodes")
     @Description("CALL algo.metaPathPrecomputeHighDegreeNodes(length:int, ratioHighDegreeNodes:int) YIELD length: \n" +
-            "Compute all metaPaths up to a metapath-length given by 'length' that start with a startNode and end with a endNode and saves them to a File called 'Precomputed_MetaPaths_Instances.txt' \n")
+            "Compute for a certain amount of nodes, given by 'ratioHighDegreeNodes', with the highest degrees their meta-paths up to a meta-path-length given by 'length' and save their nodeID, meta-paths and the end-nodes of these meta-paths in a file called 'Precomputed_MetaPaths_HighDegree.txt' \n")
 
     public Stream<MetaPathPrecomputeHighDegreeNodesResult> computeAllMetaPaths(
             @Name(value = "length", defaultValue = "5") String lengthString,
-            @Name(value = "ratioHighDegreeNodes", defaultValue = "1000000") String ratioHighDegreeNodesString) throws IOException {
+            @Name(value = "ratioHighDegreeNodes", defaultValue = "0.0000001") String ratioHighDegreeNodesString) throws IOException {
 
         int length = Integer.valueOf(lengthString);
         int ratioHighDegreeNodes = Integer.valueOf(ratioHighDegreeNodesString);

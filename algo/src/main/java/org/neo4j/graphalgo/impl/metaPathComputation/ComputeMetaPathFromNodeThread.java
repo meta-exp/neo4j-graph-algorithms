@@ -11,7 +11,6 @@ public class ComputeMetaPathFromNodeThread extends Thread {
         this.threadName = threadName;
         this.nodeID = nodeID;
         this.metaPathLength = metaPathLength;
-        currentThread().setName(threadName);
     }
 
     public void run() {

@@ -1,9 +1,6 @@
 package org.neo4j.graphalgo.impl.metaPathComputationTests;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
@@ -90,25 +87,18 @@ public class MetaPathPrecomputeHighDegreeNodesTest {
         Integer[] startNodes = {0, 4};
         Integer[] endNodes = {1, 5};
 
-        algo = new MetaPathPrecomputeHighDegreeNodes(graph, graph, graph, 4, 1000000);
+        algo = new MetaPathPrecomputeHighDegreeNodes(graph, graph, graph, 2, 0.25f);
 
     }
 
+    @Ignore
     @Test
     public void testCalculationOfMetaPaths(){
-        algo.compute();
-        /*HashMap<String, HashSet<Integer>> allMetaPaths = algo.computeAllMetaPaths();
-        HashSet<String> allExpectedMetaPaths = new HashSet<>(Arrays.asList("1 | 2 | 2 | 0", "1 | 2 | 2 | 1", "1 | 2 | 0 | 1", "0 | 1 | 0 | 1", "0 | 0 | 0 | 1", "0 | 2 | 2 | 1", "0 | 0 | 2 | 1", "0 | 1 | 2 | 1", "0 | 2 | 0 | 1", "0 | 1 | 2 | 0", "0 | 2 | 2 | 0",
-                "1 | 2 | 1", "0 | 0 | 1", "0 | 2 | 1", "0 | 1", "0 | 2 | 0"));
-
-        for (String expectedMetaPath : allExpectedMetaPaths) {
-            System.out.println("expected: " + expectedMetaPath);
-            //assert(allMetaPaths.contains(expectedMetaPath));
-        }
-
-        System.out.println(allMetaPaths);
-
-        //assertEquals(16, allMetaPaths.size());//this should be 16, ...*/
+        MetaPathPrecomputeHighDegreeNodes.Result result = algo.compute();
+        HashMap<Integer, HashMap<String, HashSet<Integer>>> actualIndexStructure = result.getFinalMetaPaths();
+        String expectedIndexStructure = "7:";
+        System.out.println("expected: " + expectedIndexStructure);
+            assert(actualIndexStructure.equals(expectedIndexStructure));
     }
 
     //TODO: write a test for the data written to the outputfile
