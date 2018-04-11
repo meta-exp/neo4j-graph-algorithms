@@ -1,10 +1,7 @@
-package org.neo4j.graphalgo;
+package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import org.neo4j.graphalgo.core.GraphLoader;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.FilterMetaPaths;
-import org.neo4j.graphalgo.results.FilterMetaPathsResult;
+import org.neo4j.graphalgo.results.metaPathComputationResults.MetaPathComputationResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -31,26 +28,16 @@ public class FilterMetaPathsProc {
     @Description("CALL algo.filterAllMetaPaths(startLabel:int, endLabel:int) YIELD length: \n" +
             "Finds all metaPaths with the specified start and end label and saves them to a File called 'Filtered_MetaPaths.txt' \n")
 
-    public Stream<FilterMetaPathsResult> filterAllMetaPaths(
+    public Stream<MetaPathComputationResult> filterAllMetaPaths(
             @Name(value = "startLabel", defaultValue = "0") String startLabelString,
             @Name(value = "endLabel", defaultValue = "0") String endLabelString) throws Exception {
 
-        final FilterMetaPathsResult.Builder builder = FilterMetaPathsResult.builder();
-
-        final HeavyGraph graph;
-
-        graph = (HeavyGraph) new GraphLoader(api)
-                .asUndirected(true)
-                .withLabelAsProperty(true)
-                .load(HeavyGraphFactory.class);
+        final MetaPathComputationResult.Builder builder = MetaPathComputationResult.builder();
 
         final FilterMetaPaths algo = new FilterMetaPaths();
         HashMap<String, Long> filteredMetaPathsDict;
         filteredMetaPathsDict = algo.filter(startLabelString, endLabelString).getFilteredMetaPathsDict();
-        builder.setFilteredMetaPathsDict(filteredMetaPathsDict);
-        graph.release();
-        //return algo.resultStream();
-        //System.out.println(Stream.of(builder.build()));
+        builder.setMetaPathsDict(filteredMetaPathsDict);
         return Stream.of(builder.build());
     }
 }
