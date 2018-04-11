@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo.impl;
+package org.neo4j.graphalgo.impl.metaPathComputationTests;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -12,7 +12,7 @@ import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
-import org.neo4j.graphalgo.GettingStartedProc;
+import org.neo4j.graphalgo.metaPathComputationProcs.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.*;
@@ -34,6 +34,7 @@ public class ComputeAllMetaPathsTest {
 
     private static GraphDatabaseAPI api;
     private ComputeAllMetaPaths algo;
+    private HeavyGraph graph;
 
     @BeforeClass
     public static void setup() throws KernelException, Exception {
@@ -79,23 +80,19 @@ public class ComputeAllMetaPathsTest {
 
     @Before
     public void setupMetapaths() throws Exception {
-        final HeavyGraph graph;
-
         graph = (HeavyGraph) new GraphLoader(api)
                 .asUndirected(true)
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
 
-        algo = new ComputeAllMetaPaths(graph, graph, graph, api, graph,3);
-
-        algo.compute();
+        algo = new ComputeAllMetaPaths(graph, graph, graph, graph,3);
     }
 
     @Test
-    public void testCalculationOfMetapaths() throws Exception {
+    public void testCalculationOfMetapaths() {
         //assertEquals(0.5, algo.similarity(), 0);
-        /*HashSet<String> allMetaPaths = algo.computeAllMetaPaths();//this runs the code two times..
+        HashSet<String> allMetaPaths = algo.computeAllMetaPaths();//this runs the code two times..
         HashSet<String> allExpectedMetaPaths = new HashSet<>(Arrays.asList("0\t4", "1\t2", "2\t2", "0 | 0 | 0\t2", "0 | 0 | 1\t2", "0 | 0 | 2\t3", "0 | 1 | 0\t4", "0 | 1 | 2\t4", "0 | 2 | 0\t13", "0 | 2 | 1\t7", "0 | 2 | 2\t5",
                 "1 | 0 | 0\t2", "1 | 0 | 1\t2", "1 | 0 | 2\t3", "1 | 2 | 0\t7", "1 | 2 | 1\t5", "1 | 2 | 2\t3", "2 | 0 | 0\t3", "2 | 0 | 1\t3", "2 | 0 | 2\t7", "2 | 1 | 0\t4", "2 | 1 | 2\t5", "2 | 2 | 0\t5", "2 | 2 | 1\t3", "2 | 2 | 2\t2",
                 "0 | 1\t2", "0 | 2\t5", "0 | 0\t2", "1 | 0\t2", "1 | 2\t3", "2 | 0\t5", "2 | 1\t3", "2 | 2\t2")); //0|0|0, 1|0|1, 2|2|2 should not exist, but in this prototype its ok. we are going back to the same node we already were
@@ -105,9 +102,26 @@ public class ComputeAllMetaPathsTest {
             assert(allMetaPaths.contains(expectedMetaPath));
 
         }
+        for (String mpath : allMetaPaths) {
+            System.out.println(mpath);
+        }
 
-        assertEquals(33, allMetaPaths.size());//this should be 30, ...*/
+        assertEquals(33, allMetaPaths.size());//this should be 30, ...
+
     }
+
+    /*@Test
+    public void testIdConversion()
+    {
+        HashSet<Long> inputHashSet = new HashSet<>();
+        inputHashSet.add(1370370L);
+        inputHashSet.add(1568363L);
+        inputHashSet.add(311488608L);
+        inputHashSet.add(152628242L);
+        HashSet<Integer> outputHashSet = new HashSet<>();
+        algo.convertIds(graph, inputHashSet,outputHashSet);
+        System.out.println(outputHashSet);
+    }*/
 
     //TODO: write a test for the data written to the outputfile
 //something is not working with the test so its commented out.
@@ -126,7 +140,7 @@ public class ComputeAllMetaPathsTest {
 
         // 4 steps from start to end max
         //verify(consumer, times(1)).test(eq( input));
-    }*/
+    }
 
     private interface Consumer {
         void test(boolean hasEdges);
@@ -134,6 +148,5 @@ public class ComputeAllMetaPathsTest {
 
     private interface ConsumerBool {
         void test(int integer_in);
-    }
-
+    }*/
 }

@@ -1,4 +1,6 @@
-package org.neo4j.graphalgo.results;
+package org.neo4j.graphalgo.results.metaPathComputationResults;
+
+import org.neo4j.graphalgo.results.AbstractResultBuilder;
 
 import java.util.HashSet;
 import java.util.Vector;
@@ -10,6 +12,8 @@ public class ComputeAllMetaPathsResult {
 
     private ComputeAllMetaPathsResult(Vector<String> metaPaths) {
         this.metaPaths = "";
+        //Gson gson = new Gson();
+        //this.metaPaths = gson.toJson(metaPaths);
     }
 
     public static Builder builder() {

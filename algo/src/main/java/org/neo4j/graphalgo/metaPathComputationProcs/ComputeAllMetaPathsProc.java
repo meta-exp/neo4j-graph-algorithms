@@ -1,10 +1,10 @@
-package org.neo4j.graphalgo;
+package org.neo4j.graphalgo.metaPathComputationProcs;
 
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
-import org.neo4j.graphalgo.results.ComputeAllMetaPathsResult;
+import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -46,7 +46,7 @@ public class ComputeAllMetaPathsProc {
                 .load(HeavyGraphFactory.class);
 
 
-        final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, graph, graph, api, graph, length);
+        final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, graph, graph, graph, length);
         HashSet<String> metaPaths;
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);

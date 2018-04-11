@@ -44,7 +44,7 @@ import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.test.rule.ImpermanentDatabaseRule;
-import org.neo4j.kernel.internal.GraphDatabaseAPI;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.LongToIntFunction;

@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo;
+package org.neo4j.graphalgo.impl.metaPathComputation;
 
 import org.neo4j.graphalgo.api.*;
 import org.neo4j.graphalgo.core.IdMap;
@@ -52,6 +52,7 @@ public class MetaPath extends Algorithm<MetaPath> {
     }
 
     public Result compute() {
+
         for (int nodeId : startNodeIds) {
             computeMetapathFromNode(nodeId);
         }

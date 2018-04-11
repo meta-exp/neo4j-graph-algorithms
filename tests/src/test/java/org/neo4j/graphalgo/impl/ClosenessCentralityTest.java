@@ -39,7 +39,6 @@ import org.neo4j.test.rule.ImpermanentDatabaseRule;
 
 import java.util.Arrays;
 import java.util.Collection;
-import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import static org.junit.Assert.*;
 
@@ -114,7 +113,6 @@ public class ClosenessCentralityTest {
                 .withoutNodeProperties()
                 .load(graphImpl);
     }
-
 
     @Test
     public void testGetCentrality() throws Exception {

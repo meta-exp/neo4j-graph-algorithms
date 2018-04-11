@@ -1,4 +1,6 @@
-package org.neo4j.graphalgo.results;
+package org.neo4j.graphalgo.results.metaPathComputationResults;
+
+import org.neo4j.graphalgo.results.AbstractResultBuilder;
 
 /**
  * @author mknblch
