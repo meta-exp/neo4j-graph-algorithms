@@ -45,6 +45,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     private WeightMapping nodeProperties;
     // Watch Out! There is no default value. If The nodeId does not exist as key, null will be returned.
     private HashMap<Integer, ArrayList<Object>> labelMap;
+    private Collection<Integer> labels = null;
 
     HeavyGraph(
             IdMap nodeIdMap,
@@ -85,7 +86,8 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     @Override
     public Collection<Integer> getAllLabels()
     {
-        return labelMap.values().stream().map(i -> (int)i.get(0)).collect(Collectors.toSet());
+        if(labels == null) labels = labelMap.values().stream().map(i -> (int)i.get(0)).collect(Collectors.toSet());
+        return labels;
     }
 
     @Override
