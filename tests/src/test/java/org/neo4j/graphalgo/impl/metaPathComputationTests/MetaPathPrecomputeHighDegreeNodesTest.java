@@ -89,12 +89,6 @@ public class MetaPathPrecomputeHighDegreeNodesTest {
     }
 
     @Test
-    public void compute(){
-        algo.compute();
-    }
-
-
-    @Test
     public void testCalculationOfMetaPaths(){
         MetaPathPrecomputeHighDegreeNodes.Result result = algo.compute();
         HashMap<Integer, HashMap<String, HashSet<Integer>>> actualIndexStructure = result.getFinalMetaPaths();
@@ -103,50 +97,50 @@ public class MetaPathPrecomputeHighDegreeNodesTest {
         expectedIndexStructure.put(1, new HashMap<>());
         expectedIndexStructure.put(6, new HashMap<>());
         expectedIndexStructure.put(7, new HashMap<>());
-        expectedIndexStructure.get(0).put("0|2|2", new HashSet<>(Arrays.asList(7,6)));
-        expectedIndexStructure.get(0).put("0|2|1", new HashSet<>(Arrays.asList(4,1)));
-        expectedIndexStructure.get(0).put("0|2|0", new HashSet<>(Arrays.asList(2,3,5,0)));
-        expectedIndexStructure.get(0).put("0|1|0", new HashSet<>(Arrays.asList(2,0)));
-        expectedIndexStructure.get(0).put("0|0|0", new HashSet<>(Arrays.asList(0)));
-        expectedIndexStructure.get(0).put("0|1|2", new HashSet<>(Arrays.asList(6,7)));
-        expectedIndexStructure.get(0).put("0|0|1", new HashSet<>(Arrays.asList(1)));
-        expectedIndexStructure.get(0).put("0|0|2", new HashSet<>(Arrays.asList(6)));
-        expectedIndexStructure.get(0).put("0|0", new HashSet<>(Arrays.asList(2)));
+        expectedIndexStructure.get(0).put("2|2", new HashSet<>(Arrays.asList(7,6)));
+        expectedIndexStructure.get(0).put("2|1", new HashSet<>(Arrays.asList(4,1)));
+        expectedIndexStructure.get(0).put("2|0", new HashSet<>(Arrays.asList(2,3,5,0)));
+        expectedIndexStructure.get(0).put("1|0", new HashSet<>(Arrays.asList(2,0)));
+        expectedIndexStructure.get(0).put("0|0", new HashSet<>(Arrays.asList(0)));
+        expectedIndexStructure.get(0).put("1|2", new HashSet<>(Arrays.asList(6,7)));
         expectedIndexStructure.get(0).put("0|1", new HashSet<>(Arrays.asList(1)));
-        expectedIndexStructure.get(0).put("0|2", new HashSet<>(Arrays.asList(6,7)));
+        expectedIndexStructure.get(0).put("0|2", new HashSet<>(Arrays.asList(6)));
+        expectedIndexStructure.get(0).put("0", new HashSet<>(Arrays.asList(2)));
+        expectedIndexStructure.get(0).put("1", new HashSet<>(Arrays.asList(1)));
+        expectedIndexStructure.get(0).put("2", new HashSet<>(Arrays.asList(6,7)));
 
-        expectedIndexStructure.get(1).put("1|0|0", new HashSet<>(Arrays.asList(0,2)));
-        expectedIndexStructure.get(1).put("1|0|1", new HashSet<>(Arrays.asList(1)));
-        expectedIndexStructure.get(1).put("1|0|2", new HashSet<>(Arrays.asList(6,7)));
-        expectedIndexStructure.get(1).put("1|2|0", new HashSet<>(Arrays.asList(3,5,0,2)));
-        expectedIndexStructure.get(1).put("1|2|1", new HashSet<>(Arrays.asList(4,1)));
-        expectedIndexStructure.get(1).put("1|2|2", new HashSet<>(Arrays.asList(6,7)));
-        expectedIndexStructure.get(1).put("1|0", new HashSet<>(Arrays.asList(0,2)));
-        expectedIndexStructure.get(1).put("1|2", new HashSet<>(Arrays.asList(6,7)));
+        expectedIndexStructure.get(1).put("0|0", new HashSet<>(Arrays.asList(0,2)));
+        expectedIndexStructure.get(1).put("0|1", new HashSet<>(Arrays.asList(1)));
+        expectedIndexStructure.get(1).put("0|2", new HashSet<>(Arrays.asList(6,7)));
+        expectedIndexStructure.get(1).put("2|0", new HashSet<>(Arrays.asList(3,5,0,2)));
+        expectedIndexStructure.get(1).put("2|1", new HashSet<>(Arrays.asList(4,1)));
+        expectedIndexStructure.get(1).put("2|2", new HashSet<>(Arrays.asList(6,7)));
+        expectedIndexStructure.get(1).put("0", new HashSet<>(Arrays.asList(0,2)));
+        expectedIndexStructure.get(1).put("2", new HashSet<>(Arrays.asList(6,7)));
 
-        expectedIndexStructure.get(6).put("2|0|0", new HashSet<>(Arrays.asList(2,0)));
-        expectedIndexStructure.get(6).put("2|0|1", new HashSet<>(Arrays.asList(1)));
-        expectedIndexStructure.get(6).put("2|0|2", new HashSet<>(Arrays.asList(6,7)));
-        expectedIndexStructure.get(6).put("2|1|0", new HashSet<>(Arrays.asList(2,0)));
-        expectedIndexStructure.get(6).put("2|1|2", new HashSet<>(Arrays.asList(6,7)));
-        expectedIndexStructure.get(6).put("2|2|0", new HashSet<>(Arrays.asList(5,3,0)));
-        expectedIndexStructure.get(6).put("2|2|1", new HashSet<>(Arrays.asList(1)));
-        expectedIndexStructure.get(6).put("2|2|2", new HashSet<>(Arrays.asList(6)));
-        expectedIndexStructure.get(6).put("2|0", new HashSet<>(Arrays.asList(2,0)));
-        expectedIndexStructure.get(6).put("2|1", new HashSet<>(Arrays.asList(4,1)));
-        expectedIndexStructure.get(6).put("2|2", new HashSet<>(Arrays.asList(7)));
+        expectedIndexStructure.get(6).put("0|0", new HashSet<>(Arrays.asList(2,0)));
+        expectedIndexStructure.get(6).put("0|1", new HashSet<>(Arrays.asList(1)));
+        expectedIndexStructure.get(6).put("0|2", new HashSet<>(Arrays.asList(6,7)));
+        expectedIndexStructure.get(6).put("1|0", new HashSet<>(Arrays.asList(2,0)));
+        expectedIndexStructure.get(6).put("1|2", new HashSet<>(Arrays.asList(6,7)));
+        expectedIndexStructure.get(6).put("2|0", new HashSet<>(Arrays.asList(5,3,0)));
+        expectedIndexStructure.get(6).put("2|1", new HashSet<>(Arrays.asList(1)));
+        expectedIndexStructure.get(6).put("2|2", new HashSet<>(Arrays.asList(6)));
+        expectedIndexStructure.get(6).put("0", new HashSet<>(Arrays.asList(2,0)));
+        expectedIndexStructure.get(6).put("1", new HashSet<>(Arrays.asList(4,1)));
+        expectedIndexStructure.get(6).put("2", new HashSet<>(Arrays.asList(7)));
 
-        expectedIndexStructure.get(7).put("2|0|0", new HashSet<>(Arrays.asList(2)));
-        expectedIndexStructure.get(7).put("2|0|1", new HashSet<>(Arrays.asList(1)));
-        expectedIndexStructure.get(7).put("2|0|2", new HashSet<>(Arrays.asList(6,7)));
-        expectedIndexStructure.get(7).put("2|1|0", new HashSet<>(Arrays.asList(2,0)));
-        expectedIndexStructure.get(7).put("2|1|2", new HashSet<>(Arrays.asList(6,7)));
-        expectedIndexStructure.get(7).put("2|2|0", new HashSet<>(Arrays.asList(2,0)));
-        expectedIndexStructure.get(7).put("2|2|1", new HashSet<>(Arrays.asList(4,1)));
-        expectedIndexStructure.get(7).put("2|2|2", new HashSet<>(Arrays.asList(7)));
-        expectedIndexStructure.get(7).put("2|0", new HashSet<>(Arrays.asList(3,5,0)));
-        expectedIndexStructure.get(7).put("2|1", new HashSet<>(Arrays.asList(1)));
-        expectedIndexStructure.get(7).put("2|2", new HashSet<>(Arrays.asList(6)));
+        expectedIndexStructure.get(7).put("0|0", new HashSet<>(Arrays.asList(2)));
+        expectedIndexStructure.get(7).put("0|1", new HashSet<>(Arrays.asList(1)));
+        expectedIndexStructure.get(7).put("0|2", new HashSet<>(Arrays.asList(6,7)));
+        expectedIndexStructure.get(7).put("1|0", new HashSet<>(Arrays.asList(2,0)));
+        expectedIndexStructure.get(7).put("1|2", new HashSet<>(Arrays.asList(6,7)));
+        expectedIndexStructure.get(7).put("2|0", new HashSet<>(Arrays.asList(2,0)));
+        expectedIndexStructure.get(7).put("2|1", new HashSet<>(Arrays.asList(4,1)));
+        expectedIndexStructure.get(7).put("2|2", new HashSet<>(Arrays.asList(7)));
+        expectedIndexStructure.get(7).put("0", new HashSet<>(Arrays.asList(3,5,0)));
+        expectedIndexStructure.get(7).put("1", new HashSet<>(Arrays.asList(1)));
+        expectedIndexStructure.get(7).put("2", new HashSet<>(Arrays.asList(6)));
 
         System.out.println("expected:   " + expectedIndexStructure);
         System.out.println("actual:     " + actualIndexStructure);

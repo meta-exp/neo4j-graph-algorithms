@@ -202,7 +202,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) {
         duplicateFreeMetaPaths.put(nodeID, new HashMap<>());
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
-        initialMetaPath.add(arrayGraphInterface.getLabel(nodeID));
+        //initialMetaPath.add(arrayGraphInterface.getLabel(nodeID)); //Not needed as the high degree node (start node) ID is given in the file and its label ID can be easily derived
         //TODO less hacky
         HashSet<Integer> instanceHS = new HashSet<>();
         instanceHS.add(nodeID);
