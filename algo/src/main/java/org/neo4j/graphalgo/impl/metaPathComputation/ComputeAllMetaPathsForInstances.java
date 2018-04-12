@@ -1,6 +1,7 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
         import org.neo4j.graphalgo.api.ArrayGraphInterface;
+        import org.neo4j.graphalgo.api.IdMapping;
         import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
         import java.io.FileOutputStream;
         import java.io.PrintStream;
@@ -26,12 +27,12 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private double estimatedCount;
     private long startTime;
     private HashMap<Integer, Integer> labelDictionary;
-    Integer[] startNodes;
+    List<Integer> startNodes;
     List<Integer> endNodes;
     HashMap<Integer, HashSet<AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>>>> highDegreeIndex;
 
 
-    public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, int metaPathLength, Integer[] startNodes, Integer[] endNodes) throws IOException {
+    public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, int metaPathLength, Long[] startNodes, Long[] endNodes) throws IOException {
         this.graph = graph;
         this.arrayGraphInterface = arrayGraphInterface;
         this.metaPathsWeights = new ArrayList<>();
@@ -44,9 +45,16 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Instances_Debug.txt"));
         this.estimatedCount = Math.pow(arrayGraphInterface.getAllLabels().size(), metaPathLength + 1);
         this.labelDictionary = new HashMap<>();
-        this.startNodes = startNodes;
         this.highDegreeIndex = new HashMap<>();
-        this.endNodes = Arrays.asList(endNodes);
+
+        HashSet<Integer> convertedEndNodes = new HashSet<>();
+        convertIds(graph, endNodes, convertedEndNodes);
+        this.endNodes = new ArrayList<>(convertedEndNodes);
+
+        HashSet<Integer> convertedStartNodes = new HashSet<>();
+        convertIds(graph, startNodes, convertedStartNodes);
+        this.startNodes = new ArrayList<>(convertedStartNodes);
+
         readPrecomputedData();
     }
 
@@ -63,6 +71,12 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         return new Result(finalMetaPaths);
     }
 
+    public void convertIds(IdMapping idMapping, Long[] incomingIds, HashSet<Integer> convertedIds) {
+        for (long id : incomingIds) {
+            convertedIds.add(idMapping.toMappedNodeId(id));
+        }
+    }
+
     public HashSet<String> computeAllMetaPaths() {
         initializeLabelDictAndInitialInstances();
         computeMetaPathsFromAllRelevantNodeLabels();
@@ -71,7 +85,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     }
 
     private void readPrecomputedData() {
-        try(BufferedReader br = new BufferedReader(new FileReader("Precomputed_MetaPaths_Instances_Index.txt"))) {
+        try(BufferedReader br = new BufferedReader(new FileReader("Precomputed_MetaPaths_HighDegree.txt"))) {
             String line = br.readLine();
 
             while (line != null) {
@@ -79,7 +93,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
                 String[] partsForInstance = parts[1].split(Pattern.quote("-"));
                 HashSet<AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>>> precomputedForInstance = new HashSet<>();
                 for (String part : partsForInstance) {
-                    String[] pair = part.split(Pattern.quote(";"));
+                    String[] pair = part.split(Pattern.quote("="));
 
                     String[] pathElements = pair[0].split(Pattern.quote("|"));
                     ArrayList<Integer> pair0 = new ArrayList<>();

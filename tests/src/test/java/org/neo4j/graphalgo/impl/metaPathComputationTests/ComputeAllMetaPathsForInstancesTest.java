@@ -16,6 +16,7 @@ package org.neo4j.graphalgo.impl.metaPathComputationTests;
         import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
         import java.util.*;
+        import java.util.regex.Pattern;
 
         import static org.junit.Assert.assertEquals;
 
@@ -86,8 +87,8 @@ public class ComputeAllMetaPathsForInstancesTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        Integer[] startNodes = {0, 4};
-        Integer[] endNodes = {1, 5};
+        Long[] startNodes = {0L, 4L};
+        Long[] endNodes = {1L, 5L};
 
         algo = new ComputeAllMetaPathsForInstances(graph, graph, 4, startNodes, endNodes);
 

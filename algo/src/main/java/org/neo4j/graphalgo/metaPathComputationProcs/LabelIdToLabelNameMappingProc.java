@@ -1,10 +1,10 @@
-package org.neo4j.graphalgo;
+package org.neo4j.graphalgo.metaPathComputationProcs;
 
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-import org.neo4j.graphalgo.impl.LabelIdToLabelNameMapping;
-import org.neo4j.graphalgo.results.LabelIdToLabelNameMappingResult;
+import org.neo4j.graphalgo.impl.metaPathComputation.LabelIdToLabelNameMapping;
+import org.neo4j.graphalgo.results.metaPathComputationResults.LabelIdToLabelNameMappingResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
