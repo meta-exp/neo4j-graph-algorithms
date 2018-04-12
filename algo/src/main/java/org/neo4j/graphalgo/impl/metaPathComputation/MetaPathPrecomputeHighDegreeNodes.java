@@ -145,7 +145,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
                     ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                     int label = arrayGraphInterface.getLabel(nextInstancesForLabel.iterator().next()); //first element since all have the same label.
                     newMetaPath.add(label);
-                    addAndLogMetaPath(newMetaPath, nextInstancesForLabel);
+                    addMetaPath(newMetaPath, nextInstancesForLabel);
 
                     //nextInstances = null; // how exactly does this work?
                     param1.push(newMetaPath);
@@ -158,9 +158,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         }
     }
 
-    private void addAndLogMetaPath(ArrayList<Integer> newMetaPath, HashSet<Integer> nextInstancesForLabel) {
-            addMetaPath(newMetaPath, nextInstancesForLabel);
-    }
+
 
 
     private ArrayList<HashSet<Integer>> allocateNextInstances() {
