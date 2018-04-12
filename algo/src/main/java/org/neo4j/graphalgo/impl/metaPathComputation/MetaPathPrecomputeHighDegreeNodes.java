@@ -47,7 +47,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         this.labelDictionary = new HashMap<>();
         this.degrees = degrees;
         this.ratioHighDegreeNodes = ratioHighDegreeNodes;
-        this.duplicateFreeMetaPaths = new HashMap<Integer, HashMap<String, HashSet<Integer>>>();
+        this.duplicateFreeMetaPaths = new HashMap<>();
     }
 
     public Result compute() {
@@ -159,13 +159,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     }
 
     private void addAndLogMetaPath(ArrayList<Integer> newMetaPath, HashSet<Integer> nextInstancesForLabel) {
-        synchronized (duplicateFreeMetaPaths) {
-            int oldSize = duplicateFreeMetaPaths.size();
-            String joinedMetaPath = addMetaPath(newMetaPath, nextInstancesForLabel);
-            int newSize = duplicateFreeMetaPaths.size();
-            if (newSize > oldSize)
-                printMetaPathAndLog(joinedMetaPath);
-        }
+            addMetaPath(newMetaPath, nextInstancesForLabel);
     }
 
 
@@ -198,19 +192,11 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
 
     private String addMetaPath(ArrayList<Integer> newMetaPath, HashSet<Integer> nextInstancesForLabel) {
         String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
-        int nodeID = Integer.valueOf(((ComputeMetaPathFromNodeThread) Thread.currentThread()).getNodeID());
+        int nodeID = ((ComputeMetaPathFromNodeThread) Thread.currentThread()).getNodeID();
         duplicateFreeMetaPaths.get(nodeID).putIfAbsent(joinedMetaPath, nextInstancesForLabel);
         duplicateFreeMetaPaths.get(nodeID).get(joinedMetaPath).addAll(nextInstancesForLabel);
 
         return joinedMetaPath;
-    }
-
-    private void printMetaPathAndLog(String joinedMetaPath) {
-        //out.print(joinedMetaPath);
-        printCount++;
-        if (printCount % ((int) estimatedCount / 50) == 0) {
-            debugOut.println("MetaPaths found: " + printCount + " estimated Progress: " + (100 * printCount / estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
-        }
     }
 
     public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) {
