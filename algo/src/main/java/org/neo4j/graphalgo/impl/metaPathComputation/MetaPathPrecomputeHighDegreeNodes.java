@@ -159,13 +159,11 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     }
 
     private void addAndLogMetaPath(ArrayList<Integer> newMetaPath, HashSet<Integer> nextInstancesForLabel) {
-        synchronized (duplicateFreeMetaPaths) {
-            int oldSize = duplicateFreeMetaPaths.size();
-            String joinedMetaPath = addMetaPath(newMetaPath, nextInstancesForLabel);
-            int newSize = duplicateFreeMetaPaths.size();
-            if (newSize > oldSize)
-                printMetaPathAndLog(joinedMetaPath);
-        }
+        int oldSize = duplicateFreeMetaPaths.size();
+        String joinedMetaPath = addMetaPath(newMetaPath, nextInstancesForLabel);
+        int newSize = duplicateFreeMetaPaths.size();
+        if (newSize > oldSize)
+            printMetaPathAndLog(joinedMetaPath);
     }
 
 
