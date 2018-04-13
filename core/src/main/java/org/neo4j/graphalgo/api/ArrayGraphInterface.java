@@ -17,6 +17,8 @@ public interface ArrayGraphInterface {
 
     int getEdgeLabel(long nodeId1, long nodeId2);
 
+    Collection<Integer> getAllEdgeLabels();
+
     Collection<Integer> getAllLabels();
 
     HashMap<Integer, String> getLabelIdToNameDict();

@@ -57,9 +57,9 @@ public class ComputeAllMetaPathsForInstancesTest {
                         "  (c)-[:TYPE1]->(s),\n" +
                         "  (c)-[:TYPE1]->(b),\n" +
                         "  (i)-[:TYPE1]->(t),\n" +
-                        "  (t)-[:TYPE1]->(s),\n" +
-                        "  (t)-[:TYPE1]->(o),\n" +
-                        "  (k)-[:TYPE1]->(s)\n";
+                        "  (t)-[:TYPE2]->(s),\n" +
+                        "  (t)-[:TYPE2]->(o),\n" +
+                        "  (k)-[:TYPE2]->(s)\n";
 
         api = TestDatabaseCreator.createTestDatabase();
 
@@ -97,15 +97,16 @@ public class ComputeAllMetaPathsForInstancesTest {
     @Test
     public void testCalculationOfMetaPaths(){
         HashSet<String> allMetaPaths = algo.computeAllMetaPaths();
-        HashSet<String> allExpectedMetaPaths = new HashSet<>(Arrays.asList("1 | 2 | 2 | 0", "1 | 2 | 2 | 1", "1 | 2 | 0 | 1", "0 | 1 | 0 | 1", "0 | 0 | 0 | 1", "0 | 2 | 2 | 1", "0 | 0 | 2 | 1", "0 | 1 | 2 | 1", "0 | 2 | 0 | 1", "0 | 1 | 2 | 0", "0 | 2 | 2 | 0",
-                "1 | 2 | 1", "0 | 0 | 1", "0 | 2 | 1", "0 | 1", "0 | 2 | 0"));
+        HashSet<String> allExpectedMetaPaths = new HashSet<>(Arrays.asList("1 | 1 | 2 | 1 | 2 | 1 | 0", "1 | 1 | 2 | 1 | 2 | 0 | 1", "1 | 1 | 2 | 0 | 0 | 0 | 1",
+                "0 | 0 | 1 | 0 | 0 | 0 | 1", "0 | 0 | 0 | 0 | 0 | 0 | 1", "0 | 0 | 2 | 1 | 2 | 0 | 1", "0 | 0 | 0 | 0 | 2 | 0 | 1", "0 | 0 | 1 | 0 | 2 | 0 | 1",
+                "0 | 0 | 2 | 0 | 0 | 0 | 1", "0 | 0 | 1 | 0 | 2 | 1 | 0", "0 | 0 | 2 | 1 | 2 | 1 | 0",
+                "1 | 1 | 2 | 0 | 1", "0 | 0 | 0 | 0 | 1", "0 | 0 | 2 | 0 | 1", "0 | 0 | 1", "0 | 0 | 2 | 1 | 0"));
 
+        System.out.println(allMetaPaths);
         for (String expectedMetaPath : allExpectedMetaPaths) {
             System.out.println("expected: " + expectedMetaPath);
             assert(allMetaPaths.contains(expectedMetaPath));
         }
-
-        System.out.println(allMetaPaths);
 
         assertEquals(16, allMetaPaths.size());//this should be 16, ...
     }

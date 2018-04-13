@@ -47,6 +47,8 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     // Watch Out! There is no default value. If The nodeId does not exist as key, null will be returned.
     private AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<Object>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap;
     private Collection<Integer> labels = null;
+    private Collection<Integer> edgeLabels = null;
+
 
     HeavyGraph(
             IdMap nodeIdMap,
@@ -92,6 +94,13 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     }
 
     @Override
+    public Collection<Integer> getAllEdgeLabels()
+    {
+        if(edgeLabels == null) edgeLabels = labelMap.getValue().values().stream().collect(Collectors.toSet());
+        return edgeLabels;
+    }
+
+    @Override
     public HashMap<Integer, String> getLabelIdToNameDict()
     {
         HashMap<Integer, String> labelIdToNameDict = new HashMap<>();
@@ -105,7 +114,12 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     @Override
     public int getEdgeLabel(long nodeId1, long nodeId2) {
         AbstractMap.SimpleEntry<Long, Long> key = new AbstractMap.SimpleEntry<>(nodeId1, nodeId2);
-        return labelMap.getValue().get(key);
+        Integer label = labelMap.getValue().get(key);
+        if (label == null) {
+            key = new AbstractMap.SimpleEntry<>(nodeId2, nodeId1);
+            label = labelMap.getValue().get(key);
+        }
+        return label;
     }
 
     @Override
