@@ -90,7 +90,7 @@ public class MetaPathPrecomputeHighDegreeNodesTest {
 
     @Ignore //TODO ignored because now we delete entrys out of duplic... to save ram space
     @Test
-    public void testCalculationOfMetaPaths() throws Exception{
+    public void testCalculationOfMetaPaths(){
         MetaPathPrecomputeHighDegreeNodes.Result result = algo.compute();
         HashMap<Integer, HashMap<String, HashSet<Integer>>> actualIndexStructure = result.getFinalMetaPaths();
         HashMap<Integer, HashMap<String, HashSet<Integer>>> expectedIndexStructure = new HashMap<>();
