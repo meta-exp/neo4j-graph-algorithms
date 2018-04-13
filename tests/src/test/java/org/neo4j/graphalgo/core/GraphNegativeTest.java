@@ -18,6 +18,7 @@
  */
 package org.neo4j.graphalgo.core;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ErrorCollector;
@@ -105,6 +106,7 @@ public final class GraphNegativeTest extends RandomGraphTestCase {
         testRelationships(graph);
     }
 
+    @Ignore
     @Test
     public void shouldLoadWeightedRelationshipsNodesForNonExistingStringTypes() {
         final Graph graph = new GraphLoader(RandomGraphTestCase.db)
@@ -114,6 +116,7 @@ public final class GraphNegativeTest extends RandomGraphTestCase {
         testWeightedRelationships(graph);
     }
 
+    @Ignore
     @Test
     public void shouldLoadWeightedRelationshipsNodesForNonExistingTypes() {
         final Graph graph = new GraphLoader(RandomGraphTestCase.db)
