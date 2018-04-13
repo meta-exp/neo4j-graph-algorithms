@@ -35,7 +35,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     private HashMap<Integer, Integer> labelDictionary;
     private float ratioHighDegreeNodes;
     private List<Integer> maxDegreeNodes;
-    private Semaphore threadSemaphore = new Semaphore(Runtime.getRuntime().availableProcessors()); //TODO maybe threadpool and such things would be better
+    private Semaphore threadSemaphore = new Semaphore(12); //TODO maybe threadpool and such things would be better
 
 
     public MetaPathPrecomputeHighDegreeNodes(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, Degrees degrees, int metaPathLength, float ratioHighDegreeNodes) throws IOException {
