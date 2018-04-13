@@ -47,7 +47,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         this.labelDictionary = new HashMap<>();
         this.degrees = degrees;
         this.ratioHighDegreeNodes = ratioHighDegreeNodes;
-        this.duplicateFreeMetaPaths = new HashMap<Integer, HashMap<String, HashSet<Integer>>>();
+        this.duplicateFreeMetaPaths = new HashMap<>();
     }
 
     public Result compute() {
@@ -145,7 +145,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
                     ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                     int label = arrayGraphInterface.getLabel(nextInstancesForLabel.iterator().next()); //first element since all have the same label.
                     newMetaPath.add(label);
-                    addAndLogMetaPath(newMetaPath, nextInstancesForLabel);
+                    addMetaPath(newMetaPath, nextInstancesForLabel);
 
                     //nextInstances = null; // how exactly does this work?
                     param1.push(newMetaPath);
@@ -158,15 +158,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         }
     }
 
-    private void addAndLogMetaPath(ArrayList<Integer> newMetaPath, HashSet<Integer> nextInstancesForLabel) {
-        synchronized (duplicateFreeMetaPaths) {
-            int oldSize = duplicateFreeMetaPaths.size();
-            String joinedMetaPath = addMetaPath(newMetaPath, nextInstancesForLabel);
-            int newSize = duplicateFreeMetaPaths.size();
-            if (newSize > oldSize)
-                printMetaPathAndLog(joinedMetaPath);
-        }
-    }
+
 
 
     private ArrayList<HashSet<Integer>> allocateNextInstances() {
@@ -198,25 +190,17 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
 
     private String addMetaPath(ArrayList<Integer> newMetaPath, HashSet<Integer> nextInstancesForLabel) {
         String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
-        int nodeID = Integer.valueOf(((ComputeMetaPathFromNodeThread) Thread.currentThread()).getNodeID());
+        int nodeID = ((ComputeMetaPathFromNodeThread) Thread.currentThread()).getNodeID();
         duplicateFreeMetaPaths.get(nodeID).putIfAbsent(joinedMetaPath, nextInstancesForLabel);
         duplicateFreeMetaPaths.get(nodeID).get(joinedMetaPath).addAll(nextInstancesForLabel);
 
         return joinedMetaPath;
     }
 
-    private void printMetaPathAndLog(String joinedMetaPath) {
-        //out.print(joinedMetaPath);
-        printCount++;
-        if (printCount % ((int) estimatedCount / 50) == 0) {
-            debugOut.println("MetaPaths found: " + printCount + " estimated Progress: " + (100 * printCount / estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
-        }
-    }
-
     public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) {
         duplicateFreeMetaPaths.put(nodeID, new HashMap<>());
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
-        initialMetaPath.add(arrayGraphInterface.getLabel(nodeID));
+        //initialMetaPath.add(arrayGraphInterface.getLabel(nodeID)); //Not needed as the high degree node (start node) ID is given in the file and its label ID can be easily derived
         //TODO less hacky
         HashSet<Integer> instanceHS = new HashSet<>();
         instanceHS.add(nodeID);
