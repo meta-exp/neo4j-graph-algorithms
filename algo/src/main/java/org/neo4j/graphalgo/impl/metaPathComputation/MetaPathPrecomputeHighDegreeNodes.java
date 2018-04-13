@@ -63,6 +63,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         debugOut.println("finished computation");
 
         System.out.println(endTime - startTime);
+        duplicateFreeMetaPaths.forEach(this::outputIndexStructure);
         return new Result(finalMetaPaths);
     }
 
@@ -204,8 +205,6 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         HashSet<Integer> instanceHS = new HashSet<>();
         instanceHS.add(nodeID);
         computeMetaPathFromNodeLabel(initialMetaPath, instanceHS, metaPathLength - 1);
-        outputIndexStructure(nodeID, duplicateFreeMetaPaths.get(nodeID));
-        //duplicateFreeMetaPaths.remove(nodeID); //TODO uncomment if duplicateFreeMetaPaths gets to big
     }
 /*
     private HashSet<Integer> initInstancesRow(int startNodeLabel) {
