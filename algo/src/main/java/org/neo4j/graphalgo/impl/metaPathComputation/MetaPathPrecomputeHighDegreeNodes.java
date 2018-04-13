@@ -63,14 +63,15 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         debugOut.println("finished computation");
 
         System.out.println(endTime - startTime);
-        duplicateFreeMetaPaths.forEach(this::outputIndexStructure);
         return new Result(finalMetaPaths);
     }
 
     private void outputIndexStructure(int highDegreeNode, HashMap<String, HashSet<Integer>> metaPaths){
-        out.print(highDegreeNode + ":");
-        metaPaths.forEach((metaPath, endNodes) -> out.print(metaPath + "=" + endNodes.stream().map(Object::toString).collect(Collectors.joining(",")) + "-"));
-        out.print("\n");
+        synchronized(out) {
+            out.print(highDegreeNode + ":");
+            metaPaths.forEach((metaPath, endNodes) -> out.print(metaPath + "=" + endNodes.stream().map(Object::toString).collect(Collectors.joining(",")) + "-"));
+            out.print("\n");
+        }
     }
 
     public HashMap<Integer, HashMap<String, HashSet<Integer>>> computeAllMetaPaths() {
@@ -205,6 +206,8 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         HashSet<Integer> instanceHS = new HashSet<>();
         instanceHS.add(nodeID);
         computeMetaPathFromNodeLabel(initialMetaPath, instanceHS, metaPathLength - 1);
+        outputIndexStructure(nodeID, duplicateFreeMetaPaths.get(nodeID));
+        duplicateFreeMetaPaths.remove(nodeID);
     }
 /*
     private HashSet<Integer> initInstancesRow(int startNodeLabel) {
