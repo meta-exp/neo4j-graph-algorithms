@@ -1,6 +1,7 @@
-package org.neo4j.graphalgo.impl;
+package org.neo4j.graphalgo.impl.metaPathComputation;
 
 import org.neo4j.graphalgo.api.ArrayGraphInterface;
+import org.neo4j.graphalgo.impl.Algorithm;
 
 import java.util.HashMap;
 

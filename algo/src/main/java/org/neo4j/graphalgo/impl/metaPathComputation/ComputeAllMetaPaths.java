@@ -24,7 +24,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private Degrees degrees;
     private IdMap mapping;
     private ArrayList<ArrayList<Integer>> metaPaths;
-    private ArrayList<Integer> metaPathsWeights;
     private int metaPathLength;
     private ArrayList<HashSet<Integer>> initialInstances;
     private int currentLabelId = 0;
@@ -46,7 +45,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         this.arrayGraphInterface = arrayGraphInterface;
         this.degrees = degrees;
         this.metaPaths = new ArrayList<>();
-        this.metaPathsWeights = new ArrayList<>();
         this.metaPathLength = metaPathLength;
         this.initialInstances = new ArrayList<>();
         for (int i = 0; i < arrayGraphInterface.getAllLabels().size(); i++) {
@@ -75,7 +73,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
         List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
 
-        Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
+        //Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
 
         for (String metaPath : finalMetaPathsAsList) {
             out.println(metaPath);
@@ -237,8 +235,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
     private void addMetaPathToIndex(int startInstance, int endInstance, int metaPathId) {
         AbstractMap.SimpleEntry<Integer, Integer> key = new AbstractMap.SimpleEntry<>(startInstance, endInstance);
-        HashSet<Integer> metaPathIds  = metaPathIndex.get(key);
-        if (metaPathIds == null) metaPathIds = new HashSet<>();
+        HashSet<Integer> metaPathIds  = metaPathIndex.getOrDefault(key, new HashSet<>());
         metaPathIds.add(metaPathId);
         metaPathIndex.put(key, metaPathIds);
     }
@@ -366,12 +363,5 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         public HashSet<String> getFinalMetaPaths() {
             return finalMetaPaths;
         }
-    }
-
-    public void weight (int index, int weight) throws Exception {
-        if (weight <= 0 || weight > 10) {
-            throw new Exception("Weight needs to be in range (0;10]");
-        }
-        metaPathsWeights.set(index, weight);
     }
 }

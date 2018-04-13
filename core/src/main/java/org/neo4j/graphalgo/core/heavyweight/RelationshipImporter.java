@@ -39,6 +39,7 @@ import org.neo4j.kernel.impl.api.RelationshipVisitor;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Supplier;
@@ -334,7 +335,7 @@ final class RelationshipImporter extends StatementTask<Void, EntityNotFoundExcep
         weights.put(relId, doubleValue);
     }
 
-    Graph toGraph(final IdMap idMap, final HashMap<Integer, ArrayList<Object>> labelMap) {
+    Graph toGraph(final IdMap idMap, final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<Object>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap) {
         return new HeavyGraph(
                 idMap,
                 matrix,
