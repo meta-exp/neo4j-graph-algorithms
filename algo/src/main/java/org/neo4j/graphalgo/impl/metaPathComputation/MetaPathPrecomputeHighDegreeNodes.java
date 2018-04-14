@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -34,6 +35,8 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     private HashMap<Integer, Integer> labelDictionary;
     private float ratioHighDegreeNodes;
     private List<Integer> maxDegreeNodes;
+    final int MAX_NOF_THREADS = 12;
+    final Semaphore threadSemaphore = new Semaphore(MAX_NOF_THREADS);
 
 
     public MetaPathPrecomputeHighDegreeNodes(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, Degrees degrees, int metaPathLength, float ratioHighDegreeNodes) throws IOException {
@@ -50,7 +53,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         this.duplicateFreeMetaPaths = new HashMap<>();
     }
 
-    public Result compute() {
+    public Result compute() throws InterruptedException{
         debugOut.println("started computation");
         startTime = System.nanoTime();
         maxDegreeNodes = getMaxDegreeNodes();
@@ -74,7 +77,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         }
     }
 
-    public HashMap<Integer, HashMap<String, HashSet<Integer>>> computeAllMetaPaths() {
+    public HashMap<Integer, HashMap<String, HashSet<Integer>>> computeAllMetaPaths() throws InterruptedException {
 
         initializeLabelDict();
         computeMetaPathsFromAllRelevantNodes();
@@ -96,10 +99,11 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         return currentLabelId - 1;
     }
 
-    private void computeMetaPathsFromAllRelevantNodes() {//TODO: rework for Instances
+    private void computeMetaPathsFromAllRelevantNodes() throws InterruptedException {//TODO: rework for Instances
         ArrayList<ComputeMetaPathFromNodeThread> threads = new ArrayList<>(maxDegreeNodes.size());
         int i = 0;
         for (int nodeID : maxDegreeNodes) {
+            threadSemaphore.acquire();
             ComputeMetaPathFromNodeThread thread = new ComputeMetaPathFromNodeThread(this, "thread--" + i, nodeID, metaPathLength);
             thread.start();
             threads.add(thread);
@@ -208,6 +212,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         computeMetaPathFromNodeLabel(initialMetaPath, instanceHS, metaPathLength - 1);
         outputIndexStructure(nodeID, duplicateFreeMetaPaths.get(nodeID));
         duplicateFreeMetaPaths.remove(nodeID);
+        threadSemaphore.release();
     }
 /*
     private HashSet<Integer> initInstancesRow(int startNodeLabel) {
