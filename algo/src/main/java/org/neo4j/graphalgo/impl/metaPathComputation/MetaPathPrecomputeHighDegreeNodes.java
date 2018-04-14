@@ -35,7 +35,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     private HashMap<Integer, Integer> labelDictionary;
     private float ratioHighDegreeNodes;
     private List<Integer> maxDegreeNodes;
-    final int MAX_NOF_THREADS = 24;
+    final int MAX_NOF_THREADS = 5000;
     final Semaphore threadSemaphore = new Semaphore(MAX_NOF_THREADS);
 
 
