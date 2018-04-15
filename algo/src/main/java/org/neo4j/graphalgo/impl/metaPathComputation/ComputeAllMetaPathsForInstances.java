@@ -32,7 +32,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     HashMap<Integer, HashSet<AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>>>> highDegreeIndex;
 
 
-    public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, int metaPathLength, Long[] startNodes, Long[] endNodes) throws IOException {
+    public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, int metaPathLength, List<Integer> startNodes, List<Integer> endNodes) throws IOException {
         this.graph = graph;
         this.arrayGraphInterface = arrayGraphInterface;
         this.metaPathsWeights = new ArrayList<>();
@@ -46,14 +46,8 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         this.estimatedCount = Math.pow(arrayGraphInterface.getAllLabels().size(), metaPathLength + 1);
         this.labelDictionary = new HashMap<>();
         this.highDegreeIndex = new HashMap<>();
-
-        HashSet<Integer> convertedEndNodes = new HashSet<>();
-        convertIds(graph, endNodes, convertedEndNodes);
-        this.endNodes = new ArrayList<>(convertedEndNodes);
-
-        HashSet<Integer> convertedStartNodes = new HashSet<>();
-        convertIds(graph, startNodes, convertedStartNodes);
-        this.startNodes = new ArrayList<>(convertedStartNodes);
+        this.startNodes = startNodes;
+        this.endNodes = endNodes;
 
         readPrecomputedData();
     }
@@ -69,12 +63,6 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         debugOut.println("total time past: " + (endTime-startTime));
         debugOut.println("finished computation");
         return new Result(finalMetaPaths);
-    }
-
-    public void convertIds(IdMapping idMapping, Long[] incomingIds, HashSet<Integer> convertedIds) {
-        for (long id : incomingIds) {
-            convertedIds.add(idMapping.toMappedNodeId(id));
-        }
     }
 
     public HashSet<String> computeAllMetaPaths() {
