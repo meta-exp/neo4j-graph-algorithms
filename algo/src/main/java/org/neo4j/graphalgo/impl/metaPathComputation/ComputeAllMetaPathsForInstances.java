@@ -97,6 +97,9 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
                     AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>> resultPair = new AbstractMap.SimpleEntry<>(pair0, pair1);
                     precomputedForInstance.add(resultPair);
                 }
+                ArrayList<Integer> endNodesForEmptyMetaPath = new ArrayList<>();
+                endNodesForEmptyMetaPath.add(Integer.valueOf(parts[0]));
+                precomputedForInstance.add(new AbstractMap.SimpleEntry<>(new ArrayList<>(), endNodesForEmptyMetaPath));
 
                 highDegreeIndex.put(Integer.valueOf(parts[0]), precomputedForInstance);
                 line = br.readLine();
@@ -223,7 +226,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
 
     private void fillNextInstances(HashSet<Integer> currentInstances, ArrayList<HashSet<Integer>> nextInstances, ArrayList<Integer> currentMetaPath, int metaPathLength) {//TODO: refactor and rename
         for (int instance : currentInstances) {
-            for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) { //TODO: check if getAdjecentNodes works
+            for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) { //TODO: check if getAdjacentNodes works
                 int label = arrayGraphInterface.getLabel(nodeId); //get the id of the label of the node
                 int edgeLabel = arrayGraphInterface.getEdgeLabel(instance, nodeId);
                 if (!highDegreeIndex.containsKey(nodeId)) {
@@ -232,10 +235,11 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
                 }
                 else
                 {
+
                     for (AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>> metaPathWithEnds : highDegreeIndex.get(nodeId)){
                         ArrayList<Integer> endCopy = (ArrayList<Integer>) metaPathWithEnds.getValue().clone();
                         endCopy.retainAll(endNodes);
-                        if(!endCopy.isEmpty() && metaPathLength >= metaPathWithEnds.getKey().size())//TODO: test if this works
+                        if(!endCopy.isEmpty() && metaPathLength > metaPathWithEnds.getKey().size()/2);
                         {
                             ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                             newMetaPath.add(edgeLabel);

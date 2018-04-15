@@ -35,7 +35,7 @@ public class MetaPathPrecomputeHighDegreeNodesProc {
 
     public Stream<MetaPathPrecomputeHighDegreeNodesResult> computeAllMetaPaths(
             @Name(value = "length", defaultValue = "5") String lengthString,
-            @Name(value = "ratioHighDegreeNodes", defaultValue = "0.0000001") String ratioHighDegreeNodesString) throws IOException {
+            @Name(value = "ratioHighDegreeNodes", defaultValue = "0.0000001") String ratioHighDegreeNodesString) throws IOException, InterruptedException {
 
         int length = Integer.valueOf(lengthString);
         float ratioHighDegreeNodes = Float.valueOf(ratioHighDegreeNodesString);

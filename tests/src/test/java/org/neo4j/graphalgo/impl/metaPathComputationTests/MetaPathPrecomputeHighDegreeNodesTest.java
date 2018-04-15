@@ -88,9 +88,9 @@ public class MetaPathPrecomputeHighDegreeNodesTest {
 
     }
 
-    @Ignore //TODO ignored because now we delete entrys out of duplic... to save ram space
+    @Ignore //TODO ignored because now we delete entrys out of duplic... to save ram space //TODO: add test for edgeTypes
     @Test
-    public void testCalculationOfMetaPaths(){
+    public void testCalculationOfMetaPaths() throws InterruptedException {
         MetaPathPrecomputeHighDegreeNodes.Result result = algo.compute();
         HashMap<Integer, HashMap<String, HashSet<Integer>>> actualIndexStructure = result.getFinalMetaPaths();
         HashMap<Integer, HashMap<String, HashSet<Integer>>> expectedIndexStructure = new HashMap<>();
