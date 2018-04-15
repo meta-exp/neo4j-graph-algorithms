@@ -87,8 +87,8 @@ public class ComputeAllMetaPathsForInstancesTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        Long[] startNodes = {0L, 4L};
-        Long[] endNodes = {1L, 5L};
+        List<Integer> startNodes = new ArrayList<>(Arrays.asList(0, 4));
+        List<Integer> endNodes = new ArrayList<>(Arrays.asList(1, 5));
 
         algo = new ComputeAllMetaPathsForInstances(graph, graph, 4, startNodes, endNodes);
 
