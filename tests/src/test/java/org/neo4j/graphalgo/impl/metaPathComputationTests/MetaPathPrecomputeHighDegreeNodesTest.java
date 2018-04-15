@@ -54,9 +54,9 @@ public class MetaPathPrecomputeHighDegreeNodesTest {
                         "  (c)-[:TYPE1]->(s),\n" +
                         "  (c)-[:TYPE1]->(b),\n" +
                         "  (i)-[:TYPE1]->(t),\n" +
-                        "  (t)-[:TYPE1]->(s),\n" +
-                        "  (t)-[:TYPE1]->(o),\n" +
-                        "  (k)-[:TYPE1]->(s)\n";
+                        "  (t)-[:TYPE2]->(s),\n" +
+                        "  (t)-[:TYPE2]->(o),\n" +
+                        "  (k)-[:TYPE2]->(s)\n";
 
         api = TestDatabaseCreator.createTestDatabase();
 

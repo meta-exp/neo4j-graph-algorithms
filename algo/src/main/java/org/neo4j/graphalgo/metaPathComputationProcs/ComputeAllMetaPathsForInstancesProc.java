@@ -1,5 +1,6 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
+import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
@@ -14,7 +15,9 @@ import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -61,8 +64,15 @@ public class ComputeAllMetaPathsForInstancesProc {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
+        HashSet<Integer> convertedEndNodes = new HashSet<>();//converting in the proc allows for easier testing
+        convertIds(graph, endNodes, convertedEndNodes);
+        List<Integer> startNodeList = new ArrayList<>(convertedEndNodes);
 
-        final ComputeAllMetaPathsForInstances algo = new ComputeAllMetaPathsForInstances(graph, graph, length, startNodes, endNodes);
+        HashSet<Integer> convertedStartNodes = new HashSet<>();
+        convertIds(graph, startNodes, convertedStartNodes);
+        List<Integer> endNodeList = new ArrayList<>(convertedStartNodes);
+
+        final ComputeAllMetaPathsForInstances algo = new ComputeAllMetaPathsForInstances(graph, graph, length, startNodeList, endNodeList);
         HashSet<String> metaPaths;
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);
@@ -70,5 +80,11 @@ public class ComputeAllMetaPathsForInstancesProc {
         //return algo.resultStream();
         //System.out.println(Stream.of(builder.build()));
         return Stream.of(builder.build());
+    }
+
+    public void convertIds(IdMapping idMapping, Long[] incomingIds, HashSet<Integer> convertedIds) {
+        for (long id : incomingIds) {
+            convertedIds.add(idMapping.toMappedNodeId(id));
+        }
     }
 }

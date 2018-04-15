@@ -151,9 +151,6 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         }
     }
 
-
-
-
     private ArrayList<HashSet<Integer>> allocateNextInstances() {
         int nextInstancesSize = arrayGraphInterface.getAllLabels().size() * arrayGraphInterface.getAllEdgeLabels().size();
         ArrayList<HashSet<Integer>> nextInstances = new ArrayList<>(nextInstancesSize);
