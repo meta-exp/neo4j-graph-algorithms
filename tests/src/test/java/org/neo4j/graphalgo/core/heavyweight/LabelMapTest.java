@@ -3,9 +3,9 @@ package org.neo4j.graphalgo.core.heavyweight;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.neo4j.graphalgo.metaPathComputationProcs.GettingStartedProc;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.metaPathComputationProcs.GettingStartedProc;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
@@ -22,7 +22,7 @@ public class LabelMapTest {
     @BeforeClass
     public static void setup() throws KernelException {
         final String cypher =
-                "CREATE (a:SNP {name:\"a\"})\n" +
+                        "CREATE (a:SNP:TEST {name:\"a\"})\n" +
                         "CREATE (b:PHN {name:\"b\"})\n" +
                         "CREATE (c:SNP {name:\"c\"})\n" +
                         "CREATE (d:PHN {name:\"d\"})\n" +
@@ -134,7 +134,20 @@ public class LabelMapTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        assert(1 == graphWithLabelMap.getLabel(1));
+        assert(2 == graphWithLabelMap.getLabel(1));
+    }
+
+    @Test
+    public void testMultipleLabels(){
+        final HeavyGraph graphWithLabelMap;
+
+        graphWithLabelMap = (HeavyGraph) new GraphLoader(api)
+                .withLabelAsProperty(true)
+                .load(HeavyGraphFactory.class);
+
+        Integer[] expectedLabels = {0, 1};
+
+        assertEquals(expectedLabels, graphWithLabelMap.getLabels(0));
     }
 
     @Test
@@ -145,7 +158,7 @@ public class LabelMapTest {
                 .load(HeavyGraphFactory.class);
 
         Collection<Integer> allLabels = graphWithLabelMap.getAllLabels();
-        assertEquals(3, allLabels.size());
+        assertEquals(4, allLabels.size());
     }
 }
 
