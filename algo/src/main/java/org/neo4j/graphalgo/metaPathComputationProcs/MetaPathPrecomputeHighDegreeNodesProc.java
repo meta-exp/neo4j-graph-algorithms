@@ -50,7 +50,7 @@ public class MetaPathPrecomputeHighDegreeNodesProc {
                 .load(HeavyGraphFactory.class);
 
 
-        final MetaPathPrecomputeHighDegreeNodes algo = new MetaPathPrecomputeHighDegreeNodes(graph, graph, graph, length, ratioHighDegreeNodes);
+        final MetaPathPrecomputeHighDegreeNodes algo = new MetaPathPrecomputeHighDegreeNodes(graph, graph, graph, length, ratioHighDegreeNodes, api);
         HashMap<Integer, HashMap<String, HashSet<Integer>>> metaPaths = new HashMap<>();
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);

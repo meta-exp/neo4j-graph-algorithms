@@ -5,6 +5,9 @@ import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -14,6 +17,8 @@ import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import static java.lang.Math.toIntExact;
 
 
 //TODO test correctness!
@@ -37,9 +42,13 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     private List<Integer> maxDegreeNodes;
     final int MAX_NOF_THREADS = 12; //TODO why not full utilization?
     final Semaphore threadSemaphore = new Semaphore(MAX_NOF_THREADS);
+    private List<Node> nodes = null;
+    private List<Relationship> rels = null;
+    private GraphDatabaseAPI api;
+    private HashMap<Integer, HashSet<Integer>> incidentEdgesDict;
 
 
-    public MetaPathPrecomputeHighDegreeNodes(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, Degrees degrees, int metaPathLength, float ratioHighDegreeNodes) throws IOException {
+    public MetaPathPrecomputeHighDegreeNodes(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, Degrees degrees, int metaPathLength, float ratioHighDegreeNodes, GraphDatabaseAPI api) throws IOException {
         this.graph = graph;
         this.arrayGraphInterface = arrayGraphInterface;
         this.metaPathsWeights = new ArrayList<>();
@@ -51,9 +60,13 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         this.degrees = degrees;
         this.ratioHighDegreeNodes = ratioHighDegreeNodes;
         this.duplicateFreeMetaPaths = new HashMap<>();
+        this.api = api;
+        incidentEdgesDict = new HashMap<>();
     }
 
     public Result compute() throws InterruptedException{
+        getMetaGraph();
+        initializeDictionaries();
         debugOut.println("started computation");
         startTime = System.nanoTime();
         maxDegreeNodes = getMaxDegreeNodes();
@@ -87,9 +100,11 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
 
     private void initializeLabelDict() {
         currentLabelId = 0;
-
+        //get all labels which are relevant
+        //arrayGraphInterface..getAllLabels().iterator().next().
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-            for (int edgeLabel : arrayGraphInterface.getAllEdgeLabels()) {
+            HashSet<Integer> relevantEdges = incidentEdgesDict.get(nodeLabel);
+            for (int edgeLabel : relevantEdges) {
                 assignIdToNodeLabel(edgeLabel, nodeLabel);
             }
         }
@@ -97,6 +112,8 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
 
     private int assignIdToNodeLabel(int edgeLabel, int nodeLabel) {
         labelDictionary.put(new AbstractMap.SimpleEntry<>(edgeLabel, nodeLabel), currentLabelId);
+        debugOut.println("labelDictionary:");
+        debugOut.println(labelDictionary);
         currentLabelId++;
         return currentLabelId - 1;
     }
@@ -203,6 +220,34 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
         duplicateFreeMetaPaths.remove(nodeID);
         threadSemaphore.release();
     }
+
+    private void getMetaGraph(){
+        org.neo4j.graphdb.Result result = null;
+        try (Transaction tx = api.beginTx()) {
+            result = api.execute("CALL apoc.meta.graph()");
+            tx.success();
+        }
+        Map<String, Object> row = result.next();
+        nodes = (List<Node>) row.get("nodes");
+        rels = (List<Relationship>) row.get("relationships");
+        debugOut.println(nodes);
+        debugOut.println(rels);
+    }
+
+    private void initializeDictionaries(){
+        for (Node node : nodes) {
+            int nodeID = toIntExact(node.getId());
+            HashSet<Integer> inciEdgesSet = new HashSet<>();
+            incidentEdgesDict.putIfAbsent(toIntExact(nodeID), inciEdgesSet);
+            for (Relationship rel : rels) {
+                if (rel.getStartNode().equals(node) || rel.getEndNode().equals(node)) {
+                    int inciEdgeID = toIntExact(rel.getId());
+                    incidentEdgesDict.get(nodeID).add(inciEdgeID);
+                }
+            }
+        }
+    }
+    
 /*
     private HashSet<Integer> initInstancesRow(int startNodeLabel) {
         int startNodeLabelId = labelDictionary.get(startNodeLabel);
