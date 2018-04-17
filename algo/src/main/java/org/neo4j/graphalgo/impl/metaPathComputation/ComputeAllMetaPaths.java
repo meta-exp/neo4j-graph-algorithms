@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static java.lang.Float.max;
+
 public class ComputeAllMetaPaths extends MetaPathComputation {
 
     private HeavyGraph graph;
@@ -259,7 +261,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private void printMetaPathAndLog(String joinedMetaPath) {
         out.println(joinedMetaPath);
         printCount++;
-        if (printCount % ((int)estimatedCount/50) == 0) {
+        if (printCount % max(((int)estimatedCount/50), 1) == 0) {
             debugOut.println("MetaPaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
         }
     }
