@@ -8,7 +8,7 @@ ADD . /neo4j-graph-algorithms/
 WORKDIR /neo4j-graph-algorithms/
 RUN mvn -Dmaven.test.skip=true clean install
 RUN cp algo/target/graph-algorithms-*.jar /var/lib/neo4j/plugins/
-
+RUN cp apoc-3.3.0.2-all.jar /var/lib/neo4j/plugins/
 EXPOSE 7474 7473 7687
 
 WORKDIR /var/lib/neo4j
