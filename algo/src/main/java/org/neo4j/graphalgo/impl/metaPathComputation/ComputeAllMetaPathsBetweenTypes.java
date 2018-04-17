@@ -31,6 +31,8 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     private String type2;
     private Integer type1ID;
     private Integer type2ID;
+    private HashMap<Integer, String> idTypeMappingNodes = new HashMap<>();
+    private HashMap<Integer, String> idTypeMappingEdges = new HashMap<>();
 
     public ComputeAllMetaPathsBetweenTypes(int metaPathLength, String type1, String type2, GraphDatabaseAPI api) throws Exception {
         this.metaPathLength = metaPathLength;
@@ -60,7 +62,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
             e.printStackTrace();
         }
 
-        return new Result(duplicateFreeMetaPaths);
+        return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges);
     }
 
     private void getMetaGraph() throws Exception {
@@ -74,6 +76,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         rels = (List<Relationship>) row.get("relationships");
         for (Node node : nodes){
             String nodeType = node.getLabels().iterator().next().name();
+            this.idTypeMappingNodes.put(toIntExact(node.getId()), nodeType);
             debugOut.println(nodeType);
             if (this.type1.equals(nodeType)){
                 this.type1ID = toIntExact(node.getId());
@@ -99,6 +102,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 try {
                     int adjNodeID = toIntExact(rel.getOtherNodeId(node.getId()));
                     int adjEdgeID = toIntExact(rel.getId());
+                    this.idTypeMappingEdges.put(toIntExact(adjEdgeID), rel.getType().name());
                     adjacentNodesDict.get(nodeID).add(new AbstractMap.SimpleEntry<>(adjNodeID, adjEdgeID));
                 } catch (Exception e) {/*prevent duplicates*/}
             }
@@ -157,8 +161,8 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
             }
         }
-        System.out.println("These are all our metapaths from node "+ pCurrentInstance);
-        System.out.println(duplicateFreeMetaPaths);
+       // System.out.println("These are all our metapaths from node "+ pCurrentInstance);
+        //System.out.println(duplicateFreeMetaPaths);
     }
 
     private void addAndLogMetaPath(ArrayList<Integer> newMetaPath) {
@@ -224,9 +228,13 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     public static final class Result {
 
         HashSet<String> finalMetaPaths;
+        HashMap<Integer, String> idTypeMappingNodes;
+        HashMap<Integer, String> idTypeMappingEdges;
 
-        public Result(HashSet<String> finalMetaPaths) {
+        public Result(HashSet<String> finalMetaPaths, HashMap<Integer, String> idTypeMappingNodes, HashMap<Integer, String> idTypeMappingEdges) {
             this.finalMetaPaths = finalMetaPaths;
+            this.idTypeMappingNodes = idTypeMappingNodes;
+            this.idTypeMappingEdges = idTypeMappingEdges;
         }
 
         @Override
@@ -237,5 +245,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         public HashSet<String> getFinalMetaPaths() {
             return finalMetaPaths;
         }
+        public HashMap<Integer, String> getIDTypeNodeDict(){ return idTypeMappingNodes; }
+        public HashMap<Integer, String> getIDTypeEdgeDict(){ return idTypeMappingEdges; }
     }
 }

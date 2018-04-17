@@ -12,7 +12,9 @@ import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
+import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsBetweenTypes.Result;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.stream.Stream;
 
@@ -40,18 +42,16 @@ public class ComputeAllMetaPathsBetweenTypesProc {
 
         final ComputeAllMetaPathsBetweenTypesResult.Builder builder = ComputeAllMetaPathsBetweenTypesResult.builder();
 
-        final HeavyGraph graph;
-
-        graph = (HeavyGraph) new GraphLoader(api)
-                .asUndirected(true)
-                .withLabelAsProperty(true)
-                .load(HeavyGraphFactory.class);
-
         final ComputeAllMetaPathsBetweenTypes algo = new ComputeAllMetaPathsBetweenTypes(length, type1, type2, api);
         HashSet<String> metaPaths;
-        metaPaths = algo.compute().getFinalMetaPaths();
+        Result result = algo.compute();
+        metaPaths = result.getFinalMetaPaths();
+        HashMap<Integer, String> nodesIDTypeDict = result.getIDTypeNodeDict();
+        HashMap <Integer, String> edgesIDTypeDict = result.getIDTypeEdgeDict();
         builder.setMetaPaths(metaPaths);
-        graph.release();
+        builder.setNodesIDTypeDict(nodesIDTypeDict);
+        builder.setEdgesIDTypeDict(edgesIDTypeDict);
+
         //return algo.resultStream();
         //System.out.println(Stream.of(builder.build()));
         return Stream.of(builder.build());
