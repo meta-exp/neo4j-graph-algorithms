@@ -4,11 +4,10 @@ import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Node;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
-import java.io.*;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
@@ -70,6 +69,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     }
 
     private void outputIndexStructure(int highDegreeNode, HashMap<String, HashSet<Integer>> metaPaths){
+        // TODO: Write in database
         synchronized(out) {
             out.print(highDegreeNode + ":");
             metaPaths.forEach((metaPath, endNodes) -> out.print(metaPath + "=" + endNodes.stream().map(Object::toString).collect(Collectors.joining(",")) + "-"));
