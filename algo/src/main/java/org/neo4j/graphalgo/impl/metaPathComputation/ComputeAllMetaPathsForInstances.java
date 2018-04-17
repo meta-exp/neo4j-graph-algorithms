@@ -125,10 +125,12 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     }
 
     private boolean initializeNode(int node) {
-        int nodeLabel = arrayGraphInterface.getLabel(node);
+        Integer[] nodeLabels = arrayGraphInterface.getLabels(node);
         int edgeLabel = arrayGraphInterface.getAllEdgeLabels().iterator().next();
-        Integer nodeLabelId = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, nodeLabel));
-        initialInstances.get(nodeLabelId).add(node);
+        for (int nodeLabel : nodeLabels) {
+            Integer nodeLabelId = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, nodeLabel));
+            initialInstances.get(nodeLabelId).add(node);
+        }
         return true;
     }
 
@@ -218,31 +220,29 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private void fillNextInstances(IntHashSet currentInstances, ArrayList<IntHashSet> nextInstances, IntArrayList currentMetaPath, int metaPathLength) {//TODO: refactor and rename
         for (IntCursor instance : currentInstances) {
             for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance.value)) { //TODO: check if getAdjacentNodes works
-                int label = arrayGraphInterface.getLabel(nodeId); //get the id of the label of the node
+                Integer[] labels = arrayGraphInterface.getLabels(nodeId); //get the id of the label of the node
                 int edgeLabel = arrayGraphInterface.getEdgeLabel(instance.value, nodeId);
-                if (!highDegreeIndex.containsKey(nodeId)) {
-                    int labelID = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, label));
-                    nextInstances.get(labelID).add(nodeId); // add the node to the corresponding instances array
-                }
-                else
-                {
-                    for (AbstractMap.SimpleEntry<IntArrayList, IntArrayList> metaPathWithEnds : highDegreeIndex.get(nodeId)){
-                        boolean reachedEndNode = false;
-                        for (IntCursor end : metaPathWithEnds.getValue())
-                        {
-                            if (endNodes.contains(end.value)) {
-                                reachedEndNode = true;
-                                break;
+                for (int label : labels) {
+                    if (!highDegreeIndex.containsKey(nodeId)) {
+                        int labelID = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, label));
+                        nextInstances.get(labelID).add(nodeId); // add the node to the corresponding instances array
+                    } else {
+                        for (AbstractMap.SimpleEntry<IntArrayList, IntArrayList> metaPathWithEnds : highDegreeIndex.get(nodeId)) {
+                            boolean reachedEndNode = false;
+                            for (IntCursor end : metaPathWithEnds.getValue()) {
+                                if (endNodes.contains(end.value)) {
+                                    reachedEndNode = true;
+                                    break;
+                                }
                             }
-                        }
 
-                        if(reachedEndNode && metaPathLength > metaPathWithEnds.getKey().size()/2)
-                        {
-                           IntArrayList newMetaPath = copyMetaPath(currentMetaPath);
-                            newMetaPath.add(edgeLabel);
-                            newMetaPath.add(label);
-                            newMetaPath.addAll(metaPathWithEnds.getKey());
-                            addAndLogMetaPath(newMetaPath);
+                            if (reachedEndNode && metaPathLength > metaPathWithEnds.getKey().size() / 2) {
+                                IntArrayList newMetaPath = copyMetaPath(currentMetaPath);
+                                newMetaPath.add(edgeLabel);
+                                newMetaPath.add(label);
+                                newMetaPath.addAll(metaPathWithEnds.getKey());
+                                addAndLogMetaPath(newMetaPath);
+                            }
                         }
                     }
                 }
