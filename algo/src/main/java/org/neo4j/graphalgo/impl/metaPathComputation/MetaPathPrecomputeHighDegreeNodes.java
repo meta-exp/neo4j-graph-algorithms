@@ -165,10 +165,12 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     private void fillNextInstances(HashSet<Integer> currentInstances, ArrayList<HashSet<Integer>> nextInstances) {
         for (int instance : currentInstances) {
             for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) { //TODO: check if getAdjacentNodes works
-                int label = arrayGraphInterface.getLabel(nodeId); //get the id of the label of the node
+                Integer[] labels = arrayGraphInterface.getLabels(nodeId); //get the id of the label of the node
                 int edgeLabel = arrayGraphInterface.getEdgeLabel(instance, nodeId);
-                int labelID = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, label));
-
+                int labelID = 0;
+                for (int label : labels) {
+                    labelID = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, label));
+                }
                 nextInstances.get(labelID).add(nodeId); // add the node to the corresponding instances array
             }
         }
