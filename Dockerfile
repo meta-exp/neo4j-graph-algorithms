@@ -4,6 +4,7 @@ RUN echo "dbms.connectors.default_listen_address=0.0.0.0" >> /var/lib/neo4j/conf
 RUN echo "dbms.connector.http.listen_address=0.0.0.0:7474" >> /var/lib/neo4j/conf/neo4j.conf
 RUN echo "dbms.connector.https.listen_address=0.0.0.0:7473" >> /var/lib/neo4j/conf/neo4j.conf
 RUN echo "dbms.connector.bolt.listen_address=0.0.0.0:7687" >> /var/lib/neo4j/conf/neo4j.conf
+RUN echo "dbms.security.procedures.unrestricted=algo.*,apoc.*" >> /var/lib/neo4j/conf/neo4j.conf
 ADD . /neo4j-graph-algorithms/
 WORKDIR /neo4j-graph-algorithms/
 RUN mvn -Dmaven.test.skip=true clean install
