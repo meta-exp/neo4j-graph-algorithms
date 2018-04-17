@@ -140,13 +140,6 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
         return currentLabelId - 1;
     }
 
-    private void createMetaPathWithLengthOne(int nodeLabel) {
-        ArrayList<Integer> metaPath = new ArrayList<>();
-        metaPath.add(nodeLabel);
-        addAndLogMetaPath(metaPath);
-    }
-
-
     private void computeMetaPathsFromAllRelevantNodeLabels() {//TODO: rework for Instances
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         int i = 0;
@@ -239,7 +232,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
                     for (AbstractMap.SimpleEntry<ArrayList<Integer>, ArrayList<Integer>> metaPathWithEnds : highDegreeIndex.get(nodeId)){
                         ArrayList<Integer> endCopy = (ArrayList<Integer>) metaPathWithEnds.getValue().clone();
                         endCopy.retainAll(endNodes);
-                        if(!endCopy.isEmpty() && metaPathLength > metaPathWithEnds.getKey().size()/2);
+                        if(!endCopy.isEmpty() && metaPathLength > metaPathWithEnds.getKey().size()/2)
                         {
                             ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                             newMetaPath.add(edgeLabel);
