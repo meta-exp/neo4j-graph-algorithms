@@ -57,10 +57,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
         //Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
 
-        for (String metaPath : finalMetaPathsAsList) {
-            out.println(metaPath);
-        }
-
         System.out.println("calculation took: " + String.valueOf(endTime-startTime));
         debugOut.println("actual amount of metaPaths: " + printCount);
         debugOut.println("total time past: " + (endTime-startTime));
