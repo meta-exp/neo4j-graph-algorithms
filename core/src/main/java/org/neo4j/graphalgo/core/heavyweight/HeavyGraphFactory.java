@@ -24,10 +24,7 @@ import org.neo4j.graphalgo.api.GraphSetup;
 import org.neo4j.graphalgo.api.WeightMapping;
 import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.LabelImporter;
-import org.neo4j.graphalgo.core.NodeImporter;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
-import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.ResourceIterable;
 import org.neo4j.helpers.Exceptions;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -67,7 +64,7 @@ public class HeavyGraphFactory extends GraphFactory {
 
         final IdMap idMap = loadIdMap();
 
-        final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<Object>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap = loadLabelMap(idMap, setup.loadWithLabels);
+        final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap = loadLabelMap(idMap, setup.loadWithLabels);
 
 
         final Supplier<WeightMapping> relWeights = () -> newWeightMap(
@@ -125,7 +122,7 @@ public class HeavyGraphFactory extends GraphFactory {
             final Supplier<WeightMapping> relWeightsSupplier,
             final Supplier<WeightMapping> nodeWeightsSupplier,
             final Supplier<WeightMapping> nodePropsSupplier,
-            final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<Object>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap,
+            final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap,
             Collection<RelationshipImporter> tasks) {
         if (tasks.size() == 1) {
             RelationshipImporter importer = tasks.iterator().next();
