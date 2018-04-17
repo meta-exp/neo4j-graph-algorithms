@@ -226,7 +226,6 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
                 }
                 else
                 {
-
                     for (AbstractMap.SimpleEntry<IntArrayList, IntArrayList> metaPathWithEnds : highDegreeIndex.get(nodeId)){
                         boolean reachedEndNode = false;
                         for (IntCursor end : metaPathWithEnds.getValue())

@@ -1,7 +1,5 @@
 package org.neo4j.graphalgo.api;
 
-import scala.Int;
-
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -14,6 +12,8 @@ public interface ArrayGraphInterface {
     int[] getIncomingNodes(int nodeId);
 
     int getLabel(int nodeId);
+
+    Integer[] getLabels(int nodeId);
 
     int getEdgeLabel(long nodeId1, long nodeId2);
 

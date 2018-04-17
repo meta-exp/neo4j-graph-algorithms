@@ -194,10 +194,26 @@ public class GraphLoader {
         return this;
     }
 
+    /**
+     * Toggle instruct the loader to load the label names as a property.
+     *
+     * @param loadWithLabels When true label names are loaded, when false they are not.
+     * @return itself to enable fluent interface
+     */
     public GraphLoader withLabelAsProperty(boolean loadWithLabels) {
         this.loadWithLabels = loadWithLabels;
         return this;
     }
+
+    /**
+     * Instructs the loader to load the label names as a property.
+     *
+     * @return itself to enable fluent interface
+     */
+    public GraphLoader withLabelAsProperty() {
+        return withLabelAsProperty(true);
+    }
+
     /**
      * Instructs the loader to load only nodes with the given label name.
      * If the label is not found, every node will be loaded.
