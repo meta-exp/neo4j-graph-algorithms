@@ -220,6 +220,7 @@ public final class ParallelUtilTest extends RandomizedTest {
         assertEquals(1, tasks.requested());
     }
 
+    @Ignore
     @Test
     public void shouldBailOnThreadInterrupt() throws Exception {
         withPool(4, pool -> {
