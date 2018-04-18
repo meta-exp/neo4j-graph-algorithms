@@ -170,8 +170,9 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
                 int labelID = 0;
                 for (int label : labels) {
                     labelID = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, label));
+                    nextInstances.get(labelID).add(nodeId); // add the node to the corresponding instances array
                 }
-                nextInstances.get(labelID).add(nodeId); // add the node to the corresponding instances array
+                
             }
         }
     }
