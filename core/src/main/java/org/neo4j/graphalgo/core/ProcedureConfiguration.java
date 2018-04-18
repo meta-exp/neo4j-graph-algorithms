@@ -270,7 +270,7 @@ public class ProcedureConfiguration {
      *
      * @return
      */
-    public Class<? extends GraphFactory> getGraphImpl() {
+    public Class<? extends GraphFactory> getGraphImpl(String defaultGraphImpl) {
         final String graphImpl = getString(
                 ProcedureConstants.GRAPH_IMPL_PARAM,
                 ProcedureConstants.DEFAULT_GRAPH_IMPL);
