@@ -100,6 +100,7 @@ public final class LoadGraphProc {
                     .withDirection(direction)
                     .withSort(stats.sorted)
                     .asUndirected(stats.undirected)
+                    .withLabelAsProperty(true)
                     .load(graphImpl);
             stats.nodes=graph.nodeCount();
             stats.loadMillis = timer.stop().getDuration();
