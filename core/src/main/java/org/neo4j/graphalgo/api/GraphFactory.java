@@ -82,7 +82,7 @@ public abstract class GraphFactory {
         return nodeImporter.call();
     }
 
-    protected AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<Object>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> loadLabelMap(IdMap mapping, boolean loadLabels) throws EntityNotFoundException {
+    protected AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> loadLabelMap(IdMap mapping, boolean loadLabels) throws EntityNotFoundException {
         if (!loadLabels){
             return null;
         }

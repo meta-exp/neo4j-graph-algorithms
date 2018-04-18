@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class LabelImporter extends StatementTask<AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<Object>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>>, EntityNotFoundException> {
+public class LabelImporter extends StatementTask<AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>>, EntityNotFoundException> {
     private final IdMap mapping;
 
     public LabelImporter(
@@ -24,7 +24,7 @@ public class LabelImporter extends StatementTask<AbstractMap.SimpleEntry<HashMap
     }
 
     @Override
-    public AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<Object>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> apply(final Statement statement) throws EntityNotFoundException {
+    public AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> apply(final Statement statement) throws EntityNotFoundException {
         final ReadOperations readOp = statement.readOperations();
         Iterator<Token> labelTokens = readOp.labelsGetAllTokens();
         PrimitiveLongIterator relationships =  readOp.relationshipsGetAll();
@@ -35,15 +35,17 @@ public class LabelImporter extends StatementTask<AbstractMap.SimpleEntry<HashMap
             readOp.relationshipVisit(relationshipId, (relationship, typeId, startNodeId, endNodeId) -> createEdgeTypeEntry(typeId, startNodeId, endNodeId, nodesToLabelMap));
         }
 
-        HashMap<Integer, ArrayList<Object>> idLabelMap = new HashMap<>();
+        HashMap<Integer, ArrayList<IdNameTuple>> idLabelMap = new HashMap<>();
         while (labelTokens.hasNext()) {
             Token token = labelTokens.next();
             PrimitiveLongIterator nodesWithThisLabel = readOp.nodesGetForLabel(token.id());
+            IdNameTuple tuple = new IdNameTuple(token.id(), token.name());
             while (nodesWithThisLabel.hasNext()){
-                ArrayList<Object> idAndName = new ArrayList<>();
-                idAndName.add(token.id());
-                idAndName.add(token.name());
-                idLabelMap.put(mapping.toMappedNodeId(nodesWithThisLabel.next()), idAndName);
+                Integer nodeId = mapping.toMappedNodeId(nodesWithThisLabel.next());
+                if (!idLabelMap.containsKey(nodeId)) {
+                    idLabelMap.put(nodeId, new ArrayList<IdNameTuple>());
+                }
+                idLabelMap.get(nodeId).add(tuple);
             }
         }
 
@@ -55,6 +57,24 @@ public class LabelImporter extends StatementTask<AbstractMap.SimpleEntry<HashMap
         AbstractMap.SimpleEntry<Long, Long> pair = new AbstractMap.SimpleEntry<>(startNodeId, endNodeId);
         nodesToLabelMap.put(pair, typeId);
         return true;
+    }
+
+    public class IdNameTuple {
+        private int id;
+        private String name;
+
+        public IdNameTuple(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getId() {
+            return id;
+        }
     }
 
 }

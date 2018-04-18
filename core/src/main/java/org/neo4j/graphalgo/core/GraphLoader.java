@@ -60,6 +60,7 @@ public class GraphLoader {
             GraphDatabaseAPI.class,
             GraphSetup.class);
 
+    private String name = null;
     private String label = null;
     private String relation = null;
     private String relWeightProp = null;
@@ -194,10 +195,31 @@ public class GraphLoader {
         return this;
     }
 
+    /**
+     * Toggle instruct the loader to load the label names as a property.
+     *
+     * @param loadWithLabels When true label names are loaded, when false they are not.
+     * @return itself to enable fluent interface
+     */
     public GraphLoader withLabelAsProperty(boolean loadWithLabels) {
         this.loadWithLabels = loadWithLabels;
         return this;
     }
+
+    /**
+     * Instructs the loader to load the label names as a property.
+     *
+     * @return itself to enable fluent interface
+     */
+    public GraphLoader withLabelAsProperty() {
+        return withLabelAsProperty(true);
+    }
+
+    public GraphLoader withName(String name) {
+        this.name = name;
+        return this;
+    }
+
     /**
      * Instructs the loader to load only nodes with the given label name.
      * If the label is not found, every node will be loaded.
@@ -507,7 +529,8 @@ public class GraphLoader {
                 sort,
                 loadAsUndirected,
                 loadWithLabels,
-                tracker);
+                tracker,
+                name);
 
         try {
             return (GraphFactory) constructor.invoke(api, setup);
@@ -562,6 +585,7 @@ public class GraphLoader {
 
     public GraphLoader init(Log log, String label, String relationship, ProcedureConfiguration config) {
         return withLog(log)
+                .withName(config.getGraphName(null))
                 .withOptionalLabel(label).withOptionalRelationshipType(relationship)
                 .withConcurrency(config.getConcurrency())
                 .withBatchSize(config.getBatchSize())
