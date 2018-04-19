@@ -18,7 +18,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     private int metaPathLength;
     private PrintStream debugOut;
     public GraphDatabaseAPI api;
-    private HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer,Integer>>> adjacentNodesDict = new HashMap<>();
+    private HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>();
     //private HashMap<Integer, Label> nodeIDLabelsDict = new HashMap<Integer, Label>();
     private List<Node> nodes = null;
     private List<Relationship> rels = null;
@@ -33,6 +33,8 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     private Integer type2ID;
     private HashMap<Integer, String> idTypeMappingNodes = new HashMap<>();
     private HashMap<Integer, String> idTypeMappingEdges = new HashMap<>();
+    private HashMap<Integer, String> intDirectionMapping = new HashMap<>();
+    private HashMap<Integer, Byte> edgesDirectionsDict = new HashMap<>();
 
     public ComputeAllMetaPathsBetweenTypes(int metaPathLength, String type1, String type2, GraphDatabaseAPI api) throws Exception {
         this.metaPathLength = metaPathLength;
@@ -43,7 +45,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema.txt"));//ends up in root/tests //or in dockerhome
     }
 
-    public Result compute() throws Exception{
+    public Result compute() throws Exception {
         debugOut.println("START");
         startTime = System.nanoTime();
         getMetaGraph();
@@ -62,7 +64,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
             e.printStackTrace();
         }
 
-        return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges);
+        return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges, intDirectionMapping);
     }
 
     private void getMetaGraph() throws Exception {
@@ -74,14 +76,14 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         Map<String, Object> row = result.next();
         nodes = (List<Node>) row.get("nodes");
         rels = (List<Relationship>) row.get("relationships");
-        for (Node node : nodes){
+        for (Node node : nodes) {
             String nodeType = node.getLabels().iterator().next().name();
             this.idTypeMappingNodes.put(toIntExact(node.getId()), nodeType);
             debugOut.println(nodeType);
-            if (this.type1.equals(nodeType)){
+            if (this.type1.equals(nodeType)) {
                 this.type1ID = toIntExact(node.getId());
             }
-            if (this.type2.equals(nodeType)){
+            if (this.type2.equals(nodeType)) {
                 this.type2ID = toIntExact(node.getId());
             }
         }
@@ -90,7 +92,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         }
     }
 
-    private void initializeDictionaries(){
+    private void initializeDictionaries() {
         for (Node node : nodes) {
             int nodeID = toIntExact(node.getId());
 
@@ -100,10 +102,23 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 debugOut.println(rel);
                 debugOut.println(rel.getAllProperties());
                 try {
-                    int adjNodeID = toIntExact(rel.getOtherNodeId(node.getId()));
+                    Node adjNode = rel.getOtherNode(node);
+                    int adjNodeID = toIntExact(adjNode.getId());
                     int adjEdgeID = toIntExact(rel.getId());
-                    this.idTypeMappingEdges.put(toIntExact(adjEdgeID), rel.getType().name());
-                    adjacentNodesDict.get(nodeID).add(new AbstractMap.SimpleEntry<>(adjNodeID, adjEdgeID));
+                    this.idTypeMappingEdges.put(adjEdgeID, rel.getType().name());
+                    AbstractMap.SimpleEntry nodeEdgePair = new AbstractMap.SimpleEntry<>(adjNodeID, adjEdgeID);
+                    adjacentNodesDict.get(nodeID).add(nodeEdgePair);
+                    Node startNode = rel.getStartNode();
+                    if (    startNode == node && startNode == adjNode) {
+                        edgesDirectionsDict.put(adjEdgeID, (byte)1); // Direction both
+                    } else if (startNode == node) {
+                        edgesDirectionsDict.put(adjEdgeID, (byte)2); // Direction outgoing from key-node of adjacentNodesDict
+                    } else if (startNode == adjNode) {
+                        edgesDirectionsDict.put(adjEdgeID, (byte)3); // Direction ingoing to key-node of adjacentNodesDict
+                    }
+                    intDirectionMapping.put(1, "both");
+                    intDirectionMapping.put(2, "out");
+                    intDirectionMapping.put(3, "in");
                 } catch (Exception e) {/*prevent duplicates*/}
             }
         }
@@ -128,8 +143,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         int currentInstance;
         int metaPathLength;
 
-        while(!st_allMetaPaths.empty() && !st_currentNode.empty() && !st_metaPathLength.empty())
-        {
+        while (!st_allMetaPaths.empty() && !st_currentNode.empty() && !st_metaPathLength.empty()) {
             currentMetaPath = st_allMetaPaths.pop();
             currentInstance = st_currentNode.pop();
             metaPathLength = st_metaPathLength.pop();
@@ -145,6 +159,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 int nodeID = edge.getKey();
                 int edgeID = edge.getValue();
                 newMetaPath.add(edgeID);
+                newMetaPath.add((int)edgesDirectionsDict.get(edgeID));
                 newMetaPath.add(nodeID);
                 if (nodeID == type2ID) {
                     synchronized (duplicateFreeMetaPaths) {
@@ -161,7 +176,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
             }
         }
-       // System.out.println("These are all our metapaths from node "+ pCurrentInstance);
+        // System.out.println("These are all our metapaths from node "+ pCurrentInstance);
         //System.out.println(duplicateFreeMetaPaths);
     }
 
@@ -202,7 +217,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         }*/
     }
 
-    public void setAdjacentNodesDict(HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict){
+    public void setAdjacentNodesDict(HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict) {
         this.adjacentNodesDict = adjacentNodesDict;
     }
 
@@ -230,11 +245,13 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         HashSet<String> finalMetaPaths;
         HashMap<Integer, String> idTypeMappingNodes;
         HashMap<Integer, String> idTypeMappingEdges;
+        HashMap<Integer, String> intDirectionMapping;
 
-        public Result(HashSet<String> finalMetaPaths, HashMap<Integer, String> idTypeMappingNodes, HashMap<Integer, String> idTypeMappingEdges) {
+        public Result(HashSet<String> finalMetaPaths, HashMap<Integer, String> idTypeMappingNodes, HashMap<Integer, String> idTypeMappingEdges, HashMap<Integer, String> intDirectionMapping) {
             this.finalMetaPaths = finalMetaPaths;
             this.idTypeMappingNodes = idTypeMappingNodes;
             this.idTypeMappingEdges = idTypeMappingEdges;
+            this.intDirectionMapping = intDirectionMapping;
         }
 
         @Override
@@ -245,7 +262,17 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         public HashSet<String> getFinalMetaPaths() {
             return finalMetaPaths;
         }
-        public HashMap<Integer, String> getIDTypeNodeDict(){ return idTypeMappingNodes; }
-        public HashMap<Integer, String> getIDTypeEdgeDict(){ return idTypeMappingEdges; }
+
+        public HashMap<Integer, String> getIDTypeNodeDict() {
+            return idTypeMappingNodes;
+        }
+
+        public HashMap<Integer, String> getIDTypeEdgeDict() {
+            return idTypeMappingEdges;
+        }
+
+        public HashMap<Integer, String> getIntDirectionMapping() {
+            return intDirectionMapping;
+        }
     }
 }

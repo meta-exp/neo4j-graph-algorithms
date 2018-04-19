@@ -13,13 +13,15 @@ public class ComputeAllMetaPathsBetweenTypesResult {
     public final String metaPaths;
     public final String nodesIDTypeDict;
     public final String edgesIDTypeDict;
+    public final String intDirectionMapping;
 
-    private ComputeAllMetaPathsBetweenTypesResult(HashSet<String> metaPaths, HashMap<Integer, String> nodesIDTypeDict, HashMap<Integer, String> edgesIDTypeDict) {
+    private ComputeAllMetaPathsBetweenTypesResult(HashSet<String> metaPaths, HashMap<Integer, String> nodesIDTypeDict, HashMap<Integer, String> edgesIDTypeDict, HashMap<Integer, String> intDirectionMapping) {
         //this.metaPaths = "";
         Gson gson = new Gson();
         this.metaPaths = gson.toJson(metaPaths);
         this.nodesIDTypeDict = gson.toJson(nodesIDTypeDict);
         this.edgesIDTypeDict = gson.toJson(edgesIDTypeDict);
+        this.intDirectionMapping = gson.toJson(intDirectionMapping);
     }
 
     public static Builder builder() {
@@ -31,6 +33,7 @@ public class ComputeAllMetaPathsBetweenTypesResult {
         private HashSet<String> metaPaths;
         private HashMap<Integer, String> nodesIDTypeDict;
         private HashMap<Integer, String> edgesIDTypeDict;
+        private HashMap<Integer, String> intDirectionMapping;
 
         public void setMetaPaths(HashSet<String> metaPaths) {
             // this.metaPaths =  metaPaths.toArray(new String[metaPaths.size()]);
@@ -45,8 +48,12 @@ public class ComputeAllMetaPathsBetweenTypesResult {
             this.edgesIDTypeDict = edgesIDTypeDict;
         }
 
+        public void setIntDirectionMapping(HashMap<Integer, String> intDirectionMapping) {
+            this.intDirectionMapping = intDirectionMapping;
+        }
+
         public ComputeAllMetaPathsBetweenTypesResult build() {
-            return new ComputeAllMetaPathsBetweenTypesResult(metaPaths, nodesIDTypeDict, edgesIDTypeDict);
+            return new ComputeAllMetaPathsBetweenTypesResult(metaPaths, nodesIDTypeDict, edgesIDTypeDict, intDirectionMapping);
 
         }
     }

@@ -48,9 +48,11 @@ public class ComputeAllMetaPathsBetweenTypesProc {
         metaPaths = result.getFinalMetaPaths();
         HashMap<Integer, String> nodesIDTypeDict = result.getIDTypeNodeDict();
         HashMap <Integer, String> edgesIDTypeDict = result.getIDTypeEdgeDict();
+        HashMap <Integer, String> intDirectionMapping = result.getIntDirectionMapping();
         builder.setMetaPaths(metaPaths);
         builder.setNodesIDTypeDict(nodesIDTypeDict);
         builder.setEdgesIDTypeDict(edgesIDTypeDict);
+        builder.setIntDirectionMapping(intDirectionMapping);
 
         //return algo.resultStream();
         //System.out.println(Stream.of(builder.build()));
