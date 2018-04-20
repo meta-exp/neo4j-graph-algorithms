@@ -23,7 +23,7 @@ public class GraphReducer extends MetaPathComputation{
         relationshipTypeDict = new HashMap<>();
     }
 
-    private RelationshipType findRelationType(String edgeType) {
+    private void findRelationType(String edgeType) {
         RelationshipType returnType = null;
         try (Transaction transaction = db.beginTx()) {
             for (RelationshipType type : db.getAllRelationshipTypes()) {
@@ -35,7 +35,6 @@ public class GraphReducer extends MetaPathComputation{
             transaction.success();
         }
         relationshipTypeDict.put(edgeType, returnType);
-        return returnType;
     }
 
     public void compute() {
