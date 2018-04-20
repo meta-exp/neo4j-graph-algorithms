@@ -201,12 +201,12 @@ public class RandomWalk {
     }
 
     private int getRandomNeighbour(int nodeId) {
-        int degree = degrees.degree(nodeId, Direction.OUTGOING);
+        int degree = degrees.degree(nodeId, Direction.BOTH);
         if(degree == 0){
             return -1;
         }
         int randomEdgeIndex= random.nextInt(degree);
-        int neighbourId = arrayGraphInterface.getOutgoingNodes(nodeId)[randomEdgeIndex];
+        int neighbourId = arrayGraphInterface.getAdjacentNodes(nodeId)[randomEdgeIndex];
 
         return neighbourId;
     }
