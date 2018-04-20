@@ -7,10 +7,13 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.*;
+import java.util.concurrent.Semaphore;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static java.lang.Math.max;
 import static java.lang.Math.toIntExact;
 
 public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
@@ -18,7 +21,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     private int metaPathLength;
     private PrintStream debugOut;
     public GraphDatabaseAPI api;
-    private HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer,Integer>>> adjacentNodesDict = new HashMap<>();
+    private HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>();
     //private HashMap<Integer, Label> nodeIDLabelsDict = new HashMap<Integer, Label>();
     private List<Node> nodes = null;
     private List<Relationship> rels = null;
@@ -33,6 +36,9 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     private Integer type2ID;
     private HashMap<Integer, String> idTypeMappingNodes = new HashMap<>();
     private HashMap<Integer, String> idTypeMappingEdges = new HashMap<>();
+    final int MAX_NOF_THREADS = 12; //TODO why not full utilization?
+    final Semaphore threadSemaphore = new Semaphore(MAX_NOF_THREADS);
+    HashMap<String, Integer> metaPathsCountsDict = new HashMap<>();
 
     public ComputeAllMetaPathsBetweenTypes(int metaPathLength, String type1, String type2, GraphDatabaseAPI api) throws Exception {
         this.metaPathLength = metaPathLength;
@@ -43,7 +49,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema.txt"));//ends up in root/tests //or in dockerhome
     }
 
-    public Result compute() throws Exception{
+    public Result compute() throws Exception {
         debugOut.println("START");
         startTime = System.nanoTime();
         getMetaGraph();
@@ -61,7 +67,8 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
+        approximateCount(duplicateFreeMetaPaths);
+        debugOut.println(metaPathsCountsDict);
         return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges);
     }
 
@@ -74,14 +81,14 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         Map<String, Object> row = result.next();
         nodes = (List<Node>) row.get("nodes");
         rels = (List<Relationship>) row.get("relationships");
-        for (Node node : nodes){
+        for (Node node : nodes) {
             String nodeType = node.getLabels().iterator().next().name();
             this.idTypeMappingNodes.put(toIntExact(node.getId()), nodeType);
             debugOut.println(nodeType);
-            if (this.type1.equals(nodeType)){
+            if (this.type1.equals(nodeType)) {
                 this.type1ID = toIntExact(node.getId());
             }
-            if (this.type2.equals(nodeType)){
+            if (this.type2.equals(nodeType)) {
                 this.type2ID = toIntExact(node.getId());
             }
         }
@@ -90,7 +97,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         }
     }
 
-    private void initializeDictionaries(){
+    private void initializeDictionaries() {
         for (Node node : nodes) {
             int nodeID = toIntExact(node.getId());
 
@@ -128,8 +135,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         int currentInstance;
         int metaPathLength;
 
-        while(!st_allMetaPaths.empty() && !st_currentNode.empty() && !st_metaPathLength.empty())
-        {
+        while (!st_allMetaPaths.empty() && !st_currentNode.empty() && !st_metaPathLength.empty()) {
             currentMetaPath = st_allMetaPaths.pop();
             currentInstance = st_currentNode.pop();
             metaPathLength = st_metaPathLength.pop();
@@ -161,7 +167,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
             }
         }
-       // System.out.println("These are all our metapaths from node "+ pCurrentInstance);
+        // System.out.println("These are all our metapaths from node "+ pCurrentInstance);
         //System.out.println(duplicateFreeMetaPaths);
     }
 
@@ -202,8 +208,60 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         }*/
     }
 
-    public void setAdjacentNodesDict(HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict){
+    public void setAdjacentNodesDict(HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict) {
         this.adjacentNodesDict = adjacentNodesDict;
+    }
+
+    public void approximateCount(HashSet<String> metaPaths) throws InterruptedException {
+        long startTime = System.nanoTime();
+        ArrayList<GetCountThread> threads = new ArrayList<>(MAX_NOF_THREADS);
+        int i = 0;
+        for (String metaPath : metaPaths) {
+            threadSemaphore.acquire();
+            GetCountThread thread = new GetCountThread(this, "thread-" + i, metaPath);
+            thread.start();
+            threads.add(thread);
+            i++;
+        }
+        try {
+            for (GetCountThread thread : threads) {
+                thread.join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        long endTime = System.nanoTime();
+        debugOut.println("time for counts:" + (endTime - startTime));
+        debugOut.println("size:" + metaPathsCountsDict.size());
+        // remove(0) would only remove the first one
+        metaPathsCountsDict.values().removeAll(Collections.singleton(0));
+        debugOut.println("size after first pruning:" + metaPathsCountsDict.size());
+    }
+
+    public void getCount(String metaPath) {
+        org.neo4j.graphdb.Result result = null;
+        String[] splitString = metaPath.split(Pattern.quote("|"));
+        String nodeLabel1 = idTypeMappingNodes.get(Integer.parseInt(splitString[0]));
+        String edgeLabel1 = idTypeMappingEdges.get(Integer.parseInt(splitString[1]));
+        String nodeLabel2 = idTypeMappingNodes.get(Integer.parseInt(splitString[2]));
+        try (Transaction tx = api.beginTx()) {
+            result = api.execute("MATCH (:`" + nodeLabel1 + "`)-[:`" + edgeLabel1 + "`]-(:`" + nodeLabel2 + "`) RETURN count(*)");
+            tx.success();
+        }
+        Map<String, Object> row = result.next();
+        int count = toIntExact((long)row.get("count(*)"));
+        metaPathsCountsDict.put(metaPath, count);
+        threadSemaphore.release();
+    }
+
+    public void setIDTypeMappingNodes(HashMap<Integer, String> idTypeMappingNodes){
+        this.idTypeMappingNodes = idTypeMappingNodes;
+    }
+    public void setIDTypeMappingEdges(HashMap<Integer, String> idTypeMappingEdges){
+        this.idTypeMappingEdges = idTypeMappingEdges;
+    }
+    public HashMap<String, Integer> getMetaPathsCountsDict(){
+        return metaPathsCountsDict;
     }
 
     //TODO -------------------------------------------------------------------
@@ -245,7 +303,13 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         public HashSet<String> getFinalMetaPaths() {
             return finalMetaPaths;
         }
-        public HashMap<Integer, String> getIDTypeNodeDict(){ return idTypeMappingNodes; }
-        public HashMap<Integer, String> getIDTypeEdgeDict(){ return idTypeMappingEdges; }
+
+        public HashMap<Integer, String> getIDTypeNodeDict() {
+            return idTypeMappingNodes;
+        }
+
+        public HashMap<Integer, String> getIDTypeEdgeDict() {
+            return idTypeMappingEdges;
+        }
     }
 }

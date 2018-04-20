@@ -10,6 +10,10 @@ public class MetaPathComputation extends Algorithm<MetaPathComputation> {
         //override this
     }
 
+    public void getCount(String metaPath) {
+        //override this
+    }
+
     public Stream<ComputeAllMetaPaths.Result> resultStream() {
         return IntStream.range(0, 1).mapToObj(result -> new ComputeAllMetaPaths.Result(new HashSet<>()));
     }
