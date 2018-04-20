@@ -30,7 +30,7 @@ public class GraphReducerProc {
         String[] goodEdgeTypes = goodEdgeTypesString.substring(1,goodEdgeTypesString.length()-1).split(Pattern.quote(", "));
         String[] goodNodeTypes = goodNodeTypesString.substring(1,goodNodeTypesString.length()-1).split(Pattern.quote(", "));
 
-        final GraphReducer algo = new GraphReducer(db, log, goodNodeTypes,goodEdgeTypes);
+        final GraphReducer algo = new GraphReducer(db, log, goodNodeTypes, goodEdgeTypes);
 
         long startTime = System.currentTimeMillis();
         algo.compute();
