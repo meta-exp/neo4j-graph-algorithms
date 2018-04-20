@@ -16,6 +16,8 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
         import java.util.stream.IntStream;
         import java.util.stream.Stream;
 
+        import static java.lang.Float.max;
+
 public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
 
     private ArrayGraphInterface arrayGraphInterface;
@@ -272,7 +274,7 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private void printMetaPathAndLog(String joinedMetaPath) {
         out.println(joinedMetaPath);
         printCount++;
-        if (printCount % ((int)estimatedCount/50) == 0) {
+        if ((printCount % max(((int)estimatedCount/50), 1)) == 0) {
             debugOut.println("MetaPaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
         }
     }
