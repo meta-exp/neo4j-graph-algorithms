@@ -2,8 +2,10 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
 
 import org.neo4j.graphdb.*;
 
+import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import javax.crypto.Mac;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.*;
@@ -215,13 +217,25 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     public void approximateCount(HashSet<String> metaPaths) throws InterruptedException {
         long startTime = System.nanoTime();
         ArrayList<GetCountThread> threads = new ArrayList<>(MAX_NOF_THREADS);
-        int i = 0;
+
+        List<HashSet<String>> metaPathsThreadSets = new ArrayList<>(MAX_NOF_THREADS);
+        for (int k = 0; k < MAX_NOF_THREADS; k++) {
+            metaPathsThreadSets.add(new HashSet<String>());
+        }
+
+        int index = 0;
         for (String metaPath : metaPaths) {
+            metaPathsThreadSets.get(index++ % MAX_NOF_THREADS).add(metaPath);
+        }
+
+        int i = 0;
+        for (HashSet<String> metaPathsSet : metaPathsThreadSets) {
             threadSemaphore.acquire();
-            GetCountThread thread = new GetCountThread(this, "thread-" + i, metaPath);
+            GetCountThread thread = new GetCountThread(this, "thread-" + i, metaPathsSet);
             thread.start();
             threads.add(thread);
             i++;
+            threadSemaphore.release();
         }
         try {
             for (GetCountThread thread : threads) {
@@ -251,7 +265,6 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         Map<String, Object> row = result.next();
         int count = toIntExact((long)row.get("count(*)"));
         metaPathsCountsDict.put(metaPath, count);
-        threadSemaphore.release();
     }
 
     public void setIDTypeMappingNodes(HashMap<Integer, String> idTypeMappingNodes){
