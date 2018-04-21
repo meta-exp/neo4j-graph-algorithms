@@ -59,6 +59,7 @@ public class ComputeAllMetaPathsBetweenTypesTest {
                         "  (i)-[:TYPE1]->(t),\n" +
                         "  (t)-[:TYPE1]->(s),\n" +
                         "  (t)-[:TYPE1]->(o),\n" +
+                        "  (s)-[:TYPE1]->(k),\n" +
                         "  (k)-[:TYPE1]->(s)\n";
 
         api = TestDatabaseCreator.createTestDatabase();
@@ -128,14 +129,14 @@ public class ComputeAllMetaPathsBetweenTypesTest {
         algo.setAdjacentNodesDict(adjacentNodesDict);
         algo.getTwoMPWeights();
         HashMap<String, Double> actualTwoMPWeightDict = new HashMap<>();
-        actualTwoMPWeightDict.put("1|0|1", (double) 2 / 24);
-        actualTwoMPWeightDict.put("1|0|2", (double) 2 / 24);
-        actualTwoMPWeightDict.put("1|0|3", (double) 5 / 24);
-        actualTwoMPWeightDict.put("2|0|1", (double) 2 / 24);
-        actualTwoMPWeightDict.put("2|0|3", (double) 3 / 24);
-        actualTwoMPWeightDict.put("3|0|1", (double) 5 / 24);
-        actualTwoMPWeightDict.put("3|0|2", (double) 3 / 24);
-        actualTwoMPWeightDict.put("3|0|3", (double) 2 / 24);
+        actualTwoMPWeightDict.put("1|0|1", (double) 2 / 26);
+        actualTwoMPWeightDict.put("1|0|2", (double) 2 / 26);
+        actualTwoMPWeightDict.put("1|0|3", (double) 5 / 26);
+        actualTwoMPWeightDict.put("2|0|1", (double) 2 / 26);
+        actualTwoMPWeightDict.put("2|0|3", (double) 4 / 26);
+        actualTwoMPWeightDict.put("3|0|1", (double) 5 / 26);
+        actualTwoMPWeightDict.put("3|0|2", (double) 4 / 26);
+        actualTwoMPWeightDict.put("3|0|3", (double) 2 / 26);
         assertEquals(actualTwoMPWeightDict, algo.getTwoMPWeightDict());
     }
 
@@ -150,11 +151,22 @@ public class ComputeAllMetaPathsBetweenTypesTest {
         algo.setAdjacentNodesDict(adjacentNodesDict);
         algo.computeMetaPathWeights(metaPaths);
         HashMap<String, Double> actualMetaPathWeightsDict = new HashMap<>();
-        actualMetaPathWeightsDict.put("1|0|1|0|2", ((double) 2 / 24) * ((double) 2 / 24));
-        actualMetaPathWeightsDict.put("1|0|1|0|3", ((double) 2 / 24) * ((double) 5 / 24));
-        actualMetaPathWeightsDict.put("2|0|1", (double) 2 / 24);
-        actualMetaPathWeightsDict.put("3|0|1", (double) 5 / 24);
+        actualMetaPathWeightsDict.put("1|0|1|0|2", ((double) 2 / 26) * ((double) 2 / 26));
+        actualMetaPathWeightsDict.put("1|0|1|0|3", ((double) 2 / 26) * ((double) 5 / 26));
+        actualMetaPathWeightsDict.put("2|0|1", (double) 2 / 26);
+        actualMetaPathWeightsDict.put("3|0|1", (double) 5 / 26);
         assertEquals(actualMetaPathWeightsDict, algo.getMetaPathWeightsDict());
+    }
+
+    @Ignore //TODO could be a problem if we consider the direction of edges
+    @Test
+    public void testPairHashSet() {
+        HashSet<AbstractMap.SimpleEntry<Integer,Integer>> nodeEdge = new HashSet<>();
+        nodeEdge.add(new AbstractMap.SimpleEntry<>(1, 2));
+        nodeEdge.add(new AbstractMap.SimpleEntry<>(1, 2));
+        nodeEdge.add(new AbstractMap.SimpleEntry<>(2, 2));
+        nodeEdge.add(new AbstractMap.SimpleEntry<>(1, 3));
+        System.out.println(nodeEdge);
     }
 
     //TODO: write a test for the data written to the outputfile

@@ -120,7 +120,6 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 } catch (Exception e) {/*prevent duplicates*/}
             }
         }
-        out.println(adjacentNodesDict);
     }
 
     public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) { //TODO will it be faster if not node but nodeID with dicts?
@@ -278,6 +277,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
 
     //TODO multithreading
     public void getTwoMPWeights() {
+        debugOut.println("getTwoMPWeights");
         org.neo4j.graphdb.Result result = null;
         int countAllTwoMP = 0;
         for (int nodeID1 : nodeLabelIDs) {
@@ -310,7 +310,9 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     //TODO multithreading
     //TODO arrayList/Array instead of string?
     public void computeMetaPathWeights(HashSet<String> metaPaths) {
+        debugOut.println("computeMetaPathWeights");
         getTwoMPWeights();
+        debugOut.println("getTwoMPWeights finished");
         for (String metaPath : metaPaths) {
             double metaPathWeight = 1;
             int thirdDelimiterIndex = 0;
@@ -321,9 +323,11 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 if (thirdDelimiterIndex < thirdDelimiterIndexOld) { //if indexOf returns -1 -> end of meta path
                     String twoMP = metaPath.substring(max(thirdDelimiterIndexOld - 1, 0), metaPath.length());
                     metaPathWeight *= twoMPWeightDict.get(twoMP);
+                    debugOut.println("twoMP (break): " + twoMP);
                     break;
                 }
                 String twoMP = metaPath.substring(max(thirdDelimiterIndexOld - 1, 0), thirdDelimiterIndex);
+                debugOut.println("twoMP: " + twoMP);
                 metaPathWeight *= twoMPWeightDict.get(twoMP);
             } while (true);
             metaPathWeightsDict.put(metaPath, metaPathWeight);
