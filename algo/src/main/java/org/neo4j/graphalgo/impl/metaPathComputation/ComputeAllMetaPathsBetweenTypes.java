@@ -2,10 +2,8 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
 
 import org.neo4j.graphdb.*;
 
-import org.neo4j.helpers.collection.Iterables;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
-import javax.crypto.Mac;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.*;
@@ -23,7 +21,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     private int metaPathLength;
     private PrintStream debugOut;
     public GraphDatabaseAPI api;
-    private HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>();
+    private HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>(); //adjNodeID, adjEdgeID
     //private HashMap<Integer, Label> nodeIDLabelsDict = new HashMap<Integer, Label>();
     private List<Node> nodes = null;
     private List<Relationship> rels = null;
@@ -41,6 +39,10 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     final int MAX_NOF_THREADS = 12; //TODO why not full utilization?
     final Semaphore threadSemaphore = new Semaphore(MAX_NOF_THREADS);
     HashMap<String, Integer> metaPathsCountsDict = new HashMap<>();
+    private HashSet<Integer> nodeLabelIDs = new HashSet<>();
+    private HashMap<String, Double> twoMPWeightDict = new HashMap<>();
+    private HashMap<String, Integer> countSingleTwoMPDict = new HashMap<>();
+    private HashMap<String, Double> metaPathWeightsDict = new HashMap<>();
 
     public ComputeAllMetaPathsBetweenTypes(int metaPathLength, String type1, String type2, GraphDatabaseAPI api) throws Exception {
         this.metaPathLength = metaPathLength;
@@ -84,6 +86,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         nodes = (List<Node>) row.get("nodes");
         rels = (List<Relationship>) row.get("relationships");
         for (Node node : nodes) {
+            nodeLabelIDs.add(toIntExact(node.getId()));
             String nodeType = node.getLabels().iterator().next().name();
             this.idTypeMappingNodes.put(toIntExact(node.getId()), nodeType);
             debugOut.println(nodeType);
@@ -210,10 +213,6 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         }*/
     }
 
-    public void setAdjacentNodesDict(HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict) {
-        this.adjacentNodesDict = adjacentNodesDict;
-    }
-
     public void approximateCount(HashSet<String> metaPaths) throws InterruptedException {
         long startTime = System.nanoTime();
         ArrayList<GetCountThread> threads = new ArrayList<>(MAX_NOF_THREADS);
@@ -253,28 +252,110 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     }
 
     public void getCount(String metaPath) {
-        org.neo4j.graphdb.Result result = null;
-        String[] splitString = metaPath.split(Pattern.quote("|"));
-        String nodeLabel1 = idTypeMappingNodes.get(Integer.parseInt(splitString[0]));
-        String edgeLabel1 = idTypeMappingEdges.get(Integer.parseInt(splitString[1]));
-        String nodeLabel2 = idTypeMappingNodes.get(Integer.parseInt(splitString[2]));
-        try (Transaction tx = api.beginTx()) {
-            result = api.execute("MATCH (:`" + nodeLabel1 + "`)-[:`" + edgeLabel1 + "`]-(:`" + nodeLabel2 + "`) RETURN count(*)");
-            tx.success();
+        //TODO regex etc WIP
+        String escapedPipe = Pattern.quote("|");
+        String regex = "(-*[0-9]+|){2}-*[0-9]+"; //see before and than |
+        String metaPathStart = metaPath.split(regex)[0];
+        System.out.println("mps" + metaPathStart);
+        if (!metaPathsCountsDict.containsKey(metaPathStart)) {
+            org.neo4j.graphdb.Result result = null;
+            String[] splitString = metaPathStart.split(escapedPipe, 3);
+            String nodeLabel1 = idTypeMappingNodes.get(Integer.parseInt(splitString[0]));
+            String edgeLabel1 = idTypeMappingEdges.get(Integer.parseInt(splitString[1]));
+            String nodeLabel2 = idTypeMappingNodes.get(Integer.parseInt(splitString[2]));
+            try (Transaction tx = api.beginTx()) {
+                result = api.execute("MATCH (:`" + nodeLabel1 + "`)-[:`" + edgeLabel1 + "`]-(:`" + nodeLabel2 + "`) RETURN count(*)");
+                tx.success();
+            }
+            Map<String, Object> row = result.next();
+            int count = toIntExact((long) row.get("count(*)"));
+            metaPathsCountsDict.put(metaPath, count);
+        } else {
+            metaPathsCountsDict.put(metaPath, metaPathsCountsDict.get(metaPathStart)); //TODO after some iterations there are longer meta-paths in the dict which could be used
         }
-        Map<String, Object> row = result.next();
-        int count = toIntExact((long)row.get("count(*)"));
-        metaPathsCountsDict.put(metaPath, count);
     }
 
-    public void setIDTypeMappingNodes(HashMap<Integer, String> idTypeMappingNodes){
+    //TODO multithreading
+    public void getTwoMPWeights() {
+        org.neo4j.graphdb.Result result = null;
+        int countAllTwoMP = 0;
+        for (int nodeID1 : nodeLabelIDs) {
+            String nodeLabel1 = idTypeMappingNodes.get(nodeID1);
+            HashSet<AbstractMap.SimpleEntry<Integer, Integer>> adjacentNodes = adjacentNodesDict.get(nodeID1);
+            for (AbstractMap.SimpleEntry<Integer, Integer> edgeNodePair : adjacentNodes) {
+                int nodeID2 = edgeNodePair.getKey();
+                String nodeLabel2 = idTypeMappingNodes.get(nodeID2);
+                int edgeID1 = edgeNodePair.getValue();
+                String edgeLabel1 = idTypeMappingEdges.get(edgeID1);
+                try (Transaction tx = api.beginTx()) {
+                    result = api.execute("MATCH (:`" + nodeLabel1 + "`)-[:`" + edgeLabel1 + "`]-(:`" + nodeLabel2 + "`) RETURN count(*)");
+                    tx.success();
+                }
+                Map<String, Object> row = result.next();
+                int countSingleTwoMP = toIntExact((long) row.get("count(*)"));
+                String twoMP = nodeID1 + "|" + edgeID1 + "|" + nodeID2;
+                /*ArrayList<Integer> twoMP = new ArrayList<Integer>(3);
+                twoMP.add(nodeID1);
+                twoMP.add(edgeID1);
+                twoMP.add(nodeID2);*/
+                countSingleTwoMPDict.put(twoMP, countSingleTwoMP);
+                countAllTwoMP += countSingleTwoMP;
+            }
+        }
+        final int COUNT_ALL_TWO_MP = countAllTwoMP; //need to be final to be used in lambda expression
+        countSingleTwoMPDict.forEach((twoMP, count) -> twoMPWeightDict.put(twoMP, (double) count / (COUNT_ALL_TWO_MP))); //not COUNT_ALL_TWO_MP * 2, because we already have the sum of twoMP and not the number of edges
+    }
+
+    //TODO multithreading
+    //TODO arrayList/Array instead of string?
+    public void computeMetaPathWeights(HashSet<String> metaPaths) {
+        getTwoMPWeights();
+        for (String metaPath : metaPaths) {
+            double metaPathWeight = 1;
+            int thirdDelimiterIndex = 0;
+            int thirdDelimiterIndexOld;
+            do { //TODO end of meta-path -> indexOf
+                thirdDelimiterIndexOld = thirdDelimiterIndex;
+                thirdDelimiterIndex += metaPath.indexOf("|", metaPath.indexOf("|", metaPath.indexOf("|", max(thirdDelimiterIndex - 1, 0)) + 1) + 1); //thirdDelimiterIndex - 1 because last node in in next iteration first node, + 1 because we do not want the same delimiter again
+                if (thirdDelimiterIndex < thirdDelimiterIndexOld) { //if indexOf returns -1 -> end of meta path
+                    String twoMP = metaPath.substring(max(thirdDelimiterIndexOld - 1, 0), metaPath.length());
+                    metaPathWeight *= twoMPWeightDict.get(twoMP);
+                    break;
+                }
+                String twoMP = metaPath.substring(max(thirdDelimiterIndexOld - 1, 0), thirdDelimiterIndex);
+                metaPathWeight *= twoMPWeightDict.get(twoMP);
+            } while (true);
+            metaPathWeightsDict.put(metaPath, metaPathWeight);
+        }
+
+    }
+
+    public void setIDTypeMappingNodes(HashMap<Integer, String> idTypeMappingNodes) {
         this.idTypeMappingNodes = idTypeMappingNodes;
     }
-    public void setIDTypeMappingEdges(HashMap<Integer, String> idTypeMappingEdges){
+
+    public void setIDTypeMappingEdges(HashMap<Integer, String> idTypeMappingEdges) {
         this.idTypeMappingEdges = idTypeMappingEdges;
     }
-    public HashMap<String, Integer> getMetaPathsCountsDict(){
+
+    public HashMap<String, Integer> getMetaPathsCountsDict() {
         return metaPathsCountsDict;
+    }
+
+    public void setNodeLabelIDs(HashSet<Integer> nodeLabelIDs) {
+        this.nodeLabelIDs = nodeLabelIDs;
+    }
+
+    public void setAdjacentNodesDict(HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict) {
+        this.adjacentNodesDict = adjacentNodesDict;
+    }
+
+    public HashMap<String, Double> getTwoMPWeightDict() {
+        return twoMPWeightDict;
+    }
+
+    public HashMap<String, Double> getMetaPathWeightsDict() {
+        return metaPathWeightsDict;
     }
 
     //TODO -------------------------------------------------------------------

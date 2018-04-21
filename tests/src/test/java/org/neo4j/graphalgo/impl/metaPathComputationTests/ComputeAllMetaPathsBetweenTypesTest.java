@@ -1,9 +1,6 @@
 package org.neo4j.graphalgo.impl.metaPathComputationTests;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
@@ -22,13 +19,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
-/**         5     5      5
- *      (1)---(2)---(3)----.
- *    5/ 2    2     2     2 \     5
- *  (0)---(7)---(8)---(9)---(10)-//->(0)
- *    3\    3     3     3   /
- *      (4)---(5)---(6)----°
- *
+/**
+ * 5     5      5
+ * (1)---(2)---(3)----.
+ * 5/ 2    2     2     2 \     5
+ * (0)---(7)---(8)---(9)---(10)-//->(0)
+ * 3\    3     3     3   /
+ * (4)---(5)---(6)----°
+ * <p>
  * S->X: {S,G,H,I,X}:8, {S,D,E,F,X}:12, {S,A,B,C,X}:20
  */
 
@@ -36,6 +34,7 @@ public class ComputeAllMetaPathsBetweenTypesTest {
 
     private static GraphDatabaseAPI api;
     private ComputeAllMetaPathsBetweenTypes algo;
+    private final HashSet<String> metaPaths = new HashSet<>(Arrays.asList("1|0|1|0|2", "1|0|1|0|3", "2|0|1", "3|0|1"));
 
     @BeforeClass
     public static void setup() throws KernelException, Exception {
@@ -93,7 +92,7 @@ public class ComputeAllMetaPathsBetweenTypesTest {
     }
 
     @Test
-    public void testGetCount(){
+    public void testGetCount() {
         String metaPath = "2|0|2";
         algo.getCount(metaPath);
         HashMap<String, Integer> actualCountsDict = new HashMap<>();
@@ -105,16 +104,56 @@ public class ComputeAllMetaPathsBetweenTypesTest {
 
     @Test
     public void testApproximateCount() throws InterruptedException {
-        HashSet<String> metaPaths = new HashSet<>(Arrays.asList("1|0|1|0|2", "1|0|1|0|42", "2|0|1", "3|0|1"));
         algo.approximateCount(metaPaths);
         HashMap<String, Integer> metaPathsCountsDict = algo.getMetaPathsCountsDict();
         HashMap<String, Integer> actualCountsDict = new HashMap<>();
-        actualCountsDict.put("2|0|1",2);
-        actualCountsDict.put("1|0|1|0|42",2);
-        actualCountsDict.put("3|0|1",5);
-        actualCountsDict.put("1|0|1|0|2",2);
+        actualCountsDict.put("2|0|1", 2);
+        actualCountsDict.put("1|0|1|0|42", 2);
+        actualCountsDict.put("3|0|1", 5);
+        actualCountsDict.put("1|0|1|0|2", 2);
         System.out.print(metaPathsCountsDict);
         assertEquals(actualCountsDict, metaPathsCountsDict);
+    }
+
+    @Ignore //TODO
+    @Test
+    public void testGetTwoMPWeights() {
+        HashSet<Integer> nodeLabelIDs = new HashSet<>(Arrays.asList(1, 2, 3));
+        algo.setNodeLabelIDs(nodeLabelIDs);
+        HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>();
+        adjacentNodesDict.put(1, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(2, 0), new AbstractMap.SimpleEntry<>(3, 0))));
+        adjacentNodesDict.put(2, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(3, 0))));
+        adjacentNodesDict.put(3, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(2, 0), new AbstractMap.SimpleEntry<>(3, 0))));
+        algo.setAdjacentNodesDict(adjacentNodesDict);
+        algo.getTwoMPWeights();
+        HashMap<String, Double> actualTwoMPWeightDict = new HashMap<>();
+        actualTwoMPWeightDict.put("1|0|1", (double) 2 / 24);
+        actualTwoMPWeightDict.put("1|0|2", (double) 2 / 24);
+        actualTwoMPWeightDict.put("1|0|3", (double) 5 / 24);
+        actualTwoMPWeightDict.put("2|0|1", (double) 2 / 24);
+        actualTwoMPWeightDict.put("2|0|3", (double) 3 / 24);
+        actualTwoMPWeightDict.put("3|0|1", (double) 5 / 24);
+        actualTwoMPWeightDict.put("3|0|2", (double) 3 / 24);
+        actualTwoMPWeightDict.put("3|0|3", (double) 2 / 24);
+        assertEquals(actualTwoMPWeightDict, algo.getTwoMPWeightDict());
+    }
+
+    @Test
+    public void testComputeMetaPathWeights() {
+        HashSet<Integer> nodeLabelIDs = new HashSet<>(Arrays.asList(1, 2, 3));
+        algo.setNodeLabelIDs(nodeLabelIDs);
+        HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>();
+        adjacentNodesDict.put(1, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(2, 0), new AbstractMap.SimpleEntry<>(3, 0))));
+        adjacentNodesDict.put(2, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(3, 0))));
+        adjacentNodesDict.put(3, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(2, 0), new AbstractMap.SimpleEntry<>(3, 0))));
+        algo.setAdjacentNodesDict(adjacentNodesDict);
+        algo.computeMetaPathWeights(metaPaths);
+        HashMap<String, Double> actualMetaPathWeightsDict = new HashMap<>();
+        actualMetaPathWeightsDict.put("1|0|1|0|2", ((double) 2 / 24) * ((double) 2 / 24));
+        actualMetaPathWeightsDict.put("1|0|1|0|3", ((double) 2 / 24) * ((double) 5 / 24));
+        actualMetaPathWeightsDict.put("2|0|1", (double) 2 / 24);
+        actualMetaPathWeightsDict.put("3|0|1", (double) 5 / 24);
+        assertEquals(actualMetaPathWeightsDict, algo.getMetaPathWeightsDict());
     }
 
     //TODO: write a test for the data written to the outputfile
