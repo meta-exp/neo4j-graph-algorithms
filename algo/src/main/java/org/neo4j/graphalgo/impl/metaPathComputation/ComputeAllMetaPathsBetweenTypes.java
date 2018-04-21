@@ -71,8 +71,9 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        approximateCount(duplicateFreeMetaPaths);
-        debugOut.println(metaPathsCountsDict);
+        computeMetaPathWeights(duplicateFreeMetaPaths);
+        debugOut.println(metaPathWeightsDict);
+        //debugOut.println(metaPathsCountsDict);
         return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges);
     }
 
@@ -89,7 +90,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
             nodeLabelIDs.add(toIntExact(node.getId()));
             String nodeType = node.getLabels().iterator().next().name();
             this.idTypeMappingNodes.put(toIntExact(node.getId()), nodeType);
-            debugOut.println(nodeType);
+            //debugOut.println(nodeType);
             if (this.type1.equals(nodeType)) {
                 this.type1ID = toIntExact(node.getId());
             }
@@ -109,8 +110,8 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
             HashSet<AbstractMap.SimpleEntry<Integer, Integer>> adjNodesSet = new HashSet<>();
             adjacentNodesDict.putIfAbsent(toIntExact(nodeID), adjNodesSet);
             for (Relationship rel : rels) {
-                debugOut.println(rel);
-                debugOut.println(rel.getAllProperties());
+                //debugOut.println(rel);
+                //debugOut.println(rel.getAllProperties());
                 try {
                     int adjNodeID = toIntExact(rel.getOtherNodeId(node.getId()));
                     int adjEdgeID = toIntExact(rel.getId());
@@ -244,11 +245,11 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
             e.printStackTrace();
         }
         long endTime = System.nanoTime();
-        debugOut.println("time for counts:" + (endTime - startTime));
-        debugOut.println("size:" + metaPathsCountsDict.size());
+        //debugOut.println("time for counts:" + (endTime - startTime));
+        //debugOut.println("size:" + metaPathsCountsDict.size());
         // remove(0) would only remove the first one
         metaPathsCountsDict.values().removeAll(Collections.singleton(0));
-        debugOut.println("size after first pruning:" + metaPathsCountsDict.size());
+        //debugOut.println("size after first pruning:" + metaPathsCountsDict.size());
     }
 
     public void getCount(String metaPath) {
@@ -327,7 +328,6 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
             } while (true);
             metaPathWeightsDict.put(metaPath, metaPathWeight);
         }
-
     }
 
     public void setIDTypeMappingNodes(HashMap<Integer, String> idTypeMappingNodes) {

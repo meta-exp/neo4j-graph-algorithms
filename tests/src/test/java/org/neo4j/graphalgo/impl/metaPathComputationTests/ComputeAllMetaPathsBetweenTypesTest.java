@@ -91,6 +91,7 @@ public class ComputeAllMetaPathsBetweenTypesTest {
         algo.setIDTypeMappingEdges(idTypeMappingEdges);
     }
 
+    @Ignore
     @Test
     public void testGetCount() {
         String metaPath = "2|0|2";
@@ -102,6 +103,7 @@ public class ComputeAllMetaPathsBetweenTypesTest {
         assertEquals(actualCountsDict, metaPathsCountsDict);
     }
 
+    @Ignore
     @Test
     public void testApproximateCount() throws InterruptedException {
         algo.approximateCount(metaPaths);
@@ -115,7 +117,6 @@ public class ComputeAllMetaPathsBetweenTypesTest {
         assertEquals(actualCountsDict, metaPathsCountsDict);
     }
 
-    @Ignore //TODO
     @Test
     public void testGetTwoMPWeights() {
         HashSet<Integer> nodeLabelIDs = new HashSet<>(Arrays.asList(1, 2, 3));
