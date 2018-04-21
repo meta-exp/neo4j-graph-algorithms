@@ -2,16 +2,19 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
 
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class GraphReducer extends MetaPathComputation{
+public class GraphReducer extends MetaPathComputation {
     public Log log;
     private GraphDatabaseService db;
     private String[] goodLabels;
     private String[] goodEdgeLabels;
+    private ArrayList<String> newGoodLabels = new ArrayList<>();
     private HashMap<String, RelationshipType> relationshipTypeDict;
 
     public GraphReducer(GraphDatabaseService db, Log log,
@@ -43,14 +46,14 @@ public class GraphReducer extends MetaPathComputation{
             findRelationType(goodEdgeType);
         }
 
-        for (long nodeId : getTypeNodeIds()) {
-            Thread thread = new DeleteNodesThread(this::deleteNode, nodeId);
+        for (long relId : getTypeRelIds()) {
+            Thread thread = new DeleteRelationshipsThread(this::deleteRelationship, relId);
             threads.add(thread);
             thread.run();
         }
 
-        for (long relId : getTypeRelIds()) {
-            Thread thread = new DeleteRelationshipsThread(this::deleteRelationship,relId);
+        for (long nodeId : getTypeNodeIds()) {
+            Thread thread = new DeleteNodesThread(this::deleteNode, nodeId);
             threads.add(thread);
             thread.run();
         }
@@ -78,7 +81,18 @@ public class GraphReducer extends MetaPathComputation{
                     }
                 }
 
-                if (shouldDelete) typeRelIds.add(rel.getId());
+                if (shouldDelete) {
+                    typeRelIds.add(rel.getId());
+                } else {
+                    for (Label label : rel.getStartNode().getLabels()) {
+                        newGoodLabels.add(label.name());
+                    }
+
+                    for (Label label : rel.getEndNode().getLabels()) {
+                        newGoodLabels.add(label.name());
+                    }
+
+                }
             }
 
             transaction.success();
@@ -102,6 +116,14 @@ public class GraphReducer extends MetaPathComputation{
                     }
                 }
 
+                if (shouldDelete) {
+                    for (String label : newGoodLabels) {
+                        if (node.hasLabel(Label.label(label))) {
+                            shouldDelete = false;
+                            break;
+                        }
+                    }
+                }
                 if (shouldDelete) typeNodeIds.add(node.getId());
             }
 
@@ -131,6 +153,7 @@ public class GraphReducer extends MetaPathComputation{
         try (Transaction transaction = db.beginTx()) {
             Relationship relInstance = db.getRelationshipById(relId);
             relInstance.delete();
+
             transaction.success();
         }
 

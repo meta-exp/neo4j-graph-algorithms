@@ -32,7 +32,7 @@ public class GraphReducerTest {
 
     private static void setupData() throws Exception {
         final String cypher =
-                "CREATE (a:Node {name:'a'})\n" +
+                        "CREATE (a:Node {name:'a'})\n" +
                         "CREATE (d:Node {name:'d'})\n" +
                         "CREATE (b:Type {name:'b'})\n" +
                         "CREATE (c:Type {name:'c'})\n" +
@@ -57,7 +57,7 @@ public class GraphReducerTest {
 
     private static void setupAlgo() throws Exception {
 
-        String[] goodNodeTypes = {"Node"};
+        String[] goodNodeTypes = {"Type"};
         String[] goodEdgeTypes = {"DIFFERENT"};
 
         GraphReducer algo = new GraphReducer(api, null, goodNodeTypes, goodEdgeTypes);
@@ -79,7 +79,7 @@ public class GraphReducerTest {
 
     @Test
     public void testNodeLabelStillExists() throws Exception {
-        String expectedLabel = "Node";
+        String expectedLabel = "Type";
 
         assert(labelsAfter.contains(expectedLabel));
     }
@@ -93,23 +93,23 @@ public class GraphReducerTest {
 
 
     @Test
-    public void testNodeAExists() throws Exception {
-        testNodeExists("a", "Node");
+    public void testNodeCExists() throws Exception {
+        testNodeExists("c", "Type");
     }
 
     @Test
-    public void testNodeDExists() throws Exception {
-        testNodeExists("d", "Node");
+    public void testNodeBExists() throws Exception {
+        testNodeExists("b", "Type");
     }
 
     @Test
     public void testNodeBNotExists() throws Exception {
-        testNodeNotExists("b", "Type");
+        testNodeNotExists("A", "Node");
     }
 
     @Test
-    public void testNodeCNotExists() throws Exception {
-        testNodeNotExists("c", "Type");
+    public void testNodeDNotExists() throws Exception {
+        testNodeNotExists("d", "Node");
     }
 
     private void testNodeExists(String name, String type) throws Exception {
