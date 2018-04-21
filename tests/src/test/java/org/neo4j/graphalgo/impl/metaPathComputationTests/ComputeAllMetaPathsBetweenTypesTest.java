@@ -34,7 +34,7 @@ public class ComputeAllMetaPathsBetweenTypesTest {
 
     private static GraphDatabaseAPI api;
     private ComputeAllMetaPathsBetweenTypes algo;
-    private final HashSet<String> metaPaths = new HashSet<>(Arrays.asList("1|0|1|0|2", "1|0|1|0|3", "2|0|1", "3|0|1"));
+    private final HashSet<String> metaPaths = new HashSet<>(Arrays.asList("1|0|1|0|2", "1|0|1|0|3", "2|0|1", "3|0|1", "3|0|1|0|2|0|3"));
 
     @BeforeClass
     public static void setup() throws KernelException, Exception {
@@ -155,6 +155,7 @@ public class ComputeAllMetaPathsBetweenTypesTest {
         actualMetaPathWeightsDict.put("1|0|1|0|3", ((double) 2 / 26) * ((double) 5 / 26));
         actualMetaPathWeightsDict.put("2|0|1", (double) 2 / 26);
         actualMetaPathWeightsDict.put("3|0|1", (double) 5 / 26);
+        actualMetaPathWeightsDict.put("3|0|1|0|2|0|3", ((double) 5 / 26) * ((double) 2 / 26) * ((double) 4 / 26));
         assertEquals(actualMetaPathWeightsDict, algo.getMetaPathWeightsDict());
     }
 

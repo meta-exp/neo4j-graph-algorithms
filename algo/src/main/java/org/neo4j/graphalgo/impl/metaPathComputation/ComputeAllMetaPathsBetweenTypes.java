@@ -256,7 +256,6 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         String escapedPipe = Pattern.quote("|");
         String regex = "(-*[0-9]+|){2}-*[0-9]+"; //see before and than |
         String metaPathStart = metaPath.split(regex)[0];
-        System.out.println("mps" + metaPathStart);
         if (!metaPathsCountsDict.containsKey(metaPathStart)) {
             org.neo4j.graphdb.Result result = null;
             String[] splitString = metaPathStart.split(escapedPipe, 3);
@@ -277,7 +276,6 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
 
     //TODO multithreading
     public void getTwoMPWeights() {
-        debugOut.println("getTwoMPWeights");
         org.neo4j.graphdb.Result result = null;
         int countAllTwoMP = 0;
         for (int nodeID1 : nodeLabelIDs) {
@@ -310,24 +308,20 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     //TODO multithreading
     //TODO arrayList/Array instead of string?
     public void computeMetaPathWeights(HashSet<String> metaPaths) {
-        debugOut.println("computeMetaPathWeights");
         getTwoMPWeights();
-        debugOut.println("getTwoMPWeights finished");
         for (String metaPath : metaPaths) {
             double metaPathWeight = 1;
             int thirdDelimiterIndex = 0;
             int thirdDelimiterIndexOld;
             do { //TODO end of meta-path -> indexOf
                 thirdDelimiterIndexOld = thirdDelimiterIndex;
-                thirdDelimiterIndex += metaPath.indexOf("|", metaPath.indexOf("|", metaPath.indexOf("|", max(thirdDelimiterIndex - 1, 0)) + 1) + 1); //thirdDelimiterIndex - 1 because last node in in next iteration first node, + 1 because we do not want the same delimiter again
-                if (thirdDelimiterIndex < thirdDelimiterIndexOld) { //if indexOf returns -1 -> end of meta path
+                thirdDelimiterIndex = metaPath.indexOf("|", metaPath.indexOf("|", metaPath.indexOf("|", max(thirdDelimiterIndex - 1, 0)) + 1) + 1); //thirdDelimiterIndex - 1 because last node in in next iteration first node, + 1 because we do not want the same delimiter again
+                if (thirdDelimiterIndex == -1) { //if indexOf returns -1 -> end of meta path
                     String twoMP = metaPath.substring(max(thirdDelimiterIndexOld - 1, 0), metaPath.length());
                     metaPathWeight *= twoMPWeightDict.get(twoMP);
-                    debugOut.println("twoMP (break): " + twoMP);
                     break;
                 }
                 String twoMP = metaPath.substring(max(thirdDelimiterIndexOld - 1, 0), thirdDelimiterIndex);
-                debugOut.println("twoMP: " + twoMP);
                 metaPathWeight *= twoMPWeightDict.get(twoMP);
             } while (true);
             metaPathWeightsDict.put(metaPath, metaPathWeight);
