@@ -92,9 +92,9 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         nodes = (List<Node>) row.get("nodes");
         rels = (List<Relationship>) row.get("relationships");
         for (Node node : nodes){
+            nodeLabelIDs.add(toIntExact(node.getId()));
             String nodeType = node.getLabels().iterator().next().name();
             this.idTypeMappingNodes.put(toIntExact(node.getId()), nodeType);
-            debugOut.println(nodeType);
         }
     }
 
@@ -105,8 +105,6 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
             HashSet<AbstractMap.SimpleEntry<Integer, Integer>> adjNodesSet = new HashSet<>();
             adjacentNodesDict.putIfAbsent(toIntExact(nodeID), adjNodesSet);
             for (Relationship rel : rels) {
-                debugOut.println(rel);
-                debugOut.println(rel.getAllProperties());
                 try {
                     int adjNodeID = toIntExact(rel.getOtherNodeId(node.getId()));
                     int adjEdgeID = toIntExact(rel.getId());
