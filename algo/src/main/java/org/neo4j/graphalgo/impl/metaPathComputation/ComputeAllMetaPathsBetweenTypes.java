@@ -39,7 +39,6 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     private HashMap<Integer, String> idTypeMappingEdges = new HashMap<>();
     final int MAX_NOF_THREADS = 12; //TODO why not full utilization?
     final Semaphore threadSemaphore = new Semaphore(MAX_NOF_THREADS);
-    HashMap<String, Integer> metaPathsCountsDict = new HashMap<>();
     private HashSet<Integer> nodeLabelIDs = new HashSet<>();
     private HashMap<String, Double> twoMPWeightDict = new HashMap<>();
     private HashMap<String, Integer> countSingleTwoMPDict = new HashMap<>();
@@ -216,67 +215,6 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         }*/
     }
 
-    public void approximateCount(HashSet<String> metaPaths) throws InterruptedException {
-        long startTime = System.nanoTime();
-        ArrayList<GetCountThread> threads = new ArrayList<>(MAX_NOF_THREADS);
-
-        List<HashSet<String>> metaPathsThreadSets = new ArrayList<>(MAX_NOF_THREADS);
-        for (int k = 0; k < MAX_NOF_THREADS; k++) {
-            metaPathsThreadSets.add(new HashSet<String>());
-        }
-
-        int index = 0;
-        for (String metaPath : metaPaths) {
-            metaPathsThreadSets.get(index++ % MAX_NOF_THREADS).add(metaPath);
-        }
-
-        int i = 0;
-        for (HashSet<String> metaPathsSet : metaPathsThreadSets) {
-            threadSemaphore.acquire();
-            GetCountThread thread = new GetCountThread(this, "thread-" + i, metaPathsSet);
-            thread.start();
-            threads.add(thread);
-            i++;
-            threadSemaphore.release();
-        }
-        try {
-            for (GetCountThread thread : threads) {
-                thread.join();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        long endTime = System.nanoTime();
-        //debugOut.println("time for counts:" + (endTime - startTime));
-        //debugOut.println("size:" + metaPathsCountsDict.size());
-        // remove(0) would only remove the first one
-        metaPathsCountsDict.values().removeAll(Collections.singleton(0));
-        //debugOut.println("size after first pruning:" + metaPathsCountsDict.size());
-    }
-
-    public void getCount(String metaPath) {
-        //TODO regex etc WIP
-        String escapedPipe = Pattern.quote("|");
-        String regex = "(-*[0-9]+|){2}-*[0-9]+"; //see before and than |
-        String metaPathStart = metaPath.split(regex)[0];
-        if (!metaPathsCountsDict.containsKey(metaPathStart)) {
-            org.neo4j.graphdb.Result result = null;
-            String[] splitString = metaPathStart.split(escapedPipe, 3);
-            String nodeLabel1 = idTypeMappingNodes.get(Integer.parseInt(splitString[0]));
-            String edgeLabel1 = idTypeMappingEdges.get(Integer.parseInt(splitString[1]));
-            String nodeLabel2 = idTypeMappingNodes.get(Integer.parseInt(splitString[2]));
-            try (Transaction tx = api.beginTx()) {
-                result = api.execute("MATCH (:`" + nodeLabel1 + "`)-[:`" + edgeLabel1 + "`]-(:`" + nodeLabel2 + "`) RETURN count(*)");
-                tx.success();
-            }
-            Map<String, Object> row = result.next();
-            int count = toIntExact((long) row.get("count(*)"));
-            metaPathsCountsDict.put(metaPath, count);
-        } else {
-            metaPathsCountsDict.put(metaPath, metaPathsCountsDict.get(metaPathStart)); //TODO after some iterations there are longer meta-paths in the dict which could be used
-        }
-    }
-    
     public void getTwoMPWeights() throws InterruptedException {
         countAllTwoMP = 0;
         ArrayList<ComputeTwoMPWeightsThread> threads = new ArrayList<>(MAX_NOF_THREADS);
@@ -417,10 +355,6 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
 
     public void setIDTypeMappingEdges(HashMap<Integer, String> idTypeMappingEdges) {
         this.idTypeMappingEdges = idTypeMappingEdges;
-    }
-
-    public HashMap<String, Integer> getMetaPathsCountsDict() {
-        return metaPathsCountsDict;
     }
 
     public void setNodeLabelIDs(HashSet<Integer> nodeLabelIDs) {
