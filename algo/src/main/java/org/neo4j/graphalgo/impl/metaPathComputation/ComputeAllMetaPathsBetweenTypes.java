@@ -74,7 +74,11 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         }
 
         computeMetaPathWeights(duplicateFreeMetaPaths);
-        if (metaPathWeightsDict.size() != duplicateFreeMetaPaths.size()) throw new OutputLengthException("Number of computed meta-paths is different to number of meta-paths with computed weight!");
+        int numComputedMP = duplicateFreeMetaPaths.size();
+        int numComputedWeights = metaPathWeightsDict.size();
+        if (numComputedMP != numComputedWeights) {
+            throw new OutputLengthException("Number of computed meta-paths (" + numComputedMP + ") is different to number of meta-paths with computed weight (" + numComputedWeights + ")!");
+        }
 
         return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges, metaPathWeightsDict);
     }
@@ -241,7 +245,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         countSingleTwoMPDict.forEach((twoMP, count) -> twoMPWeightDict.put(twoMP, (double) count / (COUNT_ALL_TWO_MP))); //not COUNT_ALL_TWO_MP * 2, because we already have the sum of twoMP and not the number of edges
     }
 
-    public void computeTwoMPWeights(HashSet<Integer> labelIDSet){
+    public void computeTwoMPWeights(HashSet<Integer> labelIDSet) {
         org.neo4j.graphdb.Result result = null;
 
         for (int nodeID1 : labelIDSet) {
@@ -259,10 +263,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 Map<String, Object> row = result.next();
                 int countSingleTwoMP = toIntExact((long) row.get("count(*)"));
                 String twoMP = nodeID1 + "|" + edgeID1 + "|" + nodeID2;
-                /*ArrayList<Integer> twoMP = new ArrayList<Integer>(3);
-                twoMP.add(nodeID1);
-                twoMP.add(edgeID1);
-                twoMP.add(nodeID2);*/
+
                 synchronized (countSingleTwoMPDict) {
                     countSingleTwoMPDict.put(twoMP, countSingleTwoMP);
                 }
@@ -319,7 +320,10 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 lengthOfLastMPID = (twoMP.length() - 1) - twoMP.lastIndexOf("|"); //- 1 because everything else is 0-indexed
                 metaPathWeight *= twoMPWeightDict.get(twoMP);
             } while (true);
-            metaPathWeightsDict.put(metaPath, metaPathWeight);
+            //TODO make synchronization more efficient? batches?
+            synchronized (metaPathWeightsDict) {
+                metaPathWeightsDict.put(metaPath, metaPathWeight);
+            }
         }
     }
 
@@ -423,7 +427,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
             return idTypeMappingEdges;
         }
 
-        public HashMap<String, Double> getMetaPathWeightsDict(){
+        public HashMap<String, Double> getMetaPathWeightsDict() {
             return metaPathWeightsDict;
         }
     }
