@@ -34,7 +34,7 @@ public class ComputeAllMetaPathsBetweenTypesTest {
 
     private static GraphDatabaseAPI api;
     private ComputeAllMetaPathsBetweenTypes algo;
-    private final HashSet<String> metaPaths = new HashSet<>(Arrays.asList("1|0|1|0|2", "1|0|1|0|3", "2|0|1", "3|0|1", "3|0|1|0|2|0|3"));
+    private final HashSet<String> metaPaths = new HashSet<>(Arrays.asList("-1|-10|-1|-10|-2", "-1|-10|-1|-10|-3", "-2|-10|-1", "-3|-10|-1", "-3|-10|-1|-10|-2|-10|-3|-10|-3|-10|-1|-10|-1"));
 
     @BeforeClass
     public static void setup() throws KernelException, Exception {
@@ -84,10 +84,10 @@ public class ComputeAllMetaPathsBetweenTypesTest {
         algo = new ComputeAllMetaPathsBetweenTypes(3, "A", "B", api);
         HashMap<Integer, String> idTypeMappingNodes = new HashMap<>();
         HashMap<Integer, String> idTypeMappingEdges = new HashMap<>();
-        idTypeMappingNodes.put(1, "A");
-        idTypeMappingNodes.put(2, "B");
-        idTypeMappingNodes.put(3, "C");
-        idTypeMappingEdges.put(0, "TYPE1");
+        idTypeMappingNodes.put(-1, "A");
+        idTypeMappingNodes.put(-2, "B");
+        idTypeMappingNodes.put(-3, "C");
+        idTypeMappingEdges.put(-10, "TYPE1");
         algo.setIDTypeMappingNodes(idTypeMappingNodes);
         algo.setIDTypeMappingEdges(idTypeMappingEdges);
     }
@@ -120,42 +120,42 @@ public class ComputeAllMetaPathsBetweenTypesTest {
 
     @Test
     public void testGetTwoMPWeights() {
-        HashSet<Integer> nodeLabelIDs = new HashSet<>(Arrays.asList(1, 2, 3));
+        HashSet<Integer> nodeLabelIDs = new HashSet<>(Arrays.asList(-1, -2, -3));
         algo.setNodeLabelIDs(nodeLabelIDs);
         HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>();
-        adjacentNodesDict.put(1, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(2, 0), new AbstractMap.SimpleEntry<>(3, 0))));
-        adjacentNodesDict.put(2, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(3, 0))));
-        adjacentNodesDict.put(3, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(2, 0), new AbstractMap.SimpleEntry<>(3, 0))));
+        adjacentNodesDict.put(-1, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(-1, -10), new AbstractMap.SimpleEntry<>(-2, -10), new AbstractMap.SimpleEntry<>(-3, -10))));
+        adjacentNodesDict.put(-2, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(-1, -10), new AbstractMap.SimpleEntry<>(-3, -10))));
+        adjacentNodesDict.put(-3, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(-1, -10), new AbstractMap.SimpleEntry<>(-2, -10), new AbstractMap.SimpleEntry<>(-3, -10))));
         algo.setAdjacentNodesDict(adjacentNodesDict);
         algo.getTwoMPWeights();
         HashMap<String, Double> actualTwoMPWeightDict = new HashMap<>();
-        actualTwoMPWeightDict.put("1|0|1", (double) 2 / 26);
-        actualTwoMPWeightDict.put("1|0|2", (double) 2 / 26);
-        actualTwoMPWeightDict.put("1|0|3", (double) 5 / 26);
-        actualTwoMPWeightDict.put("2|0|1", (double) 2 / 26);
-        actualTwoMPWeightDict.put("2|0|3", (double) 4 / 26);
-        actualTwoMPWeightDict.put("3|0|1", (double) 5 / 26);
-        actualTwoMPWeightDict.put("3|0|2", (double) 4 / 26);
-        actualTwoMPWeightDict.put("3|0|3", (double) 2 / 26);
+        actualTwoMPWeightDict.put("-1|-10|-1", (double) 2 / 26);
+        actualTwoMPWeightDict.put("-1|-10|-2", (double) 2 / 26);
+        actualTwoMPWeightDict.put("-1|-10|-3", (double) 5 / 26);
+        actualTwoMPWeightDict.put("-2|-10|-1", (double) 2 / 26);
+        actualTwoMPWeightDict.put("-2|-10|-3", (double) 4 / 26);
+        actualTwoMPWeightDict.put("-3|-10|-1", (double) 5 / 26);
+        actualTwoMPWeightDict.put("-3|-10|-2", (double) 4 / 26);
+        actualTwoMPWeightDict.put("-3|-10|-3", (double) 2 / 26);
         assertEquals(actualTwoMPWeightDict, algo.getTwoMPWeightDict());
     }
 
     @Test
-    public void testComputeMetaPathWeights() {
-        HashSet<Integer> nodeLabelIDs = new HashSet<>(Arrays.asList(1, 2, 3));
+    public void testComputeMetaPathWeights() throws InterruptedException {
+        HashSet<Integer> nodeLabelIDs = new HashSet<>(Arrays.asList(-1, -2, -3));
         algo.setNodeLabelIDs(nodeLabelIDs);
         HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>();
-        adjacentNodesDict.put(1, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(2, 0), new AbstractMap.SimpleEntry<>(3, 0))));
-        adjacentNodesDict.put(2, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(3, 0))));
-        adjacentNodesDict.put(3, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(1, 0), new AbstractMap.SimpleEntry<>(2, 0), new AbstractMap.SimpleEntry<>(3, 0))));
+        adjacentNodesDict.put(-1, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(-1, -10), new AbstractMap.SimpleEntry<>(-2, -10), new AbstractMap.SimpleEntry<>(-3, -10))));
+        adjacentNodesDict.put(-2, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(-1, -10), new AbstractMap.SimpleEntry<>(-3, -10))));
+        adjacentNodesDict.put(-3, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(-1, -10), new AbstractMap.SimpleEntry<>(-2, -10), new AbstractMap.SimpleEntry<>(-3, -10))));
         algo.setAdjacentNodesDict(adjacentNodesDict);
         algo.computeMetaPathWeights(metaPaths);
         HashMap<String, Double> actualMetaPathWeightsDict = new HashMap<>();
-        actualMetaPathWeightsDict.put("1|0|1|0|2", ((double) 2 / 26) * ((double) 2 / 26));
-        actualMetaPathWeightsDict.put("1|0|1|0|3", ((double) 2 / 26) * ((double) 5 / 26));
-        actualMetaPathWeightsDict.put("2|0|1", (double) 2 / 26);
-        actualMetaPathWeightsDict.put("3|0|1", (double) 5 / 26);
-        actualMetaPathWeightsDict.put("3|0|1|0|2|0|3", ((double) 5 / 26) * ((double) 2 / 26) * ((double) 4 / 26));
+        actualMetaPathWeightsDict.put("-1|-10|-1|-10|-2", ((double) 2 / 26) * ((double) 2 / 26));
+        actualMetaPathWeightsDict.put("-1|-10|-1|-10|-3", ((double) 2 / 26) * ((double) 5 / 26));
+        actualMetaPathWeightsDict.put("-2|-10|-1", (double) 2 / 26);
+        actualMetaPathWeightsDict.put("-3|-10|-1", (double) 5 / 26);
+        actualMetaPathWeightsDict.put("-3|-10|-1|-10|-2|-10|-3|-10|-3|-10|-1|-10|-1", ((double) 5 / 26) * ((double) 2 / 26) * ((double) 4 / 26) * ((double) 2 / 26) * ((double) 5 / 26) * ((double) 2 / 26));
         assertEquals(actualMetaPathWeightsDict, algo.getMetaPathWeightsDict());
     }
 
