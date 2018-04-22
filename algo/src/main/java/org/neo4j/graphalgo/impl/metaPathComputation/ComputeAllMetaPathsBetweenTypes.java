@@ -276,8 +276,8 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
 
     //TODO arrayList/Array instead of string?
     public void computeMetaPathWeights(HashSet<String> metaPaths) throws InterruptedException {
-        getTwoMPWeights();
         long startTime = System.nanoTime();
+        getTwoMPWeights();
         ArrayList<ComputeWeightsThread> threads = new ArrayList<>(MAX_NOF_THREADS);
 
         List<HashSet<String>> metaPathsThreadSets = divideIntoThreadSetsStr(metaPaths);
