@@ -44,6 +44,7 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
     private HashMap<String, Double> twoMPWeightDict = new HashMap<>();
     private HashMap<String, Integer> countSingleTwoMPDict = new HashMap<>();
     private HashMap<String, Double> metaPathWeightsDict = new HashMap<>();
+    private Integer countAllTwoMP;
 
     public ComputeAllMetaPathsBetweenTypes(int metaPathLength, String type1, String type2, GraphDatabaseAPI api) throws Exception {
         this.metaPathLength = metaPathLength;
@@ -275,12 +276,37 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
             metaPathsCountsDict.put(metaPath, metaPathsCountsDict.get(metaPathStart)); //TODO after some iterations there are longer meta-paths in the dict which could be used
         }
     }
+    
+    public void getTwoMPWeights() throws InterruptedException {
+        countAllTwoMP = 0;
+        ArrayList<ComputeTwoMPWeightsThread> threads = new ArrayList<>(MAX_NOF_THREADS);
 
-    //TODO multithreading
-    public void getTwoMPWeights() {
+        List<HashSet<Integer>> labelIDSets = divideIntoThreadSetsInt(nodeLabelIDs);
+
+        int i = 0;
+        for (HashSet<Integer> labelIDSet : labelIDSets) {
+            threadSemaphore.acquire();
+            ComputeTwoMPWeightsThread thread = new ComputeTwoMPWeightsThread(this, "thread-" + i, labelIDSet);
+            thread.start();
+            threads.add(thread);
+            i++;
+            threadSemaphore.release();
+        }
+        try {
+            for (ComputeTwoMPWeightsThread thread : threads) {
+                thread.join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        final int COUNT_ALL_TWO_MP = countAllTwoMP; //need to be final to be used in lambda expression
+        countSingleTwoMPDict.forEach((twoMP, count) -> twoMPWeightDict.put(twoMP, (double) count / (COUNT_ALL_TWO_MP))); //not COUNT_ALL_TWO_MP * 2, because we already have the sum of twoMP and not the number of edges
+    }
+
+    public void computeTwoMPWeights(HashSet<Integer> labelIDSet){
         org.neo4j.graphdb.Result result = null;
-        int countAllTwoMP = 0;
-        for (int nodeID1 : nodeLabelIDs) {
+
+        for (int nodeID1 : labelIDSet) {
             String nodeLabel1 = idTypeMappingNodes.get(nodeID1);
             HashSet<AbstractMap.SimpleEntry<Integer, Integer>> adjacentNodes = adjacentNodesDict.get(nodeID1);
             for (AbstractMap.SimpleEntry<Integer, Integer> edgeNodePair : adjacentNodes) {
@@ -299,22 +325,23 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
                 twoMP.add(nodeID1);
                 twoMP.add(edgeID1);
                 twoMP.add(nodeID2);*/
-                countSingleTwoMPDict.put(twoMP, countSingleTwoMP);
-                countAllTwoMP += countSingleTwoMP;
+                synchronized (countSingleTwoMPDict) {
+                    countSingleTwoMPDict.put(twoMP, countSingleTwoMP);
+                }
+                synchronized (countAllTwoMP) {
+                    countAllTwoMP += countSingleTwoMP;
+                }
             }
         }
-        final int COUNT_ALL_TWO_MP = countAllTwoMP; //need to be final to be used in lambda expression
-        countSingleTwoMPDict.forEach((twoMP, count) -> twoMPWeightDict.put(twoMP, (double) count / (COUNT_ALL_TWO_MP))); //not COUNT_ALL_TWO_MP * 2, because we already have the sum of twoMP and not the number of edges
     }
 
-    //TODO multithreading
     //TODO arrayList/Array instead of string?
     public void computeMetaPathWeights(HashSet<String> metaPaths) throws InterruptedException {
         getTwoMPWeights();
         long startTime = System.nanoTime();
         ArrayList<ComputeWeightsThread> threads = new ArrayList<>(MAX_NOF_THREADS);
 
-        List<HashSet<String>> metaPathsThreadSets = divideIntoThreadSets(metaPaths);
+        List<HashSet<String>> metaPathsThreadSets = divideIntoThreadSetsStr(metaPaths);
 
         int i = 0;
         for (HashSet<String> metaPathsSet : metaPathsThreadSets) {
@@ -358,17 +385,30 @@ public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
         }
     }
 
-    private List<HashSet<String>> divideIntoThreadSets(HashSet<String> metaPaths) {
-        List<HashSet<String>> metaPathsThreadSets = new ArrayList<>(MAX_NOF_THREADS);
+    private List<HashSet<String>> divideIntoThreadSetsStr(HashSet<String> set) {
+        List<HashSet<String>> threadSets = new ArrayList<>(MAX_NOF_THREADS);
         for (int k = 0; k < MAX_NOF_THREADS; k++) {
-            metaPathsThreadSets.add(new HashSet<String>());
+            threadSets.add(new HashSet<String>());
         }
 
         int index = 0;
-        for (String metaPath : metaPaths) {
-            metaPathsThreadSets.get(index++ % MAX_NOF_THREADS).add(metaPath);
+        for (String element : set) {
+            threadSets.get(index++ % MAX_NOF_THREADS).add(element);
         }
-        return metaPathsThreadSets;
+        return threadSets;
+    }
+
+    private List<HashSet<Integer>> divideIntoThreadSetsInt(HashSet<Integer> set) {
+        List<HashSet<Integer>> threadSets = new ArrayList<>(MAX_NOF_THREADS);
+        for (int k = 0; k < MAX_NOF_THREADS; k++) {
+            threadSets.add(new HashSet<Integer>());
+        }
+
+        int index = 0;
+        for (Integer element : set) {
+            threadSets.get(index++ % MAX_NOF_THREADS).add(element);
+        }
+        return threadSets;
     }
 
     public void setIDTypeMappingNodes(HashMap<Integer, String> idTypeMappingNodes) {

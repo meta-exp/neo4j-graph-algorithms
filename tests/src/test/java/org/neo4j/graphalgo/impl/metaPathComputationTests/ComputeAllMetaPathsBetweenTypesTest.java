@@ -119,7 +119,7 @@ public class ComputeAllMetaPathsBetweenTypesTest {
     }
 
     @Test
-    public void testGetTwoMPWeights() {
+    public void testGetTwoMPWeights() throws InterruptedException {
         HashSet<Integer> nodeLabelIDs = new HashSet<>(Arrays.asList(-1, -2, -3));
         algo.setNodeLabelIDs(nodeLabelIDs);
         HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>();
