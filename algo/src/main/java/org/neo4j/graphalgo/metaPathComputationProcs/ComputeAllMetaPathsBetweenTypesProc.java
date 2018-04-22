@@ -1,8 +1,5 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import org.neo4j.graphalgo.core.GraphLoader;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsBetweenTypes;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsBetweenTypesResult;
 import org.neo4j.kernel.api.KernelTransaction;
@@ -48,9 +45,11 @@ public class ComputeAllMetaPathsBetweenTypesProc {
         metaPaths = result.getFinalMetaPaths();
         HashMap<Integer, String> nodesIDTypeDict = result.getIDTypeNodeDict();
         HashMap <Integer, String> edgesIDTypeDict = result.getIDTypeEdgeDict();
+        HashMap<String, Double> metaPathWeightsDict = result.getMetaPathWeightsDict();
         builder.setMetaPaths(metaPaths);
         builder.setNodesIDTypeDict(nodesIDTypeDict);
         builder.setEdgesIDTypeDict(edgesIDTypeDict);
+        builder.setMetaPathWeightsDict(metaPathWeightsDict);
 
         //return algo.resultStream();
         //System.out.println(Stream.of(builder.build()));

@@ -38,7 +38,6 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     final int MAX_NOF_THREADS = 12; //TODO why not full utilization?
     final Semaphore threadSemaphore = new Semaphore(MAX_NOF_THREADS);
 
-
     public MetaPathPrecomputeHighDegreeNodes(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, Degrees degrees, int metaPathLength, float ratioHighDegreeNodes) throws IOException {
         this.graph = graph;
         this.arrayGraphInterface = arrayGraphInterface;
@@ -102,7 +101,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     }
 
     private void computeMetaPathsFromAllRelevantNodes() throws InterruptedException {//TODO: rework for Instances
-        ArrayList<ComputeMetaPathFromNodeThread> threads = new ArrayList<>(maxDegreeNodes.size());
+        ArrayList<ComputeMetaPathFromNodeThread> threads = new ArrayList<>(MAX_NOF_THREADS);
         int i = 0;
         for (int nodeID : maxDegreeNodes) {
             threadSemaphore.acquire();

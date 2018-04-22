@@ -169,7 +169,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
             ArrayList<HashMap<Integer, Integer>> nextInstances = allocateNextInstances();
             fillNextInstances(currentInstances, nextInstances);
-            currentInstances = null;//not sure if this helps or not
 
             for (int edgeLabel : arrayGraphInterface.getAllEdgeLabels()) {
                 for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
@@ -189,14 +188,9 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
                         addAndLogMetaPath(newMetaPath, instanceCountSum);
 
-                        //nextInstances = null; // how exactly does this work?
-                        //computeMetaPathFromNodeLabel(newMetaPath, nextInstancesForLabel, metaPathLength-1);  //do somehow dp instead?
                         param1.push(newMetaPath);
                         param2.push(nextInstancesForLabel);
                         param3.push(metaPathLength - 1);
-                        //debugOut.println("finished recursion of length: " + (metaPathLength - 1));
-                        //nextInstances.set(i, null);
-                        //nextInstancesForLabel = null;
                     }
                 }
             }
