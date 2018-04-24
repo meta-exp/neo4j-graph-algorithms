@@ -1,23 +1,23 @@
 
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-        import org.bouncycastle.crypto.OutputLengthException;
-        import org.neo4j.graphdb.*;
+import org.bouncycastle.crypto.OutputLengthException;
+import org.neo4j.graphdb.*;
 
-        import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
-        import java.io.FileOutputStream;
-        import java.io.PrintStream;
-        import java.util.*;
-        import java.util.concurrent.Semaphore;
-        import java.util.stream.Collectors;
-        import java.util.stream.IntStream;
-        import java.util.stream.Stream;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.util.*;
+import java.util.concurrent.Semaphore;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-        import static java.lang.Math.max;
-        import static java.lang.Math.toIntExact;
+import static java.lang.Math.max;
+import static java.lang.Math.toIntExact;
 
-public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
+public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
 
     private int metaPathLength;
     private PrintStream debugOut;
@@ -35,8 +35,13 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
     private HashMap<Integer, String> idTypeMappingEdges = new HashMap<>();
     final int MAX_NOF_THREADS = 12; //TODO why not full utilization?
     final Semaphore threadSemaphore = new Semaphore(MAX_NOF_THREADS);
+    private HashSet<Integer> nodeLabelIDs = new HashSet<>();
+    private HashMap<String, Double> twoMPWeightDict = new HashMap<>();
+    private HashMap<String, Integer> countSingleTwoMPDict = new HashMap<>();
+    private HashMap<String, Double> metaPathWeightsDict = new HashMap<>();
+    private Integer countAllTwoMP;
 
-    public ComputeAllMetaPathsSchemaFull(int metaPathLength, GraphDatabaseAPI api) throws Exception {
+    public ComputeAllMetaPathsSchemaFullWeights(int metaPathLength, GraphDatabaseAPI api) throws Exception {
         this.metaPathLength = metaPathLength;
         this.api = api;
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full_Debug.txt"));
@@ -67,7 +72,14 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
             e.printStackTrace();
         }
 
-        return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges);
+        computeMetaPathWeights(duplicateFreeMetaPaths);
+        int numComputedMP = duplicateFreeMetaPaths.size();
+        int numComputedWeights = metaPathWeightsDict.size();
+        if (numComputedMP != numComputedWeights) {
+            throw new OutputLengthException("Number of computed meta-paths (" + numComputedMP + ") is different to number of meta-paths with computed weight (" + numComputedWeights + ")!");
+        }
+
+        return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges, metaPathWeightsDict);
     }
 
     private void getMetaGraph() throws Exception {
@@ -80,6 +92,7 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         nodes = (List<Node>) row.get("nodes");
         rels = (List<Relationship>) row.get("relationships");
         for (Node node : nodes){
+            nodeLabelIDs.add(toIntExact(node.getId()));
             String nodeType = node.getLabels().iterator().next().name();
             this.idTypeMappingNodes.put(toIntExact(node.getId()), nodeType);
         }
@@ -195,6 +208,140 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         }*/
     }
 
+    public void getTwoMPWeights() throws InterruptedException {
+        countAllTwoMP = 0;
+        ArrayList<ComputeTwoMPWeightsThread> threads = new ArrayList<>(MAX_NOF_THREADS);
+
+        List<HashSet<Integer>> labelIDSets = divideIntoThreadSetsInt(nodeLabelIDs);
+
+        int i = 0;
+        for (HashSet<Integer> labelIDSet : labelIDSets) {
+            threadSemaphore.acquire();
+            ComputeTwoMPWeightsThread thread = new ComputeTwoMPWeightsThread(this, "thread-" + i, labelIDSet);
+            thread.start();
+            threads.add(thread);
+            i++;
+            threadSemaphore.release();
+        }
+        try {
+            for (ComputeTwoMPWeightsThread thread : threads) {
+                thread.join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        final int COUNT_ALL_TWO_MP = countAllTwoMP; //need to be final to be used in lambda expression
+        countSingleTwoMPDict.forEach((twoMP, count) -> twoMPWeightDict.put(twoMP, (double) count / (COUNT_ALL_TWO_MP))); //not COUNT_ALL_TWO_MP * 2, because we already have the sum of twoMP and not the number of edges
+    }
+
+    public void computeTwoMPWeights(HashSet<Integer> labelIDSet) {
+        org.neo4j.graphdb.Result result = null;
+
+        for (int nodeID1 : labelIDSet) {
+            String nodeLabel1 = idTypeMappingNodes.get(nodeID1);
+            HashSet<AbstractMap.SimpleEntry<Integer, Integer>> adjacentNodes = adjacentNodesDict.get(nodeID1);
+            for (AbstractMap.SimpleEntry<Integer, Integer> edgeNodePair : adjacentNodes) {
+                int nodeID2 = edgeNodePair.getKey();
+                String nodeLabel2 = idTypeMappingNodes.get(nodeID2);
+                int edgeID1 = edgeNodePair.getValue();
+                String edgeLabel1 = idTypeMappingEdges.get(edgeID1);
+                try (Transaction tx = api.beginTx()) {
+                    result = api.execute("MATCH (:`" + nodeLabel1 + "`)-[:`" + edgeLabel1 + "`]-(:`" + nodeLabel2 + "`) RETURN count(*)");
+                    tx.success();
+                }
+                Map<String, Object> row = result.next();
+                int countSingleTwoMP = toIntExact((long) row.get("count(*)"));
+                String twoMP = nodeID1 + "|" + edgeID1 + "|" + nodeID2;
+
+                synchronized (countSingleTwoMPDict) {
+                    countSingleTwoMPDict.put(twoMP, countSingleTwoMP);
+                }
+                synchronized (countAllTwoMP) {
+                    countAllTwoMP += countSingleTwoMP;
+                }
+            }
+        }
+    }
+
+    //TODO arrayList/Array instead of string?
+    public void computeMetaPathWeights(HashSet<String> metaPaths) throws InterruptedException {
+        long startTime = System.nanoTime();
+        getTwoMPWeights();
+        ArrayList<ComputeWeightsThread> threads = new ArrayList<>(MAX_NOF_THREADS);
+
+        List<HashSet<String>> metaPathsThreadSets = divideIntoThreadSetsStr(metaPaths);
+
+        int i = 0;
+        for (HashSet<String> metaPathsSet : metaPathsThreadSets) {
+            threadSemaphore.acquire();
+            ComputeWeightsThread thread = new ComputeWeightsThread(this, "thread-" + i, metaPathsSet);
+            thread.start();
+            threads.add(thread);
+            i++;
+            threadSemaphore.release();
+        }
+        try {
+            for (ComputeWeightsThread thread : threads) {
+                thread.join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        long endTime = System.nanoTime();
+        debugOut.println("Time for computation of weights: " + (endTime - startTime));
+    }
+
+    public void computeWeights(HashSet<String> metaPaths) {
+        for (String metaPath : metaPaths) {
+            double metaPathWeight = 1;
+            int thirdDelimiterIndex = 0;
+            int thirdDelimiterIndexOld;
+            int lengthOfLastMPID = 0;
+            do { //TODO end of meta-path -> indexOf
+                thirdDelimiterIndexOld = thirdDelimiterIndex;
+                thirdDelimiterIndex = metaPath.indexOf("|", metaPath.indexOf("|", metaPath.indexOf("|", thirdDelimiterIndexOld - lengthOfLastMPID) + 1) + 1); //thirdDelimiterIndex - lengthOfLastMPID because last node in in next iteration first node, + 1 because we do not want the same delimiter again
+                if (thirdDelimiterIndex == -1) { //if indexOf returns -1 -> end of meta path
+                    String twoMP = metaPath.substring(max(thirdDelimiterIndexOld - lengthOfLastMPID, 0), metaPath.length());
+                    metaPathWeight *= twoMPWeightDict.get(twoMP);
+                    break;
+                }
+                String twoMP = metaPath.substring(max(thirdDelimiterIndexOld - lengthOfLastMPID, 0), thirdDelimiterIndex);
+                lengthOfLastMPID = (twoMP.length() - 1) - twoMP.lastIndexOf("|"); //- 1 because everything else is 0-indexed
+                metaPathWeight *= twoMPWeightDict.get(twoMP);
+            } while (true);
+            //TODO make synchronization more efficient? batches?
+            synchronized (metaPathWeightsDict) {
+                metaPathWeightsDict.put(metaPath, metaPathWeight);
+            }
+        }
+    }
+
+    private List<HashSet<String>> divideIntoThreadSetsStr(HashSet<String> set) {
+        List<HashSet<String>> threadSets = new ArrayList<>(MAX_NOF_THREADS);
+        for (int k = 0; k < MAX_NOF_THREADS; k++) {
+            threadSets.add(new HashSet<String>());
+        }
+
+        int index = 0;
+        for (String element : set) {
+            threadSets.get(index++ % MAX_NOF_THREADS).add(element);
+        }
+        return threadSets;
+    }
+
+    private List<HashSet<Integer>> divideIntoThreadSetsInt(HashSet<Integer> set) {
+        List<HashSet<Integer>> threadSets = new ArrayList<>(MAX_NOF_THREADS);
+        for (int k = 0; k < MAX_NOF_THREADS; k++) {
+            threadSets.add(new HashSet<Integer>());
+        }
+
+        int index = 0;
+        for (Integer element : set) {
+            threadSets.get(index++ % MAX_NOF_THREADS).add(element);
+        }
+        return threadSets;
+    }
+
     public void setIDTypeMappingNodes(HashMap<Integer, String> idTypeMappingNodes) {
         this.idTypeMappingNodes = idTypeMappingNodes;
     }
@@ -203,8 +350,20 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         this.idTypeMappingEdges = idTypeMappingEdges;
     }
 
+    public void setNodeLabelIDs(HashSet<Integer> nodeLabelIDs) {
+        this.nodeLabelIDs = nodeLabelIDs;
+    }
+
     public void setAdjacentNodesDict(HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict) {
         this.adjacentNodesDict = adjacentNodesDict;
+    }
+
+    public HashMap<String, Double> getTwoMPWeightDict() {
+        return twoMPWeightDict;
+    }
+
+    public HashMap<String, Double> getMetaPathWeightsDict() {
+        return metaPathWeightsDict;
     }
 
     //TODO -------------------------------------------------------------------
@@ -214,12 +373,12 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
     }
 
     @Override
-    public ComputeAllMetaPathsSchemaFull me() {
+    public ComputeAllMetaPathsSchemaFullWeights me() {
         return this;
     }
 
     @Override
-    public ComputeAllMetaPathsSchemaFull release() {
+    public ComputeAllMetaPathsSchemaFullWeights release() {
         return null;
     }
 
@@ -231,11 +390,13 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         HashSet<String> finalMetaPaths;
         HashMap<Integer, String> idTypeMappingNodes;
         HashMap<Integer, String> idTypeMappingEdges;
+        HashMap<String, Double> metaPathWeightsDict;
 
-        public Result(HashSet<String> finalMetaPaths, HashMap<Integer, String> idTypeMappingNodes, HashMap<Integer, String> idTypeMappingEdges) {
+        public Result(HashSet<String> finalMetaPaths, HashMap<Integer, String> idTypeMappingNodes, HashMap<Integer, String> idTypeMappingEdges, HashMap<String, Double> metaPathWeightsDict) {
             this.finalMetaPaths = finalMetaPaths;
             this.idTypeMappingNodes = idTypeMappingNodes;
             this.idTypeMappingEdges = idTypeMappingEdges;
+            this.metaPathWeightsDict = metaPathWeightsDict;
         }
 
         @Override
@@ -255,5 +416,8 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
             return idTypeMappingEdges;
         }
 
+        public HashMap<String, Double> getMetaPathWeightsDict() {
+            return metaPathWeightsDict;
+        }
     }
 }
