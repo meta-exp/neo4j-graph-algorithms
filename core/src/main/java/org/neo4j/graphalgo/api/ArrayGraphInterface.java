@@ -15,7 +15,7 @@ public interface ArrayGraphInterface {
 
     Integer[] getLabels(int nodeId);
 
-    int getEdgeLabel(long nodeId1, long nodeId2);
+    int getEdgeLabel(Integer nodeId1, Integer nodeId2);
 
     Collection<Integer> getAllEdgeLabels();
 

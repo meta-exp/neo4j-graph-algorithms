@@ -46,7 +46,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     private WeightMapping nodeProperties;
     private boolean canRelease = true;
     // Watch Out! There is no default value. If The nodeId does not exist as key, null will be returned.
-    private AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap;
+    private AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer>> labelMap;
     private Collection<Integer> labels = null;
     private Collection<Integer> edgeLabels = null;
 
@@ -70,7 +70,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
             final WeightMapping relationshipWeights,
             final WeightMapping nodeWeights,
             final WeightMapping nodeProperties,
-            final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap) {
+            final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer>> labelMap) {
         this.nodeIdMap = nodeIdMap;
         this.container = container;
         this.relationshipWeights = relationshipWeights;
@@ -130,8 +130,8 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     }
 
     @Override
-    public int getEdgeLabel(long nodeId1, long nodeId2) {
-        AbstractMap.SimpleEntry<Long, Long> key = new AbstractMap.SimpleEntry<>(nodeId1, nodeId2);
+    public int getEdgeLabel(Integer nodeId1, Integer nodeId2) {
+        AbstractMap.SimpleEntry<Integer, Integer> key = new AbstractMap.SimpleEntry<>(nodeId1, nodeId2);
         Integer label = labelMap.getValue().get(key);
         if (label == null) {
             key = new AbstractMap.SimpleEntry<>(nodeId2, nodeId1);
