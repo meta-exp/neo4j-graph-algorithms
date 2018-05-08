@@ -47,7 +47,7 @@ public class NodeWalkerProc {
     }
 
     @Procedure(name = "randomWalkFromNodeType", mode = Mode.READ)
-    @Description("Starts a random walk of the specified number of steps at multiple random start nodes of the given type. " +
+    @Description("Starts (multiple) random walk(s) of the specified number of steps at multiple random start nodes of the given type. " +
             "If not type is given any node is chosen. Optionally specify a filePath instead of returning the paths within neo4j.")
     public Stream<WalkResult> randomWalkFromNodeType(@Name("steps") long steps,
                                               @Name("walks") long walks,
@@ -68,6 +68,39 @@ public class NodeWalkerProc {
                                                  @Name("walks") long walks,
                                                  @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
         NodeWalker walker = getRandomWalker();
+        NodeWalker.AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+
+        Stream<WalkResult> stream = walker.walkFromAllNodes(output, steps, walks);
+//        graph.release(); Should have no impact, as done by GC
+        return stream;
+    }
+
+    @Procedure(name = "node2vecWalk", mode = Mode.READ)
+    @Description("Starts (multiple) node2vecWalk(s) with the given parameters at the given start node. " +
+            "Optionally specify a filePath instead of returning the paths within neo4j.")
+    public Stream<WalkResult> node2VecWalk(@Name("nodeId") long nodeId,
+                                         @Name("steps") long steps,
+                                         @Name("walks") long walks,
+                                         @Name("returnParameter") double returnParam,
+                                         @Name("inOutParameter") double inOutParam,
+                                         @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
+        NodeWalker walker = getNode2VecWalker(returnParam, inOutParam);
+        NodeWalker.AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+
+        Stream<WalkResult> stream = walker.walkFromNode(output, nodeId, steps, walks);
+//        graph.release(); Should have no impact, as done by GC
+        return stream;
+    }
+
+    @Procedure(name = "node2vecWalkFromAllNodes", mode = Mode.READ)
+    @Description("Starts (multiple) node2vecWalk(s) with the given parameters from every node in the graph. " +
+            "Optionally specify a filePath instead of returning the paths within neo4j.")
+    public Stream<WalkResult> node2VecWalkFromAllNodes(@Name("steps") long steps,
+                                         @Name("walks") long walks,
+                                         @Name("returnParameter") double returnParam,
+                                         @Name("inOutParameter") double inOutParam,
+                                         @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
+        NodeWalker walker = getNode2VecWalker(returnParam, inOutParam);
         NodeWalker.AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
 
         Stream<WalkResult> stream = walker.walkFromAllNodes(output, steps, walks);
