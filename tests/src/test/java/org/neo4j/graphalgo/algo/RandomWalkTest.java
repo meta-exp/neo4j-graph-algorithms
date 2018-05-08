@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
-import org.neo4j.graphalgo.RandomWalkProc;
+import org.neo4j.graphalgo.NodeWalkerProc;
 import org.neo4j.harness.junit.Neo4jRule;
 
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class RandomWalkTest {
     // This rule starts a Neo4j instance
     @ClassRule
     public static Neo4jRule neo4j = new Neo4jRule()
-            .withProcedure(RandomWalkProc.class);
+            .withProcedure(NodeWalkerProc.class);
     private static Session session;
     private static Driver driver;
 
@@ -63,14 +63,14 @@ public class RandomWalkTest {
 
     @Test
     public void shouldHaveGivenStartNode() {
-        Record result = session.run("CALL randomWalk(1, 1, 1)").single();
+        Record result = session.run("CALL walkFromNode(1, 1, 1)").single();
 
         assertThat((long) 1, equalTo(getStartNodeId(result)));
     }
 
     @Test
     public void shouldHaveResults() {
-        Iterator<Record> results = session.run("CALL multiRandomWalk(1, 5)");
+        Iterator<Record> results = session.run("CALL walkFromNodeType(1, 5)");
 
         assertTrue(results.hasNext());
     }
@@ -78,7 +78,7 @@ public class RandomWalkTest {
     @Test
     public void shouldHaveSameTypesForStartNodes() {
         // TODO: make this test predictable (i.e. set random seed)
-        Iterator<Record> results = session.run("CALL multiRandomWalk(1, 5, 'Fred')");
+        Iterator<Record> results = session.run("CALL walkFromNodeType(1, 5, 'Fred')");
 
         while (results.hasNext()) {
             Record record = results.next();
@@ -89,7 +89,7 @@ public class RandomWalkTest {
 
     @Test
     public void shouldHaveStartedFromEveryNode() {
-        Iterator<Record> results = session.run("CALL allNodesRandomWalk(1, 1)");
+        Iterator<Record> results = session.run("CALL walkFromAllNodes(1, 1)");
 
         List<Long> nodeIds = new ArrayList<>();
         while (results.hasNext()) {
@@ -107,8 +107,7 @@ public class RandomWalkTest {
 
     @Test
     public void shouldNotFail() {
-        // This starts a random walk on a node without neighbor.
-        Iterator<Record> results = session.run("CALL randomWalk(3, 7, 2)");
+        Iterator<Record> results = session.run("CALL walkFromNode(2, 7, 2)");
 
         results.next();
         results.next();

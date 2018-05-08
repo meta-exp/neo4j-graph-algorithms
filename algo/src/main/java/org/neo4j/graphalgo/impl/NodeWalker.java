@@ -1,14 +1,14 @@
 package org.neo4j.graphalgo.impl;
 
-import org.neo4j.graphalgo.RandomWalkProc;
+import org.neo4j.graphalgo.NodeWalkerProc;
 import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
+import org.neo4j.time.SystemNanoClock;
 
-import javax.management.relation.Relation;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -16,13 +16,13 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class RandomWalk {
+public class NodeWalker {
 
-
-    public static Random random = new Random();
+    private static Random random = new Random();
 
     private ArrayGraphInterface arrayGraphInterface;
     private Degrees degrees;
@@ -30,8 +30,9 @@ public class RandomWalk {
     private Log log;
     private HeavyGraph graph;
     private GraphDatabaseService db;
+    private AbstractNextNodeStrategy nextNodeStrategy;
 
-    public RandomWalk(HeavyGraph graph, Log log, GraphDatabaseService db){
+    public NodeWalker(HeavyGraph graph, Log log, GraphDatabaseService db, AbstractNextNodeStrategy nextNodeStrategy){
 
         this.idMapping = graph;
         this.arrayGraphInterface = graph;
@@ -39,17 +40,18 @@ public class RandomWalk {
         this.graph = graph;
         this.log = log;
         this.db = db;
+        this.nextNodeStrategy = nextNodeStrategy;
     }
 
-    public Stream<RandomWalkProc.RandomWalkResult> randomWalk(AbstractWalkOutput output, long nodeId, long steps, long walks) {
+    public Stream<NodeWalkerProc.WalkResult> walkFromNode(AbstractWalkOutput output, long nodeId, long steps, long walks) {
         Stream<Integer> stream = Stream.generate(() -> getMappedId(nodeId)).limit(walks);
 
-        randomWalks(output, stream, walks, steps);
+        startWalks(output, stream, walks, steps);
 
         return output.getStream();
     }
 
-    public Stream<RandomWalkProc.RandomWalkResult> multiRandomWalk(AbstractWalkOutput output, long steps, long walks, String type) {
+    public Stream<NodeWalkerProc.WalkResult> walkFromNodeType(AbstractWalkOutput output, long steps, long walks, String type) {
         Stream<Integer> startNodeIdStream;
         if (type.isEmpty()) {
             startNodeIdStream = randomNodesFromAllNodes((int) walks);
@@ -58,12 +60,12 @@ public class RandomWalk {
 //            startNodes = randomNodesFromType(type, walks);
         }
 
-        randomWalks(output, startNodeIdStream, walks, steps);
+        startWalks(output, startNodeIdStream, walks, steps);
 
         return output.getStream();
     }
 
-    public Stream<RandomWalkProc.RandomWalkResult> allNodesRandomWalk(AbstractWalkOutput output, long steps, long walks) {
+    public Stream<NodeWalkerProc.WalkResult> walkFromAllNodes(AbstractWalkOutput output, long steps, long walks) {
         // TODO: find out why sometimes not all nodes are visited.
 
         long nodeCount = graph.nodeCount();
@@ -76,7 +78,7 @@ public class RandomWalk {
             stream = Stream.concat(stream, nodeIdStream);
         }
 
-        randomWalks(output, stream, totalWalks, steps);
+        startWalks(output, stream, totalWalks, steps);
 
         return output.getStream();
     }
@@ -95,7 +97,7 @@ public class RandomWalk {
 //    }
 
 
-    private void randomWalks(AbstractWalkOutput output, Stream<Integer> nodeStream, long numberOfElements, long steps) {
+    private void startWalks(AbstractWalkOutput output, Stream<Integer> nodeStream, long numberOfElements, long steps) {
         int cores = Runtime.getRuntime().availableProcessors();
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(cores * 4);
         executor.setCorePoolSize(cores * 4);
@@ -105,7 +107,7 @@ public class RandomWalk {
         nodeStream.forEach((nodeId)->{
             executor.execute(() -> {
                 try {
-                    long[][] pathIds = doRandomWalk(nodeId, (int) steps);
+                    long[][] pathIds = doWalk(nodeId, (int) steps, nextNodeStrategy);
                     long numberOfResults = output.numberOfResults() + 1;
                     // log progress ------
                     if(numberOfResults % 50000 == 2500){ //get a better estimate after 2500 walks
@@ -145,10 +147,10 @@ public class RandomWalk {
         return remainingElements * (long) timeForOne;
     }
 
-    private RandomWalkProc.RandomPath convertIdsToPath(long[][] pathIds){
-//        RandomWalkProc.RandomPath path = new RandomWalkProc.RandomPath(pathIds[1].length);
+    private NodeWalkerProc.WalkPath convertIdsToPath(long[][] pathIds){
+//        NodeWalkerProc.WalkPath path = new NodeWalkerProc.WalkPath(pathIds[1].length);
         int pathLength = pathIds[0].length;
-        RandomWalkProc.RandomPath path = new RandomWalkProc.RandomPath(pathLength);
+        NodeWalkerProc.WalkPath path = new NodeWalkerProc.WalkPath(pathLength);
         try (Transaction tx = db.beginTx()) {
             // path[0] contains Ids of nodes, path[1] contains Ids of relationships
             for(int i = 0; i < pathLength - 1; i++){
@@ -181,34 +183,27 @@ public class RandomWalk {
         return null;
     }
 
-    private long[][] doRandomWalk(int startNodeId, int steps) {
+    private long[][] doWalk(int startNodeId, int steps, AbstractNextNodeStrategy nextNodeStrategy) {
         long[] nodeIds = new long[(int) steps + 1];
-        int nodeId = startNodeId;
-        nodeIds[0] = getOriginalId(nodeId);
+        int currentNodeId = startNodeId;
+        int previousNodeId = currentNodeId;
+        nodeIds[0] = getOriginalId(currentNodeId);
         for(int i = 1; i <= steps; i++){
-            nodeId = getRandomNeighbour(nodeId);
-            if (nodeId == -1) {
+            int nextNodeId = nextNodeStrategy.getNextNode(currentNodeId, previousNodeId);
+            previousNodeId = currentNodeId;
+            currentNodeId = nextNodeId;
+
+            if (currentNodeId == -1) {
                 nodeIds = new long[1];
                 nodeIds[0] = getOriginalId(startNodeId);
                 // End walk when there is no way out and return empty result
                 break;
             }
-            nodeIds[i] = getOriginalId(nodeId);
+            nodeIds[i] = getOriginalId(currentNodeId);
         }
         long[][] pack = {nodeIds, {}};
 
         return pack;
-    }
-
-    private int getRandomNeighbour(int nodeId) {
-        int degree = degrees.degree(nodeId, Direction.BOTH);
-        if(degree == 0){
-            return -1;
-        }
-        int randomEdgeIndex= random.nextInt(degree);
-        int neighbourId = arrayGraphInterface.getAdjacentNodes(nodeId)[randomEdgeIndex];
-
-        return neighbourId;
     }
 
     private long getOriginalId(int nodeId) {
@@ -227,18 +222,18 @@ public class RandomWalk {
 
         public abstract void addResult(long[][] result);
 
-        public Stream<RandomWalkProc.RandomWalkResult> getStream() {
+        public Stream<NodeWalkerProc.WalkResult> getStream() {
             return Stream.empty();
         }
 
         public abstract int numberOfResults();
     }
 
-    public static class RandomWalkNodeDirectFileOutput extends AbstractWalkOutput {
+    public static class WalkNodeDirectFileOutput extends AbstractWalkOutput {
         private PrintStream output;
         private int count = 0;
 
-        public RandomWalkNodeDirectFileOutput(String filePath) throws IOException {
+        public WalkNodeDirectFileOutput(String filePath) throws IOException {
             super();
             this.output = new PrintStream(new FileOutputStream(filePath));
         }
@@ -266,12 +261,12 @@ public class RandomWalk {
         }
     }
 
-    public static class RandomWalkDatabaseOutput extends AbstractWalkOutput {
+    public static class WalkDatabaseOutput extends AbstractWalkOutput {
         public ArrayList<long[][]> pathIds = new ArrayList<>();
-        private RandomWalk instance;
+        private NodeWalker instance;
         private Iterator<long[][]> pathIterator;
 
-        public RandomWalkDatabaseOutput(RandomWalk instance) {
+        public WalkDatabaseOutput(NodeWalker instance) {
             super();
             this.instance = instance;
         }
@@ -284,13 +279,122 @@ public class RandomWalk {
             pathIds.add(result);
         }
 
-        public Stream<RandomWalkProc.RandomWalkResult> getStream() {
+        public Stream<NodeWalkerProc.WalkResult> getStream() {
             return Stream.generate(
-                    () -> new RandomWalkProc.RandomWalkResult(instance.convertIdsToPath(pathIterator.next()))).limit(pathIds.size());
+                    () -> new NodeWalkerProc.WalkResult(instance.convertIdsToPath(pathIterator.next()))).limit(pathIds.size());
         }
 
         public int numberOfResults(){
             return pathIds.size();
+        }
+    }
+
+    public static abstract class AbstractNextNodeStrategy{
+
+        private ArrayGraphInterface arrayGraphInterface;
+        private Degrees degrees;
+
+        public AbstractNextNodeStrategy(ArrayGraphInterface arrayGraphInterface, Degrees degrees){
+            this.arrayGraphInterface = arrayGraphInterface;
+            this.degrees = degrees;
+        }
+
+        public abstract int getNextNode(int currentNodeId, int previousNodeId);
+
+    }
+
+    public static class RandomNextNodeStrategy extends AbstractNextNodeStrategy{
+        private static Random random = new Random();
+
+        public RandomNextNodeStrategy(ArrayGraphInterface arrayGraphInterface, Degrees degrees){
+            super(arrayGraphInterface, degrees);
+        }
+
+        public int getNextNode(int currentNodeId, int previousNodeId){
+            int degree = super.degrees.degree(currentNodeId, Direction.BOTH);
+            if(degree == 0){
+                return -1;
+            }
+            int randomEdgeIndex= random.nextInt(degree);
+            int neighbourId = super.arrayGraphInterface.getAdjacentNodes(currentNodeId)[randomEdgeIndex];
+
+            return neighbourId;
+        }
+    }
+
+    public static class Node2VecStrategy extends AbstractNextNodeStrategy{
+        private static Random random = new Random();
+        private double returnParam, inOutParam;
+
+
+        public Node2VecStrategy(ArrayGraphInterface arrayGraphInterface, Degrees degrees,
+                                double returnParam, double inOutParam){
+            super(arrayGraphInterface, degrees);
+            this.returnParam = returnParam;
+            this.inOutParam = inOutParam;
+        }
+
+        public int getNextNode(int currentNodeId, int previousNodeId){
+            int degree = super.degrees.degree(currentNodeId, Direction.BOTH);
+            if(degree == 0){
+                return -1;
+            }
+
+            float[] distribution = buildProbabilityDistribution(currentNodeId, previousNodeId, returnParam, inOutParam);
+            int neighbourIndex = pickIndexFromDistribution(distribution);
+            int neighbourId = super.arrayGraphInterface.getAdjacentNodes(currentNodeId)[neighbourIndex];
+
+            return neighbourId;
+        }
+
+        private float[] buildProbabilityDistribution(int currentNodeId, int previousNodeId,
+                                                   double returnParam, double inOutParam){
+            int[] neighbours = super.arrayGraphInterface.getAdjacentNodes(currentNodeId);
+            int[] previousNeighbours = super.arrayGraphInterface.getAdjacentNodes(previousNodeId);
+            List<Integer> prevList = IntStream.of(previousNeighbours).boxed().collect(Collectors.toList());
+
+            float[] probabilities = new float[neighbours.length];
+
+            float probSum = 0;
+
+            for(int i = 0; i < neighbours.length; i++){ // Calculate probabilities for all adjacent nodes
+                int neighbourId = neighbours[i];
+                float probability;
+
+                if(neighbourId == previousNodeId){
+                    // node is previous node
+                    probability = 1f / ((float) returnParam);
+                } else if (prevList.contains(neighbourId)){
+                    // node is also adjacent to previous node --> distance to previous node is 1
+                    probability = 1f;
+                } else {
+                    // node is not adjacent to previous node --> distance to previous node is 2
+                    probability = 1f / ((float) inOutParam);
+                }
+                probabilities[i] = probability;
+                probSum += probability;
+            }
+            probabilities = normalizeDistribution(probabilities, probSum);
+            return probabilities;
+        }
+
+        private float[] normalizeDistribution(float[] array, float sum){
+            for(int i = 0; i < array.length; i++){
+                array[i] = array[i] / sum;
+            }
+            return array;
+        }
+
+        private int pickIndexFromDistribution(float[] distribution){
+            double p = random.nextDouble();
+            double cumulativeProbability = 0.0;
+            for(int i = 0; i < distribution.length; i++){
+                cumulativeProbability += distribution[i];
+                if (p <= cumulativeProbability) {
+                    return i;
+                }
+            }
+            return distribution.length - 1;
         }
     }
 }
