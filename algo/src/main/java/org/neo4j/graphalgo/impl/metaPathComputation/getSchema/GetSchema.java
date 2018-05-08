@@ -1,26 +1,47 @@
-package org.neo4j.graphalgo.impl.metaPathComputation;
+package org.neo4j.graphalgo.impl.metaPathComputation.getSchema;
 
+import org.neo4j.graphalgo.HarmonicCentralityProc;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
+import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
+import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathComputation;
 import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class GetSchema extends MetaPathComputation  {
+public class GetSchema extends MetaPathComputation {
 
     private HeavyGraph graph;
+    private ArrayList<ArrayList<HashSet<Integer> > > inSchema;
     private HashMap<Integer, Integer> labelDictionary;//maybe change to array if it stays integer->integer
     private HashMap<Integer, Integer> reverseLabelDictionary;//also change to Array
+    //private HashMap<Integer, Integer> edgeLabelDictionary;
     private int labelCounter;
+    //private int edgeLabelCounter;
+    private int amountOfLabels;
+    //private int amountOfEdgeLabels;
 
     public GetSchema(HeavyGraph graph) {
         this.graph = graph;
+        this.amountOfLabels = graph.getAllLabels().size();
+        //this.amountOfEdgeLabels = graph.getAllEdgeLabels().size();
         this.labelDictionary = new HashMap<>();
-        reverseLabelDictionary = new HashMap<>();
+        this.reverseLabelDictionary = new HashMap<>();
+        //this.edgeLabelDictionary = new HashMap<>();
         this.labelCounter = 0;
+        //this.edgeLabelCounter = 0;
+
+        this.inSchema = new ArrayList<>(amountOfLabels);
+        for (int i = 0; i < amountOfLabels; i++) {
+            ArrayList<HashSet<Integer>> row = new ArrayList<>(amountOfLabels);
+            for(int j = 0; j < amountOfLabels; j++) {
+                row.add(new HashSet<>());
+            }
+            inSchema.add(row);
+        }
     }
 
     public Result compute() {
-        ArrayList<ArrayList<Pair>> schema = new ArrayList<>(); //max supported nodecount = ca. 2.000.000.000
+        ArrayList<ArrayList<Pair>> schema = new ArrayList<>(amountOfLabels); //max supported nodecount = ca. 2.000.000.000
         graph.forEachNode(node -> addNeighboursToShema(node, schema));
 
         return new Result(schema, labelDictionary, reverseLabelDictionary);
@@ -41,11 +62,21 @@ public class GetSchema extends MetaPathComputation  {
                 for(int neighbourLabel : neighbourLabels) {
                     Integer neighbourLabelId = getLabelId(schema, neighbourLabel);
 
+                    if(inSchema.get(labelId).get(neighbourLabelId).contains(edgeLabel)) continue;
                     Pair pair = new Pair();
                     pair.setCar(neighbourLabelId);
                     pair.setCdr(edgeLabel);
 
                     schema.get(labelId).add(pair);
+                    inSchema.get(labelId).get(neighbourLabelId).add(edgeLabel);
+
+                    if(inSchema.get(neighbourLabelId).get(labelId).contains(edgeLabel)) continue;
+                    Pair pair2 = new Pair();
+                    pair2.setCar(labelId);
+                    pair2.setCdr(edgeLabel);
+
+                    schema.get(neighbourLabelId).add(pair2);
+                    inSchema.get(neighbourLabelId).get(labelId).add(edgeLabel);
                 }
             }
         }
@@ -62,37 +93,22 @@ public class GetSchema extends MetaPathComputation  {
             labelId = labelCounter;
             labelCounter++;
 
-            ArrayList<Pair> adjacencyRow = new ArrayList<>();
+            ArrayList<Pair> adjacencyRow = new ArrayList<>();//maybe give size of amountOfLabels*amountOfEdgeLabels
             schema.add(adjacencyRow);
         }
         return labelId;
     }
 
-    private class Pair {
-        int car = 0;
-        int cdr = 0;
-
-        int car()
+    /*private Integer getEdgeLabelId(Integer label) {
+        Integer edgeLabelId = edgeLabelDictionary.get(label);
+        if(edgeLabelId == null)
         {
-            return car;
+            edgeLabelDictionary.put(label, edgeLabelCounter);
+            edgeLabelId = edgeLabelCounter;
+            edgeLabelCounter++;
         }
-
-        int cdr()
-        {
-            return cdr;
-        }
-
-        void setCar(int value)
-        {
-            car = value;
-        }
-
-        void setCdr(int value)
-        {
-            cdr = value;
-        }
-    }
-
+        return edgeLabelId;
+    }*/
 
 
     //TODO------------------------------------------------------------------------------------------------------------------

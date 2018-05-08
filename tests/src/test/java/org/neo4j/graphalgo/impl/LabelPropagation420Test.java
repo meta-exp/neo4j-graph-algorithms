@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.graphalgo.impl;
+/*package org.neo4j.graphalgo.impl;
 
 import com.carrotsearch.hppc.IntArrayList;
 import com.carrotsearch.hppc.IntObjectMap;
@@ -78,8 +78,8 @@ import static org.junit.Assert.assertTrue;
  * 3rd iteration:
  *  nothing to do, finished
  */
-//@formatter:on
-public final class LabelPropagation420Test {
+//@formatter:on*/
+/*public final class LabelPropagation420Test {
 
     private static final String GRAPH =
             "CREATE (nAlice:User {id:'Alice',label:2})\n" +
@@ -178,3 +178,4 @@ public final class LabelPropagation420Test {
         }
     }
 }
+*/
