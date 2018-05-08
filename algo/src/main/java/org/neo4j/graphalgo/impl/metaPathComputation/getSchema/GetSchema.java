@@ -50,35 +50,30 @@ public class GetSchema extends MetaPathComputation {
     private boolean addNeighboursToShema(int node, ArrayList<ArrayList<Pair>> schema)
     {
         int[] neighbours = graph.getOutgoingNodes(node);
-        Integer[] labels = graph.getLabels(node);
+        Integer label = graph.getLabel(node);
+        Integer labelId = getLabelId(schema, label);
 
         for (int neighbour : neighbours) {
             int edgeLabel = graph.getEdgeLabel(node, neighbour); //why is this method taking longs??
-            Integer[] neighbourLabels = graph.getLabels(neighbour);
 
-            for (Integer label : labels) {
-                Integer labelId = getLabelId(schema, label);
+            Integer neighbourLabel = graph.getLabel(neighbour);
+            Integer neighbourLabelId = getLabelId(schema, neighbourLabel);
 
-                for(int neighbourLabel : neighbourLabels) {
-                    Integer neighbourLabelId = getLabelId(schema, neighbourLabel);
+            if(inSchema.get(labelId).get(neighbourLabelId).contains(edgeLabel)) continue;
+            Pair pair = new Pair();
+            pair.setCar(neighbourLabelId);
+            pair.setCdr(edgeLabel);
 
-                    if(inSchema.get(labelId).get(neighbourLabelId).contains(edgeLabel)) continue;
-                    Pair pair = new Pair();
-                    pair.setCar(neighbourLabelId);
-                    pair.setCdr(edgeLabel);
+            schema.get(labelId).add(pair);
+            inSchema.get(labelId).get(neighbourLabelId).add(edgeLabel);
 
-                    schema.get(labelId).add(pair);
-                    inSchema.get(labelId).get(neighbourLabelId).add(edgeLabel);
+            if(inSchema.get(neighbourLabelId).get(labelId).contains(edgeLabel)) continue;
+            Pair pair2 = new Pair();
+            pair2.setCar(labelId);
+            pair2.setCdr(edgeLabel);
 
-                    if(inSchema.get(neighbourLabelId).get(labelId).contains(edgeLabel)) continue;
-                    Pair pair2 = new Pair();
-                    pair2.setCar(labelId);
-                    pair2.setCdr(edgeLabel);
-
-                    schema.get(neighbourLabelId).add(pair2);
-                    inSchema.get(neighbourLabelId).get(labelId).add(edgeLabel);
-                }
-            }
+            schema.get(neighbourLabelId).add(pair2);
+            inSchema.get(neighbourLabelId).get(labelId).add(edgeLabel);
         }
 
         return true;
