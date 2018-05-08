@@ -63,14 +63,14 @@ public class RandomWalkTest {
 
     @Test
     public void shouldHaveGivenStartNode() {
-        Record result = session.run("CALL walkFromNode(1, 1, 1)").single();
+        Record result = session.run("CALL randomWalk(1, 1, 1)").single();
 
         assertThat((long) 1, equalTo(getStartNodeId(result)));
     }
 
     @Test
     public void shouldHaveResults() {
-        Iterator<Record> results = session.run("CALL walkFromNodeType(1, 5)");
+        Iterator<Record> results = session.run("CALL randomWalkFromNodeType(1, 5)");
 
         assertTrue(results.hasNext());
     }
@@ -78,7 +78,7 @@ public class RandomWalkTest {
     @Test
     public void shouldHaveSameTypesForStartNodes() {
         // TODO: make this test predictable (i.e. set random seed)
-        Iterator<Record> results = session.run("CALL walkFromNodeType(1, 5, 'Fred')");
+        Iterator<Record> results = session.run("CALL randomWalkFromNodeType(1, 5, 'Fred')");
 
         while (results.hasNext()) {
             Record record = results.next();
@@ -89,7 +89,7 @@ public class RandomWalkTest {
 
     @Test
     public void shouldHaveStartedFromEveryNode() {
-        Iterator<Record> results = session.run("CALL walkFromAllNodes(1, 1)");
+        Iterator<Record> results = session.run("CALL randomWalkFromAllNodes(1, 1)");
 
         List<Long> nodeIds = new ArrayList<>();
         while (results.hasNext()) {
@@ -107,7 +107,7 @@ public class RandomWalkTest {
 
     @Test
     public void shouldNotFail() {
-        Iterator<Record> results = session.run("CALL walkFromNode(2, 7, 2)");
+        Iterator<Record> results = session.run("CALL randomWalk(2, 7, 2)");
 
         results.next();
         results.next();

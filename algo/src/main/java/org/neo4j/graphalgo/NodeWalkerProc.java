@@ -31,74 +31,46 @@ public class NodeWalkerProc {
     @Context
     public KernelTransaction transaction;
 
-    @Procedure(name = "walkFromNode", mode = Mode.READ)
-    @Description("Starts a random walk of the specified number of steps at the given start node.")
-    public Stream<WalkResult> randomWalk(@Name("nodeId") long nodeId,
-                                         @Name("steps") long steps,
-                                         @Name("walks") long walks) {
-
-        NodeWalker walker = getRandomWalker();
-        Stream<WalkResult> stream = walker.walkFromNode(new NodeWalker.WalkDatabaseOutput(walker), nodeId, steps, walks);
-//        graph.release(); Should have no impact, as done by GC
-        return stream;
-    }
-
-    @Procedure(name = "randomWalk_fileOutput", mode = Mode.READ)
-    @Description("Starts a random walk of the specified number of steps at the given start node.")
+    @Procedure(name = "randomWalk", mode = Mode.READ)
+    @Description("Starts a random walk of the specified number of steps at the given start node. " +
+            "Optionally specify a filePath instead of returning the paths within neo4j.")
     public Stream<WalkResult> randomWalk(@Name("nodeId") long nodeId,
                                          @Name("steps") long steps,
                                          @Name("walks") long walks,
-                                         @Name("filePath") String filePath) throws IOException {
+                                         @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
         NodeWalker walker = getRandomWalker();
-        Stream<WalkResult> stream = walker.walkFromNode(new NodeWalker.WalkNodeDirectFileOutput(filePath), nodeId, steps, walks);
+        NodeWalker.AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+
+        Stream<WalkResult> stream = walker.walkFromNode(output, nodeId, steps, walks);
 //        graph.release(); Should have no impact, as done by GC
         return stream;
     }
 
-    @Procedure(name = "walkFromNodeType", mode = Mode.READ)
+    @Procedure(name = "randomWalkFromNodeType", mode = Mode.READ)
     @Description("Starts a random walk of the specified number of steps at multiple random start nodes of the given type. " +
-            "If not type is given any node is chosen.")
-    public Stream<WalkResult> multiRandomWalk(@Name("steps") long steps,
+            "If not type is given any node is chosen. Optionally specify a filePath instead of returning the paths within neo4j.")
+    public Stream<WalkResult> randomWalkFromNodeType(@Name("steps") long steps,
                                               @Name("walks") long walks,
-                                              @Name(value = "type", defaultValue = "") String type) {
+                                              @Name(value = "type", defaultValue = "") String type,
+                                              @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
         NodeWalker walker = getRandomWalker();
-        Stream<WalkResult> stream = walker.walkFromNodeType(new NodeWalker.WalkDatabaseOutput(walker), steps, walks, type);
+        NodeWalker.AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+
+        Stream<WalkResult> stream = walker.walkFromNodeType(output, steps, walks, type);
 //        graph.release(); Should have no impact, as done by GC
         return stream;
     }
 
-    @Procedure(name = "multiRandomWalk_fileOutput", mode = Mode.READ)
-    @Description("Starts a random walk of the specified number of steps at multiple random start nodes of the given type. " +
-            "If not type is given any node is chosen.")
-    public Stream<WalkResult> multiRandomWalk(@Name("steps") long steps,
-                                              @Name("walks") long walks,
-                                              @Name("filePath") String filePath,
-                                              @Name(value = "type", defaultValue = "") String type) throws IOException {
-        NodeWalker walker = getRandomWalker();
-        Stream<WalkResult> stream = walker.walkFromNodeType(new NodeWalker.WalkNodeDirectFileOutput(filePath), steps, walks, type);
-//        graph.release(); Should have no impact, as done by GC
-        return stream;
-    }
-
-    @Procedure(name = "walkFromAllNodes", mode = Mode.READ)
+    @Procedure(name = "randomWalkFromAllNodes", mode = Mode.READ)
     @Description("Starts random walks from every node in the graph. Specify the steps for each random walks " +
-            "and the number of walks per node.")
-    public Stream<WalkResult> allNodesRandomWalk(@Name("steps") long steps,
-                                                 @Name("walks") long walks) {
-        NodeWalker walker = getRandomWalker();
-        Stream<WalkResult> stream = walker.walkFromAllNodes(new NodeWalker.WalkDatabaseOutput(walker), steps, walks);
-//        graph.release(); Should have no impact, as done by GC
-        return stream;
-    }
-
-    @Procedure(name = "allNodesRandomWalk_fileOutput", mode = Mode.READ)
-    @Description("Starts random walks from every node in the graph. Specify the steps for each random walks " +
-            "and the number of walks per node.")
-    public Stream<WalkResult> allNodesRandomWalk(@Name("steps") long steps,
+            "and the number of walks per node. Optionally specify a filePath instead of returning the paths within neo4j.")
+    public Stream<WalkResult> randomWalkFromAllNodes(@Name("steps") long steps,
                                                  @Name("walks") long walks,
-                                                 @Name("filePath") String filePath) throws IOException {
+                                                 @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
         NodeWalker walker = getRandomWalker();
-        Stream<WalkResult> stream = walker.walkFromAllNodes(new NodeWalker.WalkNodeDirectFileOutput(filePath), steps, walks);
+        NodeWalker.AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+
+        Stream<WalkResult> stream = walker.walkFromAllNodes(output, steps, walks);
 //        graph.release(); Should have no impact, as done by GC
         return stream;
     }
@@ -115,6 +87,16 @@ public class NodeWalkerProc {
                 .load(HeavyGraphFactory.class);
 
         return graph;
+    }
+
+    private NodeWalker.AbstractWalkOutput getAppropriateOutput(NodeWalker walker, String filePath) throws IOException{
+        NodeWalker.AbstractWalkOutput output;
+        if(filePath.isEmpty()){
+            output = new NodeWalker.WalkDatabaseOutput(walker);
+        } else {
+            output = new NodeWalker.WalkNodeDirectFileOutput(filePath);
+        }
+        return output;
     }
 
     private NodeWalker getRandomWalker(){
