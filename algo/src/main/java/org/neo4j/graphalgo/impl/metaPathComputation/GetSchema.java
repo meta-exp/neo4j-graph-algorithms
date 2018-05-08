@@ -1,31 +1,21 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-import org.neo4j.graphalgo.api.Degrees;
-import org.neo4j.graphalgo.api.ArrayGraphInterface;
-import org.neo4j.graphalgo.api.IdMapping;
-import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.io.*;
 import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import static java.lang.Float.max;
-
 
 public class GetSchema extends MetaPathComputation  {
 
     private HeavyGraph graph;
     private HashMap<Integer, Integer> labelDictionary;//maybe change to array if it stays integer->integer
+    private HashMap<Integer, Integer> reverseLabelDictionary;//also change to Array
     private int labelCounter;
 
     public GetSchema(HeavyGraph graph) {
         this.graph = graph;
         this.labelDictionary = new HashMap<>();
+        reverseLabelDictionary = new HashMap<>();
         this.labelCounter = 0;
     }
 
@@ -33,7 +23,7 @@ public class GetSchema extends MetaPathComputation  {
         ArrayList<ArrayList<Pair>> schema = new ArrayList<>(); //max supported nodecount = ca. 2.000.000.000
         graph.forEachNode(node -> addNeighboursToShema(node, schema));
 
-        return new Result(new ArrayList<>());
+        return new Result(schema, labelDictionary, reverseLabelDictionary);
     }
 
     private boolean addNeighboursToShema(int node, ArrayList<ArrayList<Pair>> schema)
@@ -41,30 +31,41 @@ public class GetSchema extends MetaPathComputation  {
         int[] neighbours = graph.getOutgoingNodes(node);
         Integer[] labels = graph.getLabels(node);
 
-        for (Integer label : labels) {
-            Integer labelId = labelDictionary.get(label);
-            if(labelId == null)
-            {
-                labelDictionary.put(label, labelCounter);
-                labelId = labelCounter;
-                labelCounter++;
+        for (int neighbour : neighbours) {
+            int edgeLabel = graph.getEdgeLabel(node, neighbour); //why is this method taking longs??
+            Integer[] neighbourLabels = graph.getLabels(neighbour);
 
-                ArrayList<Pair> adjacencyRow = new ArrayList<>();
-                schema.add(adjacencyRow);
-            }
+            for (Integer label : labels) {
+                Integer labelId = getLabelId(schema, label);
 
-            for (int neighbour : neighbours) {
-                int edgeLabel = graph.getEdgeLabel(node, neighbour); //why is this method taking longs??
+                for(int neighbourLabel : neighbourLabels) {
+                    Integer neighbourLabelId = getLabelId(schema, neighbourLabel);
 
-                Pair pair = new Pair();
-                pair.setCar(neighbour);
-                pair.setCdr(edgeLabel);
-                
-                schema.get(labelId).add(pair);
+                    Pair pair = new Pair();
+                    pair.setCar(neighbourLabelId);
+                    pair.setCdr(edgeLabel);
+
+                    schema.get(labelId).add(pair);
+                }
             }
         }
 
         return true;
+    }
+
+    private Integer getLabelId(ArrayList<ArrayList<Pair>> schema, Integer label) {
+        Integer labelId = labelDictionary.get(label);
+        if(labelId == null)
+        {
+            labelDictionary.put(label, labelCounter);
+            reverseLabelDictionary.put(labelCounter, label);
+            labelId = labelCounter;
+            labelCounter++;
+
+            ArrayList<Pair> adjacencyRow = new ArrayList<>();
+            schema.add(adjacencyRow);
+        }
+        return labelId;
     }
 
     private class Pair {
@@ -113,8 +114,13 @@ public class GetSchema extends MetaPathComputation  {
     public static final class Result {
 
         ArrayList<ArrayList<Pair>> schema;
-        public Result(ArrayList<ArrayList<Pair>> schema) {
+        HashMap<Integer, Integer> labelDictionary;
+        HashMap<Integer, Integer> reverseLabelDictionary;
+
+        public Result(ArrayList<ArrayList<Pair>> schema, HashMap<Integer, Integer> labelDictionary, HashMap<Integer, Integer> reverseLabelDictionary) {
             this.schema = schema;
+            this.labelDictionary = labelDictionary;
+            this.reverseLabelDictionary = reverseLabelDictionary;
         }
 
         @Override
@@ -124,6 +130,14 @@ public class GetSchema extends MetaPathComputation  {
 
         public ArrayList<ArrayList<Pair>> getSchemaAdjacencies() {
             return schema;
+        }
+
+        public HashMap<Integer, Integer> getLabelDictionary() {
+            return labelDictionary;
+        }
+
+        public HashMap<Integer, Integer> getReverseLabelDictionary() {
+            return reverseLabelDictionary;
         }
     }
 }
