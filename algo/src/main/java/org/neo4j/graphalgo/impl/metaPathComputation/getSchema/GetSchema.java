@@ -66,32 +66,38 @@ public class GetSchema extends MetaPathComputation {
 
     private boolean addNeighboursToSchema(int node, ArrayList<ArrayList<Pair>> schema) {
         int[] neighbours = graph.getOutgoingNodes(node);
-        Integer label = graph.getLabel(node);
-        Integer labelId = getLabelId(schema, label);
+        Integer[] labels = graph.getLabels(node);
+        for (int label : labels) {
+            Integer labelId = getLabelId(schema, label);
 
-        for (int neighbour : neighbours) {
-            int edgeLabel = graph.getEdgeLabel(node, neighbour);
+            for (int neighbour : neighbours) {
+                int edgeLabel = graph.getEdgeLabel(node, neighbour);
 
-            Integer neighbourLabel = graph.getLabel(neighbour);
-            Integer neighbourLabelId = getLabelId(schema, neighbourLabel);
-            synchronized (schema) {
-                if (inSchema.get(labelId).get(neighbourLabelId).contains(edgeLabel)) continue;
-                Pair pair = new Pair();
-                pair.setCar(neighbourLabelId);
-                pair.setCdr(edgeLabel);
+                Integer[] neighbourLabels = graph.getLabels(neighbour);
+                for (int neighbourLabel : neighbourLabels) {
 
-                schema.get(labelId).add(pair);
-                inSchema.get(labelId).get(neighbourLabelId).add(edgeLabel);
-            }
 
-            synchronized (schema) {
-                if (inSchema.get(neighbourLabelId).get(labelId).contains(edgeLabel)) continue;
-                Pair pair2 = new Pair();
-                pair2.setCar(labelId);
-                pair2.setCdr(edgeLabel);
+                    Integer neighbourLabelId = getLabelId(schema, neighbourLabel);
+                    synchronized (schema) {
+                        if (inSchema.get(labelId).get(neighbourLabelId).contains(edgeLabel)) continue;
+                        Pair pair = new Pair();
+                        pair.setCar(neighbourLabelId);
+                        pair.setCdr(edgeLabel);
 
-                schema.get(neighbourLabelId).add(pair2);
-                inSchema.get(neighbourLabelId).get(labelId).add(edgeLabel);
+                        schema.get(labelId).add(pair);
+                        inSchema.get(labelId).get(neighbourLabelId).add(edgeLabel);
+                    }
+
+                    synchronized (schema) {
+                        if (inSchema.get(neighbourLabelId).get(labelId).contains(edgeLabel)) continue;
+                        Pair pair2 = new Pair();
+                        pair2.setCar(labelId);
+                        pair2.setCdr(edgeLabel);
+
+                        schema.get(neighbourLabelId).add(pair2);
+                        inSchema.get(neighbourLabelId).get(labelId).add(edgeLabel);
+                    }
+                }
             }
         }
 
