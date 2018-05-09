@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 public class GetSchema extends MetaPathComputation {
 
     private HeavyGraph graph;
-    private ArrayList<ArrayList<HashSet<Integer> > > inSchema;
+    private ArrayList<ArrayList<HashSet<Integer>>> inSchema;
     private HashMap<Integer, Integer> labelDictionary;//maybe change to array if it stays integer->integer
     private HashMap<Integer, Integer> reverseLabelDictionary;//also change to Array
     private int labelCounter;
@@ -32,7 +32,7 @@ public class GetSchema extends MetaPathComputation {
         this.inSchema = new ArrayList<>(amountOfLabels);
         for (int i = 0; i < amountOfLabels; i++) {
             ArrayList<HashSet<Integer>> row = new ArrayList<>(amountOfLabels);
-            for(int j = 0; j < amountOfLabels; j++) {
+            for (int j = 0; j < amountOfLabels; j++) {
                 row.add(new HashSet<>());
             }
             inSchema.add(row);
@@ -45,12 +45,12 @@ public class GetSchema extends MetaPathComputation {
         long numberOfNodesPerCore = nodeCount / numberOfCores;
 
         ArrayList<AddNeighboursToSchemaThread> threads = new ArrayList<>(numberOfCores);
-        for(int i = 0; i < numberOfCores; i++) {
-            AddNeighboursToSchemaThread thread = new AddNeighboursToSchemaThread(schema, (int)(i * numberOfNodesPerCore), numberOfNodesPerCore);
+        for (int i = 0; i < numberOfCores; i++) {
+            AddNeighboursToSchemaThread thread = new AddNeighboursToSchemaThread(schema, (int) (i * numberOfNodesPerCore), numberOfNodesPerCore);
             threads.add(thread);
             thread.start();
         }
-        AddNeighboursToSchemaThread missingThread = new AddNeighboursToSchemaThread(schema, (int)(numberOfCores * numberOfNodesPerCore), nodeCount - (int)(numberOfCores * numberOfNodesPerCore));
+        AddNeighboursToSchemaThread missingThread = new AddNeighboursToSchemaThread(schema, (int) (numberOfCores * numberOfNodesPerCore), nodeCount - (int) (numberOfCores * numberOfNodesPerCore));
         threads.add(missingThread);
         missingThread.start();
 
@@ -61,12 +61,10 @@ public class GetSchema extends MetaPathComputation {
                 e.printStackTrace();
             }
         }
-
         return new Result(schema, labelDictionary, reverseLabelDictionary);
     }
 
-    private boolean addNeighboursToSchema(int node, ArrayList<ArrayList<Pair>> schema)
-    {
+    private boolean addNeighboursToSchema(int node, ArrayList<ArrayList<Pair>> schema) {
         int[] neighbours = graph.getOutgoingNodes(node);
         Integer label = graph.getLabel(node);
         Integer labelId = getLabelId(schema, label);
@@ -76,40 +74,45 @@ public class GetSchema extends MetaPathComputation {
 
             Integer neighbourLabel = graph.getLabel(neighbour);
             Integer neighbourLabelId = getLabelId(schema, neighbourLabel);
+            synchronized (schema) {
+                if (inSchema.get(labelId).get(neighbourLabelId).contains(edgeLabel)) continue;
+                Pair pair = new Pair();
+                pair.setCar(neighbourLabelId);
+                pair.setCdr(edgeLabel);
 
-            if(inSchema.get(labelId).get(neighbourLabelId).contains(edgeLabel)) continue;
-            Pair pair = new Pair();
-            pair.setCar(neighbourLabelId);
-            pair.setCdr(edgeLabel);
+                schema.get(labelId).add(pair);
+                inSchema.get(labelId).get(neighbourLabelId).add(edgeLabel);
+            }
 
-            schema.get(labelId).add(pair);
-            inSchema.get(labelId).get(neighbourLabelId).add(edgeLabel);
+            synchronized (schema) {
+                if (inSchema.get(neighbourLabelId).get(labelId).contains(edgeLabel)) continue;
+                Pair pair2 = new Pair();
+                pair2.setCar(labelId);
+                pair2.setCdr(edgeLabel);
 
-            if(inSchema.get(neighbourLabelId).get(labelId).contains(edgeLabel)) continue;
-            Pair pair2 = new Pair();
-            pair2.setCar(labelId);
-            pair2.setCdr(edgeLabel);
-
-            schema.get(neighbourLabelId).add(pair2);
-            inSchema.get(neighbourLabelId).get(labelId).add(edgeLabel);
+                schema.get(neighbourLabelId).add(pair2);
+                inSchema.get(neighbourLabelId).get(labelId).add(edgeLabel);
+            }
         }
 
         return true;
     }
 
     private Integer getLabelId(ArrayList<ArrayList<Pair>> schema, Integer label) {
-        Integer labelId = labelDictionary.get(label);
-        if(labelId == null)
-        {
-            labelDictionary.put(label, labelCounter);
-            reverseLabelDictionary.put(labelCounter, label);
-            labelId = labelCounter;
-            labelCounter++;
+        synchronized (labelDictionary) {
+            Integer labelId = labelDictionary.get(label);
+            if (labelId == null) {
+                labelDictionary.put(label, labelCounter);
+                reverseLabelDictionary.put(labelCounter, label);
+                labelId = labelCounter;
+                labelCounter++;
 
-            ArrayList<Pair> adjacencyRow = new ArrayList<>();//maybe give size of amountOfLabels*amountOfEdgeLabels
-            schema.add(adjacencyRow);
+                ArrayList<Pair> adjacencyRow = new ArrayList<>();//maybe give size of amountOfLabels*amountOfEdgeLabels
+                schema.add(adjacencyRow);
+            }
+
+            return labelId;
         }
-        return labelId;
     }
 
     class AddNeighboursToSchemaThread extends Thread {
@@ -124,8 +127,8 @@ public class GetSchema extends MetaPathComputation {
         }
 
         public void run() {
-            for(int i = startNode; i < startNode + numberOfNodes; i++)
-            addNeighboursToSchema(i, schema);
+            for (int i = startNode; i < startNode + numberOfNodes; i++)
+                addNeighboursToSchema(i, schema);
         }
     }
 
@@ -136,7 +139,9 @@ public class GetSchema extends MetaPathComputation {
     }//no clue what this is all about
 
     @Override
-    public GetSchema me() { return this; }
+    public GetSchema me() {
+        return this;
+    }
 
     @Override
     public GetSchema release() {
