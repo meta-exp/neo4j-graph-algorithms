@@ -1,10 +1,13 @@
 package org.neo4j.graphalgo.impl.metaPathComputation.getSchema;
 
-import org.neo4j.graphalgo.HarmonicCentralityProc;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
+import org.neo4j.graphalgo.impl.metaPathComputation.ComputeMetaPathFromNodeLabelThread;
 import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathComputation;
+
+import java.lang.reflect.Array;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -14,21 +17,17 @@ public class GetSchema extends MetaPathComputation {
     private ArrayList<ArrayList<HashSet<Integer> > > inSchema;
     private HashMap<Integer, Integer> labelDictionary;//maybe change to array if it stays integer->integer
     private HashMap<Integer, Integer> reverseLabelDictionary;//also change to Array
-    //private HashMap<Integer, Integer> edgeLabelDictionary;
     private int labelCounter;
-    //private int edgeLabelCounter;
     private int amountOfLabels;
-    //private int amountOfEdgeLabels;
+    private int numberOfCores;
 
     public GetSchema(HeavyGraph graph) {
         this.graph = graph;
         this.amountOfLabels = graph.getAllLabels().size();
-        //this.amountOfEdgeLabels = graph.getAllEdgeLabels().size();
         this.labelDictionary = new HashMap<>();
         this.reverseLabelDictionary = new HashMap<>();
-        //this.edgeLabelDictionary = new HashMap<>();
         this.labelCounter = 0;
-        //this.edgeLabelCounter = 0;
+        this.numberOfCores = Runtime.getRuntime().availableProcessors();
 
         this.inSchema = new ArrayList<>(amountOfLabels);
         for (int i = 0; i < amountOfLabels; i++) {
@@ -42,19 +41,38 @@ public class GetSchema extends MetaPathComputation {
 
     public Result compute() {
         ArrayList<ArrayList<Pair>> schema = new ArrayList<>(amountOfLabels); //max supported nodecount = ca. 2.000.000.000
-        graph.forEachNode(node -> addNeighboursToShema(node, schema));
+        long nodeCount = graph.nodeCount();
+        long numberOfNodesPerCore = nodeCount / numberOfCores;
+
+        ArrayList<AddNeighboursToSchemaThread> threads = new ArrayList<>(numberOfCores);
+        for(int i = 0; i < numberOfCores; i++) {
+            AddNeighboursToSchemaThread thread = new AddNeighboursToSchemaThread(schema, (int)(i * numberOfNodesPerCore), numberOfNodesPerCore);
+            threads.add(thread);
+            thread.start();
+        }
+        AddNeighboursToSchemaThread missingThread = new AddNeighboursToSchemaThread(schema, (int)(numberOfCores * numberOfNodesPerCore), nodeCount - (int)(numberOfCores * numberOfNodesPerCore));
+        threads.add(missingThread);
+        missingThread.start();
+
+        for (AddNeighboursToSchemaThread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
         return new Result(schema, labelDictionary, reverseLabelDictionary);
     }
 
-    private boolean addNeighboursToShema(int node, ArrayList<ArrayList<Pair>> schema)
+    private boolean addNeighboursToSchema(int node, ArrayList<ArrayList<Pair>> schema)
     {
         int[] neighbours = graph.getOutgoingNodes(node);
         Integer label = graph.getLabel(node);
         Integer labelId = getLabelId(schema, label);
 
         for (int neighbour : neighbours) {
-            int edgeLabel = graph.getEdgeLabel(node, neighbour); //why is this method taking longs??
+            int edgeLabel = graph.getEdgeLabel(node, neighbour);
 
             Integer neighbourLabel = graph.getLabel(neighbour);
             Integer neighbourLabelId = getLabelId(schema, neighbourLabel);
@@ -94,16 +112,22 @@ public class GetSchema extends MetaPathComputation {
         return labelId;
     }
 
-    /*private Integer getEdgeLabelId(Integer label) {
-        Integer edgeLabelId = edgeLabelDictionary.get(label);
-        if(edgeLabelId == null)
-        {
-            edgeLabelDictionary.put(label, edgeLabelCounter);
-            edgeLabelId = edgeLabelCounter;
-            edgeLabelCounter++;
+    class AddNeighboursToSchemaThread extends Thread {
+        private int startNode;
+        private long numberOfNodes;
+        private ArrayList<ArrayList<Pair>> schema;
+
+        AddNeighboursToSchemaThread(ArrayList<ArrayList<Pair>> schema, int startNode, long numberOfNodes) {
+            this.startNode = startNode;
+            this.numberOfNodes = numberOfNodes;
+            this.schema = schema;
         }
-        return edgeLabelId;
-    }*/
+
+        public void run() {
+            for(int i = startNode; i < startNode + numberOfNodes; i++)
+            addNeighboursToSchema(i, schema);
+        }
+    }
 
 
     //TODO------------------------------------------------------------------------------------------------------------------
