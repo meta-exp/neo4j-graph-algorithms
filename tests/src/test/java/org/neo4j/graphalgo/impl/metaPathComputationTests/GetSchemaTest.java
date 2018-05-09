@@ -73,7 +73,6 @@ public class GetSchemaTest {
         algo = new GetSchema(graph);
     }
 
-    @Ignore
     @Test
     public void testSchema() {
         GetSchema.Result result = algo.compute();
@@ -140,11 +139,15 @@ public class GetSchemaTest {
             ArrayList<Pair> row1 = schema.get(i);
             ArrayList<Pair> row2 = expectedSchema.get(i);
             assertEquals(row2.size(), row1.size());
-            for (int j = 0; j < row1.size(); j++) {
-                Pair pair1 = row1.get(j);
-                Pair pair2 = row2.get(j);
-                assertEquals(pair2.car(), pair1.car());
-                assertEquals(pair2.cdr(), pair1.cdr());
+            for (int j = 0; j < row2.size(); j++) {
+                Pair expectedPair = row2.get(j);
+                boolean pairFound = false;
+                for (Pair actualPair : row1) {
+                    if(actualPair.car() == expectedPair.car() && actualPair.cdr() == expectedPair.cdr()) {
+                        pairFound = true;
+                    }
+                }
+                assertEquals(true, pairFound);
             }
         }
     }
