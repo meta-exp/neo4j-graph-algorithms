@@ -2,22 +2,17 @@ package org.neo4j.graphalgo.impl.metaPathComputation.getSchema;
 
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeMetaPathFromNodeLabelThread;
 import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathComputation;
 
-import java.lang.reflect.Array;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class GetSchema extends MetaPathComputation {
 
     private HeavyGraph graph;
-    private ArrayList<ArrayList<HashSet<Integer>>> inSchema;
     private HashMap<Integer, Integer> labelDictionary;//maybe change to array if it stays integer->integer
     private HashMap<Integer, Integer> reverseLabelDictionary;//also change to Array
-    private int labelCounter;
     private int amountOfLabels;
     private int numberOfCores;
 
@@ -26,34 +21,36 @@ public class GetSchema extends MetaPathComputation {
         this.amountOfLabels = graph.getAllLabels().size();
         this.labelDictionary = new HashMap<>();
         this.reverseLabelDictionary = new HashMap<>();
-        this.labelCounter = 0;
         this.numberOfCores = Runtime.getRuntime().availableProcessors();
-
-        this.inSchema = new ArrayList<>(amountOfLabels);
-        for (int i = 0; i < amountOfLabels; i++) {
-            ArrayList<HashSet<Integer>> row = new ArrayList<>(amountOfLabels);
-            for (int j = 0; j < amountOfLabels; j++) {
-                row.add(new HashSet<>());
-            }
-            inSchema.add(row);
-        }
     }
 
     public Result compute() {
-        ArrayList<ArrayList<Pair>> schema = new ArrayList<>(amountOfLabels); //max supported nodecount = ca. 2.000.000.000
-        long nodeCount = graph.nodeCount();
-        long numberOfNodesPerCore = nodeCount / numberOfCores;
+        initializeLabelDict();
+        ArrayList<AddNeighboursToSchemaThread> threads = startThreads();
+        joinThreads(threads);
+        ArrayList<HashSet<Pair>> schema = mergeSchemata(threads);
 
-        ArrayList<AddNeighboursToSchemaThread> threads = new ArrayList<>(numberOfCores);
-        for (int i = 0; i < numberOfCores; i++) {
-            AddNeighboursToSchemaThread thread = new AddNeighboursToSchemaThread(schema, (int) (i * numberOfNodesPerCore), numberOfNodesPerCore);
-            threads.add(thread);
-            thread.start();
+        return new Result(schema, labelDictionary, reverseLabelDictionary);
+    }
+
+    private ArrayList<HashSet<Pair>> mergeSchemata(ArrayList<AddNeighboursToSchemaThread> threads) {
+        ArrayList<HashSet<Pair>> schema = new ArrayList<>(amountOfLabels);//max supported nodecount = ca. 2.000.000.000
+        for (int i = 0; i < amountOfLabels; i++) {
+            HashSet<Pair> adjacencyRow = new HashSet<>();//maybe give size of amountOfLabels*amountOfEdgeLabels
+            schema.add(adjacencyRow);
         }
-        AddNeighboursToSchemaThread missingThread = new AddNeighboursToSchemaThread(schema, (int) (numberOfCores * numberOfNodesPerCore), nodeCount - (int) (numberOfCores * numberOfNodesPerCore));
-        threads.add(missingThread);
-        missingThread.start();
 
+        for (AddNeighboursToSchemaThread thread : threads) {
+            ArrayList<HashSet<Pair>> threadSchema = thread.retrieveSchema();
+            for (int i = 0; i < amountOfLabels; i++) {
+                schema.get(i).addAll(threadSchema.get(i));
+            }
+        }
+
+        return schema;
+    }
+
+    private void joinThreads(ArrayList<AddNeighboursToSchemaThread> threads) {
         for (AddNeighboursToSchemaThread thread : threads) {
             try {
                 thread.join();
@@ -61,42 +58,51 @@ public class GetSchema extends MetaPathComputation {
                 e.printStackTrace();
             }
         }
-        return new Result(schema, labelDictionary, reverseLabelDictionary);
     }
 
-    private boolean addNeighboursToSchema(int node, ArrayList<ArrayList<Pair>> schema) {
+    private ArrayList<AddNeighboursToSchemaThread> startThreads() {
+        long nodeCount = graph.nodeCount();
+        long numberOfNodesPerCore = nodeCount / numberOfCores;
+
+        ArrayList<AddNeighboursToSchemaThread> threads = new ArrayList<>(numberOfCores);
+        for (int i = 0; i < numberOfCores; i++) {
+            AddNeighboursToSchemaThread thread = new AddNeighboursToSchemaThread((int) (i * numberOfNodesPerCore), numberOfNodesPerCore);
+            threads.add(thread);
+            thread.start();
+        }
+        AddNeighboursToSchemaThread missingThread = new AddNeighboursToSchemaThread((int) (numberOfCores * numberOfNodesPerCore), nodeCount - (int) (numberOfCores * numberOfNodesPerCore));
+        threads.add(missingThread);
+        missingThread.start();
+        return threads;
+    }
+
+    private void initializeLabelDict() {
+        int labelCounter = 0;
+        for (int label : graph.getAllLabels()) {
+            labelDictionary.put(label, labelCounter);
+            reverseLabelDictionary.put(labelCounter, label);
+            labelCounter++;
+        }
+    }
+
+    private boolean addNeighboursToSchema(int node, ArrayList<HashSet<Pair>> schema) {
         int[] neighbours = graph.getOutgoingNodes(node);
         Integer[] labels = graph.getLabels(node);
         for (int label : labels) {
-            Integer labelId = getLabelId(schema, label);
+            Integer labelId = getLabelId(label);
 
             for (int neighbour : neighbours) {
                 int edgeLabel = graph.getEdgeLabel(node, neighbour);
 
                 Integer[] neighbourLabels = graph.getLabels(neighbour);
                 for (int neighbourLabel : neighbourLabels) {
+                    Integer neighbourLabelId = getLabelId(neighbourLabel);
 
+                    Pair pair = new Pair(neighbourLabelId, edgeLabel);
+                    schema.get(labelId).add(pair);
 
-                    Integer neighbourLabelId = getLabelId(schema, neighbourLabel);
-                    synchronized (schema) {
-                        if (inSchema.get(labelId).get(neighbourLabelId).contains(edgeLabel)) continue;
-                        Pair pair = new Pair();
-                        pair.setCar(neighbourLabelId);
-                        pair.setCdr(edgeLabel);
-
-                        schema.get(labelId).add(pair);
-                        inSchema.get(labelId).get(neighbourLabelId).add(edgeLabel);
-                    }
-
-                    synchronized (schema) {
-                        if (inSchema.get(neighbourLabelId).get(labelId).contains(edgeLabel)) continue;
-                        Pair pair2 = new Pair();
-                        pair2.setCar(labelId);
-                        pair2.setCdr(edgeLabel);
-
-                        schema.get(neighbourLabelId).add(pair2);
-                        inSchema.get(neighbourLabelId).get(labelId).add(edgeLabel);
-                    }
+                    Pair pair2 = new Pair(labelId, edgeLabel);
+                    schema.get(neighbourLabelId).add(pair2);
                 }
             }
         }
@@ -104,37 +110,35 @@ public class GetSchema extends MetaPathComputation {
         return true;
     }
 
-    private Integer getLabelId(ArrayList<ArrayList<Pair>> schema, Integer label) {
-        synchronized (labelDictionary) {
-            Integer labelId = labelDictionary.get(label);
-            if (labelId == null) {
-                labelDictionary.put(label, labelCounter);
-                reverseLabelDictionary.put(labelCounter, label);
-                labelId = labelCounter;
-                labelCounter++;
-
-                ArrayList<Pair> adjacencyRow = new ArrayList<>();//maybe give size of amountOfLabels*amountOfEdgeLabels
-                schema.add(adjacencyRow);
-            }
-
-            return labelId;
-        }
+    private Integer getLabelId(Integer label) {
+        return labelDictionary.get(label);
     }
 
     class AddNeighboursToSchemaThread extends Thread {
         private int startNode;
         private long numberOfNodes;
-        private ArrayList<ArrayList<Pair>> schema;
+        private ArrayList<HashSet<Pair>> schema;
 
-        AddNeighboursToSchemaThread(ArrayList<ArrayList<Pair>> schema, int startNode, long numberOfNodes) {
+        AddNeighboursToSchemaThread(int startNode, long numberOfNodes) {
             this.startNode = startNode;
             this.numberOfNodes = numberOfNodes;
-            this.schema = schema;
         }
 
         public void run() {
-            for (int i = startNode; i < startNode + numberOfNodes; i++)
+            ArrayList<HashSet<Pair>> schema = new ArrayList<>(amountOfLabels);//max supported nodecount = ca. 2.000.000.000
+            for (int i = 0; i < amountOfLabels; i++) {
+                HashSet<Pair> adjacencyRow = new HashSet<>();//maybe give size of amountOfLabels*amountOfEdgeLabels
+                schema.add(adjacencyRow);
+            }
+
+            for (int i = startNode; i < startNode + numberOfNodes; i++) {
                 addNeighboursToSchema(i, schema);
+            }
+            this.schema = schema;
+        }
+
+        public ArrayList<HashSet<Pair>> retrieveSchema() {
+            return schema;
         }
     }
 
@@ -159,11 +163,11 @@ public class GetSchema extends MetaPathComputation {
      */
     public static final class Result {
 
-        ArrayList<ArrayList<Pair>> schema;
+        ArrayList<HashSet<Pair>> schema;
         HashMap<Integer, Integer> labelDictionary;
         HashMap<Integer, Integer> reverseLabelDictionary;
 
-        public Result(ArrayList<ArrayList<Pair>> schema, HashMap<Integer, Integer> labelDictionary, HashMap<Integer, Integer> reverseLabelDictionary) {
+        public Result(ArrayList<HashSet<Pair>> schema, HashMap<Integer, Integer> labelDictionary, HashMap<Integer, Integer> reverseLabelDictionary) {
             this.schema = schema;
             this.labelDictionary = labelDictionary;
             this.reverseLabelDictionary = reverseLabelDictionary;
@@ -174,7 +178,7 @@ public class GetSchema extends MetaPathComputation {
             return "Result{}";
         }
 
-        public ArrayList<ArrayList<Pair>> getSchemaAdjacencies() {
+        public ArrayList<HashSet<Pair>> getSchemaAdjacencies() {
             return schema;
         }
 

@@ -13,6 +13,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -76,74 +77,49 @@ public class GetSchemaTest {
     @Test
     public void testSchema() {
         GetSchema.Result result = algo.compute();
-        ArrayList<ArrayList<Pair>> expectedSchema = new ArrayList<>();
+        ArrayList<HashSet<Pair>> expectedSchema = new ArrayList<>();
 
         for(int i = 0; i < 3; i++) {
-            expectedSchema.add(new ArrayList<>());
+            expectedSchema.add(new HashSet<>());
         }
 
-        Pair pair = new Pair();
-        pair.setCar(0);
-        pair.setCdr(0);
+        Pair pair = new Pair(0,0);
         expectedSchema.get(0).add(pair);
-        pair = new Pair();
-        pair.setCar(2);
-        pair.setCdr(0);
+        pair = new Pair(1,0);
         expectedSchema.get(0).add(pair);
-        pair = new Pair();
-        pair.setCar(1);
-        pair.setCdr(0);
+        pair = new Pair(2,0);
         expectedSchema.get(0).add(pair);
-        pair = new Pair();
-        pair.setCar(1);
-        pair.setCdr(1);
+        pair = new Pair(2,1);
         expectedSchema.get(0).add(pair);
 
-        pair = new Pair();
-        pair.setCar(0);
-        pair.setCdr(0);
-        expectedSchema.get(2).add(pair);
-        pair = new Pair();
-        pair.setCar(1);
-        pair.setCdr(0);
-        expectedSchema.get(2).add(pair);
-        pair = new Pair();
-        pair.setCar(1);
-        pair.setCdr(1);
-        expectedSchema.get(2).add(pair);
-
-        pair = new Pair();
-        pair.setCar(0);
-        pair.setCdr(0);
+        pair = new Pair(0,0);
         expectedSchema.get(1).add(pair);
-        pair = new Pair();
-        pair.setCar(0);
-        pair.setCdr(1);
+        pair = new Pair(2,0);
         expectedSchema.get(1).add(pair);
-        pair = new Pair();
-        pair.setCar(2);
-        pair.setCdr(0);
-        expectedSchema.get(1).add(pair);
-        pair = new Pair();
-        pair.setCar(2);
-        pair.setCdr(1);
-        expectedSchema.get(1).add(pair);
-        pair = new Pair();
-        pair.setCar(1);
-        pair.setCdr(1);
+        pair = new Pair(2,1);
         expectedSchema.get(1).add(pair);
 
-        ArrayList<ArrayList<Pair>> schema = result.getSchemaAdjacencies();
+        pair = new Pair(0,0);
+        expectedSchema.get(2).add(pair);
+        pair = new Pair(0,1);
+        expectedSchema.get(2).add(pair);
+        pair = new Pair(1,0);
+        expectedSchema.get(2).add(pair);
+        pair = new Pair(1,1);
+        expectedSchema.get(2).add(pair);
+        pair = new Pair(2,1);
+        expectedSchema.get(2).add(pair);
+
+        ArrayList<HashSet<Pair>> schema = result.getSchemaAdjacencies();
         assertEquals(expectedSchema.size(), schema.size());
         for (int i = 0; i < schema.size(); i++) {
-            ArrayList<Pair> row1 = schema.get(i);
-            ArrayList<Pair> row2 = expectedSchema.get(i);
+            HashSet<Pair> row1 = schema.get(i);
+            HashSet<Pair> row2 = expectedSchema.get(i);
             assertEquals(row2.size(), row1.size());
-            for (int j = 0; j < row2.size(); j++) {
-                Pair expectedPair = row2.get(j);
+            for (Pair expectedPair : row2) {
                 boolean pairFound = false;
                 for (Pair actualPair : row1) {
-                    if(actualPair.car() == expectedPair.car() && actualPair.cdr() == expectedPair.cdr()) {
+                    if(expectedPair.equals(actualPair)) {
                         pairFound = true;
                     }
                 }

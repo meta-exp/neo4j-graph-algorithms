@@ -48,7 +48,7 @@ public class GetSchemaProc {
         final GetSchema algo = new GetSchema(graph);
 
         GetSchema.Result result = algo.compute();
-        ArrayList<ArrayList<Pair>> schema = result.getSchemaAdjacencies();
+        ArrayList<HashSet<Pair>> schema = result.getSchemaAdjacencies();
         HashMap<Integer, Integer> reverseDictionary = result.getReverseLabelDictionary();
         builder.setSchema(schema);
         builder.setReverseLabelDictionary(reverseDictionary);

@@ -6,13 +6,14 @@ import org.neo4j.graphalgo.results.AbstractResultBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class GetSchemaResult {
 
     public final String schema;
     public final String reverseLabelDictionary;
 
-    private GetSchemaResult(ArrayList<ArrayList<Pair>> schema, HashMap<Integer, Integer> reverseLabelDictionary) {
+    private GetSchemaResult(ArrayList<HashSet<Pair>> schema, HashMap<Integer, Integer> reverseLabelDictionary) {
         Gson gson = new Gson();
         this.schema = gson.toJson(schema);
         this.reverseLabelDictionary = gson.toJson(reverseLabelDictionary);
@@ -24,10 +25,10 @@ public class GetSchemaResult {
 
     public static class Builder extends AbstractResultBuilder<GetSchemaResult> {
 
-        private ArrayList<ArrayList<Pair>> schema;
+        private ArrayList<HashSet<Pair>> schema;
         private HashMap<Integer, Integer> reverseLabelDictionary;
 
-        public void setSchema(ArrayList<ArrayList<Pair>> schema) {
+        public void setSchema(ArrayList<HashSet<Pair>> schema) {
             this.schema = schema;
         }
 

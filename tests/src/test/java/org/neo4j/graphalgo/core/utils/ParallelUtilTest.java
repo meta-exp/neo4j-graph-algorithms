@@ -155,6 +155,7 @@ public final class ParallelUtilTest extends RandomizedTest {
                 (int) Math.ceil(nodeCount / (double) batchSize) <= maxConcurrency);
     }
 
+    @Ignore
     @Test
     public void shouldRunAtMostConcurrencyTasks() {
         int tasks = 6;

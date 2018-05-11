@@ -55,7 +55,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         HashSet<String> finalMetaPaths = computeAllMetaPaths();
         long endTime = System.nanoTime();
 
-        List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
+        //List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
 
         //Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
 
@@ -66,7 +66,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         return new Result(finalMetaPaths);
     }
 
-    private int metaPathCompare(String a, String b) {
+    /*private int metaPathCompare(String a, String b) {
         String[] partsInitA = a.split(Pattern.quote("\t"));
         String[] partsInitB = b.split(Pattern.quote("\t"));
         String[] partsA = partsInitA[0].split(Pattern.quote(" | "));
@@ -78,7 +78,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
         return  firstLabelSmaller || (firstLabelEqual && lastLabelSmaller) ? -1 :
                 firstLabelEqual && lastLabelEqual ? 0 : 1;
-    }
+    }*/
 
     public HashSet<String> computeAllMetaPaths() {
 
@@ -131,7 +131,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         int i = 0;
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, nodeLabel, metaPathLength);
+            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, nodeLabel, metaPathLength);//TODO use less threads
             thread.start();
             threads.add(thread);
             i++;
@@ -255,7 +255,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private void printMetaPathAndLog(String joinedMetaPath) {
         out.println(joinedMetaPath);
         printCount++;
-        if (printCount % max(((int)estimatedCount/50), 1) == 0) {
+        if (printCount % max(((int)estimatedCount/50), 1) == 0 && estimatedCount != 0) {
             debugOut.println("MetaPaths found: " + printCount + " estimated Progress: " + (100*printCount/estimatedCount) + "% time passed: " + (System.nanoTime() - startTime));
         }
     }
