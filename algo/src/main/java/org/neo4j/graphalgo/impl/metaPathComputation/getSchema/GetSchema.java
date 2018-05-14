@@ -1,5 +1,6 @@
 package org.neo4j.graphalgo.impl.metaPathComputation.getSchema;
 
+import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
 import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathComputation;
@@ -11,16 +12,16 @@ import java.util.stream.Stream;
 public class GetSchema extends MetaPathComputation {
 
     private HeavyGraph graph;
-    private HashMap<Integer, Integer> labelDictionary;//maybe change to array if it stays integer->integer
-    private HashMap<Integer, Integer> reverseLabelDictionary;//also change to Array
+    private IntIntHashMap labelDictionary;//maybe change to array if it stays integer->integer
+    private IntIntHashMap reverseLabelDictionary;//also change to Array
     private int amountOfLabels;
     private int numberOfCores;
 
     public GetSchema(HeavyGraph graph) {
         this.graph = graph;
         this.amountOfLabels = graph.getAllLabels().size();
-        this.labelDictionary = new HashMap<>();
-        this.reverseLabelDictionary = new HashMap<>();
+        this.labelDictionary = new IntIntHashMap();
+        this.reverseLabelDictionary = new IntIntHashMap();
         this.numberOfCores = Runtime.getRuntime().availableProcessors();
     }
 
@@ -44,6 +45,7 @@ public class GetSchema extends MetaPathComputation {
             ArrayList<HashSet<Pair>> threadSchema = thread.retrieveSchema();
             for (int i = 0; i < amountOfLabels; i++) {
                 schema.get(i).addAll(threadSchema.get(i));
+                threadSchema.set(i, new HashSet<>());
             }
         }
 
@@ -164,10 +166,10 @@ public class GetSchema extends MetaPathComputation {
     public static final class Result {
 
         ArrayList<HashSet<Pair>> schema;
-        HashMap<Integer, Integer> labelDictionary;
-        HashMap<Integer, Integer> reverseLabelDictionary;
+        IntIntHashMap labelDictionary;
+        IntIntHashMap reverseLabelDictionary;
 
-        public Result(ArrayList<HashSet<Pair>> schema, HashMap<Integer, Integer> labelDictionary, HashMap<Integer, Integer> reverseLabelDictionary) {
+        public Result(ArrayList<HashSet<Pair>> schema, IntIntHashMap labelDictionary, IntIntHashMap reverseLabelDictionary) {
             this.schema = schema;
             this.labelDictionary = labelDictionary;
             this.reverseLabelDictionary = reverseLabelDictionary;
@@ -182,11 +184,11 @@ public class GetSchema extends MetaPathComputation {
             return schema;
         }
 
-        public HashMap<Integer, Integer> getLabelDictionary() {
+        public IntIntHashMap getLabelDictionary() {
             return labelDictionary;
         }
 
-        public HashMap<Integer, Integer> getReverseLabelDictionary() {
+        public IntIntHashMap getReverseLabelDictionary() {
             return reverseLabelDictionary;
         }
     }

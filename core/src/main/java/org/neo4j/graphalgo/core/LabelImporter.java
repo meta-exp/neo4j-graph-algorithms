@@ -27,24 +27,24 @@ public class LabelImporter extends StatementTask<AbstractMap.SimpleEntry<HashMap
     public AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer>> apply(final Statement statement) throws EntityNotFoundException {
         final ReadOperations readOp = statement.readOperations();
         Iterator<Token> labelTokens = readOp.labelsGetAllTokens();
-        PrimitiveLongIterator relationships =  readOp.relationshipsGetAll();
+        PrimitiveLongIterator relationships = readOp.relationshipsGetAll();
 
         HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer> nodesToLabelMap = new HashMap<>();
-        while(relationships.hasNext()) {
+        while (relationships.hasNext()) {
             long relationshipId = relationships.next();
             readOp.relationshipVisit(relationshipId, (relationship, typeId, startNodeId, endNodeId) -> createEdgeTypeEntry(typeId, startNodeId, endNodeId, nodesToLabelMap));
         }
 
         HashMap<Integer, ArrayList<IdNameTuple>> idLabelMap = new HashMap<>();
+        for (int nodeId = 0; nodeId < readOp.nodesGetCount(); nodeId++) {
+            idLabelMap.put(nodeId, new ArrayList<>());
+        }
         while (labelTokens.hasNext()) {
             Token token = labelTokens.next();
             PrimitiveLongIterator nodesWithThisLabel = readOp.nodesGetForLabel(token.id());
             IdNameTuple tuple = new IdNameTuple(token.id(), token.name());
-            while (nodesWithThisLabel.hasNext()){
+            while (nodesWithThisLabel.hasNext()) {
                 Integer nodeId = mapping.toMappedNodeId(nodesWithThisLabel.next());
-                if (!idLabelMap.containsKey(nodeId)) {
-                    idLabelMap.put(nodeId, new ArrayList<>());
-                }
                 idLabelMap.get(nodeId).add(tuple);
             }
         }
@@ -52,8 +52,7 @@ public class LabelImporter extends StatementTask<AbstractMap.SimpleEntry<HashMap
         return new AbstractMap.SimpleEntry<>(idLabelMap, nodesToLabelMap);
     }
 
-    private boolean createEdgeTypeEntry(int typeId, long startNodeId, long endNodeId, HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer> nodesToLabelMap)
-    {
+    private boolean createEdgeTypeEntry(int typeId, long startNodeId, long endNodeId, HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer> nodesToLabelMap) {
         AbstractMap.SimpleEntry<Integer, Integer> pair = new AbstractMap.SimpleEntry<>(mapping.toMappedNodeId(startNodeId), mapping.toMappedNodeId(endNodeId));
         nodesToLabelMap.put(pair, typeId);
         return true;

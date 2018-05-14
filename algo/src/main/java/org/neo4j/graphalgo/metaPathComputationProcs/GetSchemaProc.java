@@ -1,5 +1,6 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
+import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
@@ -49,7 +50,7 @@ public class GetSchemaProc {
 
         GetSchema.Result result = algo.compute();
         ArrayList<HashSet<Pair>> schema = result.getSchemaAdjacencies();
-        HashMap<Integer, Integer> reverseDictionary = result.getReverseLabelDictionary();
+        IntIntHashMap reverseDictionary = result.getReverseLabelDictionary();
         builder.setSchema(schema);
         builder.setReverseLabelDictionary(reverseDictionary);
         graph.release();
