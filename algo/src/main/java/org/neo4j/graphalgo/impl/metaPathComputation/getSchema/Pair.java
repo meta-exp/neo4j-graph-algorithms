@@ -3,7 +3,7 @@ package org.neo4j.graphalgo.impl.metaPathComputation.getSchema;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-public final class Pair {
+public final class Pair implements java.io.Serializable {
     private final int first;
     private final int second;
 

@@ -8,6 +8,7 @@ import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathComputation;
 import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.io.*;
 
 public class GetSchema extends MetaPathComputation {
 
@@ -26,12 +27,44 @@ public class GetSchema extends MetaPathComputation {
     }
 
     public Result compute() {
+        ArrayList<HashSet<Pair>> schema = null;
+        boolean notYetComputed = false;
+
+        try {
+            FileInputStream fileIn = new FileInputStream("metagraph.ser");
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            schema = (ArrayList<HashSet<Pair>>) in.readObject();
+            in.close();
+            fileIn.close();
+        } catch (IOException i) {
+            notYetComputed = true;
+        } catch (ClassNotFoundException c) {
+            c.printStackTrace();
+            notYetComputed = true;
+        }
+
+        if(notYetComputed) schema = computeSchema();
+
+        return new Result(schema, labelDictionary, reverseLabelDictionary);
+    }
+
+
+    private ArrayList<HashSet<Pair>> computeSchema() {
         initializeLabelDict();
         ArrayList<AddNeighboursToSchemaThread> threads = startThreads();
         joinThreads(threads);
         ArrayList<HashSet<Pair>> schema = mergeSchemata(threads);
 
-        return new Result(schema, labelDictionary, reverseLabelDictionary);
+        try {
+            FileOutputStream fileOut = new FileOutputStream("metagraph.ser");
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(schema);
+            out.close();
+            fileOut.close();
+        } catch (IOException i) {
+            i.printStackTrace();
+        }
+        return schema;
     }
 
     private ArrayList<HashSet<Pair>> mergeSchemata(ArrayList<AddNeighboursToSchemaThread> threads) {
