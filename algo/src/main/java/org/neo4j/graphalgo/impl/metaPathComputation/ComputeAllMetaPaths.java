@@ -10,7 +10,6 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -56,30 +55,12 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         HashSet<String> finalMetaPaths = computeAllMetaPaths();
         long endTime = System.nanoTime();
 
-        //List<String> finalMetaPathsAsList = new ArrayList<>(finalMetaPaths) ;
-
-        //Collections.sort(finalMetaPathsAsList, (a, b) -> metaPathCompare(a.toString(), b.toString()));//TODO: write test for sort
-
         System.out.println("calculation took: " + String.valueOf(endTime - startTime));
         debugOut.println("actual amount of metaPaths: " + printCount);
         debugOut.println("total time past: " + (endTime - startTime));
         debugOut.println("finished computation");
         return new Result(finalMetaPaths);
     }
-
-    /*private int metaPathCompare(String a, String b) {
-        String[] partsInitA = a.split(Pattern.quote("\t"));
-        String[] partsInitB = b.split(Pattern.quote("\t"));
-        String[] partsA = partsInitA[0].split(Pattern.quote(" | "));
-        String[] partsB = partsInitB[0].split(Pattern.quote(" | "));
-        boolean firstLabelEqual = Integer.parseInt(partsA[0]) == Integer.parseInt(partsB[0]);
-        boolean lastLabelEqual = Integer.parseInt(partsA[partsA.length - 1]) == Integer.parseInt(partsB[partsB.length - 1]);
-        boolean firstLabelSmaller = Integer.parseInt(partsA[0]) < Integer.parseInt(partsB[0]);
-        boolean lastLabelSmaller = Integer.parseInt(partsA[partsA.length - 1]) < Integer.parseInt(partsB[partsB.length - 1]);
-
-        return  firstLabelSmaller || (firstLabelEqual && lastLabelSmaller) ? -1 :
-                firstLabelEqual && lastLabelEqual ? 0 : 1;
-    }*/
 
     public HashSet<String> computeAllMetaPaths() {
 
@@ -151,15 +132,14 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             return;
         }
 
-        ArrayList<HashMap<Integer, Integer>> nextInstances = allocateNextInstances();
-        fillNextInstances(currentInstances, nextInstances);
+        ArrayList<HashMap<Integer, Integer>> nextInstances = calculateNextInstances(currentInstances);
 
         for (int edgeLabel : arrayGraphInterface.getAllEdgeLabels()) {
             for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-                int key = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, nodeLabel));
-                HashMap<Integer, Integer> nextInstancesForLabel = nextInstances.get(key);
+                int instancesArrayIndex = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, nodeLabel));
+                HashMap<Integer, Integer> nextInstancesForLabel = nextInstances.get(instancesArrayIndex);
                 if (!nextInstancesForLabel.isEmpty()) {
-                    nextInstances.set(key, null);
+                    nextInstances.set(instancesArrayIndex, null);
 
                     ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                     newMetaPath.add(edgeLabel);
@@ -198,7 +178,8 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         return nextInstances;
     }
 
-    private void fillNextInstances(HashMap<Integer, Integer> currentInstances, ArrayList<HashMap<Integer, Integer>> nextInstances) {
+    private ArrayList<HashMap<Integer, Integer>> calculateNextInstances(HashMap<Integer, Integer> currentInstances) {
+        ArrayList<HashMap<Integer, Integer>> nextInstances = allocateNextInstances();
         for (int instance : currentInstances.keySet()) {
             for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) {
                 int label = arrayGraphInterface.getLabel(nodeId); //get the id of the label of the node
@@ -212,6 +193,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
                 nextInstances.get(labelID).put(nodeId, count); // add the node to the corresponding instances array
             }
         }
+        return nextInstances;
     }
 
     private ArrayList<Integer> copyMetaPath(ArrayList<Integer> currentMetaPath) {

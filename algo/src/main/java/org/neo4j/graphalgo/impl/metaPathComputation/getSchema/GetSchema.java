@@ -42,10 +42,10 @@ public class GetSchema extends MetaPathComputation {
         }
 
         for (AddNeighboursToSchemaThread thread : threads) {
-            ArrayList<HashSet<Pair>> threadSchema = thread.retrieveSchema();
+            ArrayList<HashSet<Pair>> threadSchema = thread.getSchema();
             for (int i = 0; i < amountOfLabels; i++) {
                 schema.get(i).addAll(threadSchema.get(i));
-                threadSchema.set(i, new HashSet<>());
+                threadSchema.set(i, null);
             }
         }
 
@@ -100,11 +100,11 @@ public class GetSchema extends MetaPathComputation {
                 for (int neighbourLabel : neighbourLabels) {
                     Integer neighbourLabelId = getLabelId(neighbourLabel);
 
-                    Pair pair = new Pair(neighbourLabelId, edgeLabel);
-                    schema.get(labelId).add(pair);
+                    Pair outgoingEdge = new Pair(neighbourLabelId, edgeLabel);
+                    schema.get(labelId).add(outgoingEdge);
 
-                    Pair pair2 = new Pair(labelId, edgeLabel);
-                    schema.get(neighbourLabelId).add(pair2);
+                    Pair incomingEdge = new Pair(labelId, edgeLabel);
+                    schema.get(neighbourLabelId).add(incomingEdge);
                 }
             }
         }
@@ -139,7 +139,7 @@ public class GetSchema extends MetaPathComputation {
             this.schema = schema;
         }
 
-        public ArrayList<HashSet<Pair>> retrieveSchema() {
+        public ArrayList<HashSet<Pair>> getSchema() {
             return schema;
         }
     }
