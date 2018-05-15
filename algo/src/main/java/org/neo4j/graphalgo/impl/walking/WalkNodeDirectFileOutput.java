@@ -18,9 +18,9 @@ public class WalkNodeDirectFileOutput extends AbstractWalkOutput {
         this.output.close();
     }
 
-    public synchronized void addResult(long[][] result) {
+    public synchronized void addResult(long[] result) {
         count++;
-        this.output.println(arrayToString(result[0]));
+        this.output.println(arrayToString(result));
     }
 
     private String arrayToString(long[] array){

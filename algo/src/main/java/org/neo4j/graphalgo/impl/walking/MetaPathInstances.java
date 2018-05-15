@@ -1,16 +1,9 @@
 package org.neo4j.graphalgo.impl.walking;
 
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.logging.Log;
 
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static java.lang.Math.toIntExact;
 
 public class MetaPathInstances extends AbstractWalkAlgorithm {
 

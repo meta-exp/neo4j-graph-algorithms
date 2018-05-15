@@ -10,7 +10,7 @@ public abstract class AbstractWalkOutput {
 
     public abstract void endInput();
 
-    public abstract void addResult(long[][] result);
+    public abstract void addResult(long[] result);
 
     public Stream<NodeWalkerProc.WalkResult> getStream() {
         return Stream.empty();

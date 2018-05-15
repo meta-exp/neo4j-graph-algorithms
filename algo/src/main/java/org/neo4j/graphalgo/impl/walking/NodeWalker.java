@@ -89,7 +89,7 @@ public class NodeWalker extends AbstractWalkAlgorithm {
         nodeStream.forEach((nodeId)->{
             executor.execute(() -> {
                 try {
-                    long[][] pathIds = doWalk(nodeId, (int) steps, nextNodeStrategy);
+                    long[] pathIds = doWalk(nodeId, (int) steps, nextNodeStrategy);
                     long numberOfResults = output.numberOfResults() + 1;
                     // log progress ------
                     if(numberOfResults % 50000 == 2500){ //get a better estimate after 2500 walks
@@ -129,7 +129,7 @@ public class NodeWalker extends AbstractWalkAlgorithm {
         return remainingElements * (long) timeForOne;
     }
 
-    private long[][] doWalk(int startNodeId, int steps, AbstractNextNodeStrategy nextNodeStrategy) {
+    private long[] doWalk(int startNodeId, int steps, AbstractNextNodeStrategy nextNodeStrategy) {
         long[] nodeIds = new long[(int) steps + 1];
         int currentNodeId = startNodeId;
         int previousNodeId = currentNodeId;
@@ -147,9 +147,8 @@ public class NodeWalker extends AbstractWalkAlgorithm {
             }
             nodeIds[i] = getOriginalId(currentNodeId);
         }
-        long[][] pack = {nodeIds, {}};
 
-        return pack;
+        return nodeIds;
     }
 
     public static abstract class AbstractNextNodeStrategy {

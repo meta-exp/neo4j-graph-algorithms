@@ -12,8 +12,8 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 public class WalkDatabaseOutput extends AbstractWalkOutput {
-    public ArrayList<long[][]> pathIds = new ArrayList<>();
-    private Iterator<long[][]> pathIterator;
+    public ArrayList<long[]> pathIds = new ArrayList<>();
+    private Iterator<long[]> pathIterator;
     private GraphDatabaseService db;
     private Log log;
 
@@ -27,7 +27,7 @@ public class WalkDatabaseOutput extends AbstractWalkOutput {
         pathIterator = pathIds.iterator();
     }
 
-    public synchronized void addResult(long[][] result) {
+    public synchronized void addResult(long[] result) {
         pathIds.add(result);
     }
 
@@ -40,16 +40,15 @@ public class WalkDatabaseOutput extends AbstractWalkOutput {
         return pathIds.size();
     }
 
-    private NodeWalkerProc.WalkPath convertIdsToPath(long[][] pathIds){
+    private NodeWalkerProc.WalkPath convertIdsToPath(long[] pathIds){
 //        NodeWalkerProc.WalkPath path = new NodeWalkerProc.WalkPath(pathIds[1].length);
-        int pathLength = pathIds[0].length;
+        int pathLength = pathIds.length;
         NodeWalkerProc.WalkPath path = new NodeWalkerProc.WalkPath(pathLength);
         try (Transaction tx = db.beginTx()) {
             // path[0] contains Ids of nodes, path[1] contains Ids of relationships
             for(int i = 0; i < pathLength - 1; i++){
-                Node node = db.getNodeById(pathIds[0][i]);
-                Node nextNode = db.getNodeById(pathIds[0][i+1]);
-//                Relationship relationship = db.getRelationshipById(pathIds[1][i]);
+                Node node = db.getNodeById(pathIds[i]);
+                Node nextNode = db.getNodeById(pathIds[i+1]);
 
 
                 path.addNode(node);
@@ -58,7 +57,7 @@ public class WalkDatabaseOutput extends AbstractWalkOutput {
                 path.addRelationship(relationship);
             }
             // Add last node (that doesn't have a relationship)
-            Node node = db.getNodeById(pathIds[0][pathIds[0].length - 1]);
+            Node node = db.getNodeById(pathIds[pathIds.length - 1]);
             path.addNode(node);
             tx.success();
         } catch (Exception e) {
