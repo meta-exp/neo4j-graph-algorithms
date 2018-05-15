@@ -7,7 +7,6 @@ import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
-import org.neo4j.time.SystemNanoClock;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -20,7 +19,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class NodeWalker {
+import static java.lang.Math.toIntExact;
+
+public class MetaPathInstances {
 
     private static Random random = new Random();
 
@@ -32,7 +33,10 @@ public class NodeWalker {
     private GraphDatabaseService db;
     private AbstractNextNodeStrategy nextNodeStrategy;
 
-    public NodeWalker(HeavyGraph graph, Log log, GraphDatabaseService db, AbstractNextNodeStrategy nextNodeStrategy){
+
+    private HashMap<Integer, String> idTypeMappingNodes, idTypeMappingEdges;
+
+    public MetaPathInstances(HeavyGraph graph, Log log, GraphDatabaseService db, AbstractNextNodeStrategy nextNodeStrategy){
 
         this.idMapping = graph;
         this.arrayGraphInterface = graph;
@@ -41,6 +45,55 @@ public class NodeWalker {
         this.log = log;
         this.db = db;
         this.nextNodeStrategy = nextNodeStrategy;
+    }
+
+    private void initializeMappings() throws Exception {
+        org.neo4j.graphdb.Result result;
+        try (Transaction tx = db.beginTx()) {
+            result = db.execute("CALL apoc.meta.graph()");
+            tx.success();
+        }
+        Map<String, Object> row = result.next();
+        List<Node> nodes = (List<Node>) row.get("nodes");
+        List<Relationship> relationships = (List<Relationship>) row.get("relationships");
+
+        idTypeMappingNodes = new HashMap<Integer, String>();
+        for (Node node:nodes){
+            String nodeType = node.getLabels().iterator().next().name();
+            idTypeMappingNodes.put(toIntExact(node.getId()), nodeType);
+            log.info(nodeType);
+        }
+
+        idTypeMappingEdges = new HashMap<Integer, String>();
+        for (Relationship relationship :relationships){
+            String relationshipType = relationship.getType().name();
+            this.idTypeMappingEdges.put(toIntExact(relationship.getId()), relationshipType);
+            log.info(relationshipType);
+        }
+    }
+
+    public void doExtraction(int nodeId, int[] previousResults, int[] types, AbstractWalkOutput output){
+        int currentNodeType = types[previousResults.length];
+        // End this walk if it doesn't match the required types anymore
+        if(graph.getLabel(nodeId) != currentNodeType){
+            return;
+        }
+
+        // If this walk completes the required types, end it and save it
+        if(previousResults.length + 1 == types.length){
+
+        }
+
+        int nextEdgeType = types[previousResults.length+1];
+        int[] neighbours = graph.getAdjacentNodes(nodeId);
+        for(int i = 0; i < neighbours.length; i++){
+            int neighbourId = neighbours[i];
+            int edgeType = graph.getEdgeLabel(nodeId, neighbourId);
+
+            if(edgeType == nextEdgeType){
+                // TODO Do something
+            }
+        }
     }
 
     public Stream<NodeWalkerProc.WalkResult> walkFromNode(AbstractWalkOutput output, long nodeId, long steps, long walks) {
@@ -263,10 +316,10 @@ public class NodeWalker {
 
     public static class WalkDatabaseOutput extends AbstractWalkOutput {
         public ArrayList<long[][]> pathIds = new ArrayList<>();
-        private NodeWalker instance;
+        private MetaPathInstances instance;
         private Iterator<long[][]> pathIterator;
 
-        public WalkDatabaseOutput(NodeWalker instance) {
+        public WalkDatabaseOutput(MetaPathInstances instance) {
             super();
             this.instance = instance;
         }
