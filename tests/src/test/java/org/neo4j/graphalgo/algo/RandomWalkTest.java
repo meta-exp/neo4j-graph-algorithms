@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.types.Node;
 import org.neo4j.driver.v1.types.Path;
-import org.neo4j.graphalgo.NodeWalkerProc;
+import org.neo4j.graphalgo.walkingProcs.NodeWalkerProc;
 import org.neo4j.harness.junit.Neo4jRule;
 
 import java.util.ArrayList;

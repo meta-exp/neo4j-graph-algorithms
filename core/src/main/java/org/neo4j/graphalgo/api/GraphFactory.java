@@ -19,6 +19,8 @@
 package org.neo4j.graphalgo.api;
 
 import org.neo4j.graphalgo.core.*;
+import org.neo4j.graphalgo.core.heavyweight.Labels.GraphLabeler;
+import org.neo4j.graphalgo.core.heavyweight.Labels.LabelImporter;
 import org.neo4j.graphalgo.core.huge.HugeIdMap;
 import org.neo4j.graphalgo.core.huge.HugeNodeImporter;
 import org.neo4j.graphalgo.core.utils.ImportProgress;
@@ -31,9 +33,6 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
 import org.neo4j.logging.NullLog;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -82,13 +81,11 @@ public abstract class GraphFactory {
         return nodeImporter.call();
     }
 
-    protected AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> loadLabelMap(IdMap mapping, boolean loadLabels) throws EntityNotFoundException {
+    protected GraphLabeler loadLabelMap(IdMap mapping, boolean loadLabels) throws EntityNotFoundException {
         if (!loadLabels){
             return null;
         }
-        final LabelImporter labelImporter = new LabelImporter(
-                api,
-                mapping);
+        final LabelImporter labelImporter = new LabelImporter(api, mapping);
         return labelImporter.call();
     }
 

@@ -3,12 +3,13 @@ package org.neo4j.graphalgo.results.metaPathComputationResults;
 import com.google.gson.Gson;
 import org.neo4j.graphalgo.results.AbstractResultBuilder;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 
 public class LabelIdToLabelNameMappingResult {
     public final String labelIdToLabelNameDict;
 
-    private LabelIdToLabelNameMappingResult(HashMap<Integer, String> labelIdToLabelNameDict) {
+    private LabelIdToLabelNameMappingResult(AbstractMap<Integer, String> labelIdToLabelNameDict) {
         Gson gson = new Gson();
         this.labelIdToLabelNameDict = gson.toJson(labelIdToLabelNameDict);
     }
@@ -19,9 +20,9 @@ public class LabelIdToLabelNameMappingResult {
 
     public static class Builder extends AbstractResultBuilder<LabelIdToLabelNameMappingResult> {
 
-        private HashMap<Integer, String> labelIdToLabelNameDict;
+        private AbstractMap<Integer, String> labelIdToLabelNameDict;
 
-        public void setLabelIdToLabelNameDict(HashMap<Integer, String> labelIdToLabelNameDict) {
+        public void setLabelIdToLabelNameDict(AbstractMap<Integer, String> labelIdToLabelNameDict) {
             this.labelIdToLabelNameDict = labelIdToLabelNameDict;
         }
 

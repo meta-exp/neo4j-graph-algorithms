@@ -1,38 +1,18 @@
-package org.neo4j.graphalgo;
+package org.neo4j.graphalgo.walkingProcs;
 
-import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-import org.neo4j.graphalgo.core.utils.Pools;
-import org.neo4j.graphalgo.core.utils.paged.AllocationTracker;
 import org.neo4j.graphalgo.impl.walking.AbstractWalkOutput;
 import org.neo4j.graphalgo.impl.walking.NodeWalker;
-import org.neo4j.graphalgo.impl.walking.WalkDatabaseOutput;
-import org.neo4j.graphalgo.impl.walking.WalkNodeDirectFileOutput;
-import org.neo4j.graphdb.*;
-import org.neo4j.kernel.api.KernelTransaction;
-import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.logging.Log;
-import org.neo4j.procedure.*;
+import org.neo4j.graphalgo.impl.walking.WalkResult;
+import org.neo4j.procedure.Description;
+import org.neo4j.procedure.Mode;
+import org.neo4j.procedure.Name;
+import org.neo4j.procedure.Procedure;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.stream.Stream;
 
-public class NodeWalkerProc {
-    @Context
-    public GraphDatabaseAPI api;
-
-    @Context
-    public GraphDatabaseService db;
-
-    @Context
-    public Log log;
-
-    @Context
-    public KernelTransaction transaction;
+public class NodeWalkerProc extends AbstractWalkingProc {
 
     @Procedure(name = "randomWalk", mode = Mode.READ)
     @Description("Starts a random walk of the specified number of steps at the given start node. " +
@@ -42,7 +22,7 @@ public class NodeWalkerProc {
                                          @Name("walks") long walks,
                                          @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
         NodeWalker walker = getRandomWalker();
-        AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+        AbstractWalkOutput output = getAppropriateOutput(filePath);
 
         Stream<WalkResult> stream = walker.walkFromNode(output, nodeId, steps, walks);
 //        graph.release(); Should have no impact, as done by GC
@@ -57,7 +37,7 @@ public class NodeWalkerProc {
                                               @Name(value = "type", defaultValue = "") String type,
                                               @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
         NodeWalker walker = getRandomWalker();
-        AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+        AbstractWalkOutput output = getAppropriateOutput(filePath);
 
         Stream<WalkResult> stream = walker.walkFromNodeType(output, steps, walks, type);
 //        graph.release(); Should have no impact, as done by GC
@@ -71,7 +51,7 @@ public class NodeWalkerProc {
                                                  @Name("walks") long walks,
                                                  @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
         NodeWalker walker = getRandomWalker();
-        AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+        AbstractWalkOutput output = getAppropriateOutput(filePath);
 
         Stream<WalkResult> stream = walker.walkFromAllNodes(output, steps, walks);
 //        graph.release(); Should have no impact, as done by GC
@@ -88,7 +68,7 @@ public class NodeWalkerProc {
                                          @Name("inOutParameter") double inOutParam,
                                          @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
         NodeWalker walker = getNode2VecWalker(returnParam, inOutParam);
-        AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+        AbstractWalkOutput output = getAppropriateOutput(filePath);
 
         Stream<WalkResult> stream = walker.walkFromNode(output, nodeId, steps, walks);
 //        graph.release(); Should have no impact, as done by GC
@@ -104,35 +84,11 @@ public class NodeWalkerProc {
                                          @Name("inOutParameter") double inOutParam,
                                          @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
         NodeWalker walker = getNode2VecWalker(returnParam, inOutParam);
-        AbstractWalkOutput output = getAppropriateOutput(walker, filePath);
+        AbstractWalkOutput output = getAppropriateOutput(filePath);
 
         Stream<WalkResult> stream = walker.walkFromAllNodes(output, steps, walks);
 //        graph.release(); Should have no impact, as done by GC
         return stream;
-    }
-
-    private HeavyGraph getGraph(){
-        AllocationTracker tracker = AllocationTracker.create();
-        HeavyGraph graph = (HeavyGraph) new GraphLoader(api, Pools.DEFAULT)
-                .withoutNodeProperties()
-                .withoutNodeWeights()
-                .withoutNodeProperties()
-                .withoutExecutorService()
-                .withoutRelationshipWeights()
-                .withAllocationTracker(tracker)
-                .load(HeavyGraphFactory.class);
-
-        return graph;
-    }
-
-    private AbstractWalkOutput getAppropriateOutput(NodeWalker walker, String filePath) throws IOException{
-        AbstractWalkOutput output;
-        if(filePath.isEmpty()){
-            output = new WalkDatabaseOutput(db, log);
-        } else {
-            output = new WalkNodeDirectFileOutput(filePath);
-        }
-        return output;
     }
 
     private NodeWalker getRandomWalker(){
@@ -145,88 +101,6 @@ public class NodeWalkerProc {
         HeavyGraph graph = getGraph();
         NodeWalker.AbstractNextNodeStrategy nextNodeStrategy = new NodeWalker.Node2VecStrategy(graph, graph, returnParam, inOutParam);
         return new NodeWalker(graph, log, nextNodeStrategy);
-    }
-
-    public static class WalkResult {
-        public Path path;
-
-        public WalkResult(Path path) {
-            this.path = path;
-        }
-    }
-
-    public static class WalkPath implements Path {
-
-        private ArrayList<Node> nodes;
-        private ArrayList<Relationship> relationships;
-
-        public WalkPath(int size) {
-            nodes = new ArrayList<>(size);
-            relationships = new ArrayList<>(Math.max(0, size - 1)); // for empty paths
-        }
-
-        public void addNode(Node node) {
-            nodes.add(node);
-        }
-
-        public void addRelationship(Relationship relationship) {
-            relationships.add(relationship);
-        }
-
-        @Override
-        public Node startNode() {
-            return nodes.get(0);
-        }
-
-        @Override
-        public Node endNode() {
-            return nodes.get(nodes.size() - 1);
-        }
-
-        @Override
-        public Relationship lastRelationship() {
-            return relationships.get(relationships.size() - 1);
-        }
-
-        @Override
-        public Iterable<Relationship> relationships() {
-            return relationships;
-        }
-
-        @Override
-        public Iterable<Relationship> reverseRelationships() {
-            ArrayList<Relationship> reverse = new ArrayList<>(relationships);
-            Collections.reverse(reverse);
-            return reverse;
-        }
-
-        @Override
-        public Iterable<Node> nodes() {
-            return nodes;
-        }
-
-        @Override
-        public Iterable<Node> reverseNodes() {
-            ArrayList<Node> reverse = new ArrayList<>(nodes);
-            Collections.reverse(reverse);
-            return reverse;
-        }
-
-        @Override
-        public int length() {
-            return nodes.size();
-        }
-
-        @Override
-        public String toString() {
-            return nodes.toString();
-        }
-
-        @Override
-        public Iterator<PropertyContainer> iterator() {
-            //TODO ???????
-            return null;
-        }
     }
 
 }

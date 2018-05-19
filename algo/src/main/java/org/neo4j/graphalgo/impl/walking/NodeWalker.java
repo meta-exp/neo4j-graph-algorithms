@@ -1,6 +1,5 @@
 package org.neo4j.graphalgo.impl.walking;
 
-import org.neo4j.graphalgo.NodeWalkerProc;
 import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
@@ -25,7 +24,7 @@ public class NodeWalker extends AbstractWalkAlgorithm {
         this.nextNodeStrategy = nextNodeStrategy;
     }
 
-    public Stream<NodeWalkerProc.WalkResult> walkFromNode(AbstractWalkOutput output, long nodeId, long steps, long walks) {
+    public Stream<WalkResult> walkFromNode(AbstractWalkOutput output, long nodeId, long steps, long walks) {
         Stream<Integer> stream = Stream.generate(() -> getMappedId(nodeId)).limit(walks);
 
         startWalks(output, stream, walks, steps);
@@ -33,7 +32,7 @@ public class NodeWalker extends AbstractWalkAlgorithm {
         return output.getStream();
     }
 
-    public Stream<NodeWalkerProc.WalkResult> walkFromNodeType(AbstractWalkOutput output, long steps, long walks, String type) {
+    public Stream<WalkResult> walkFromNodeType(AbstractWalkOutput output, long steps, long walks, String type) {
         Stream<Integer> startNodeIdStream;
         if (type.isEmpty()) {
             startNodeIdStream = randomNodesFromAllNodes((int) walks);
@@ -47,7 +46,7 @@ public class NodeWalker extends AbstractWalkAlgorithm {
         return output.getStream();
     }
 
-    public Stream<NodeWalkerProc.WalkResult> walkFromAllNodes(AbstractWalkOutput output, long steps, long walks) {
+    public Stream<WalkResult> walkFromAllNodes(AbstractWalkOutput output, long steps, long walks) {
         // TODO: find out why sometimes not all nodes are visited.
 
         long nodeCount = graph.nodeCount();

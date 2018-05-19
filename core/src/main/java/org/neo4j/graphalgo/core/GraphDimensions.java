@@ -19,6 +19,7 @@
 package org.neo4j.graphalgo.core;
 
 import org.neo4j.graphalgo.api.GraphSetup;
+import org.neo4j.graphalgo.core.heavyweight.Labels.LabelMapping;
 import org.neo4j.graphalgo.core.utils.StatementTask;
 import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.Statement;

@@ -1,7 +1,7 @@
 package org.neo4j.graphalgo.api;
 
+import java.util.AbstractMap;
 import java.util.Collection;
-import java.util.HashMap;
 
 public interface ArrayGraphInterface {
 
@@ -21,5 +21,7 @@ public interface ArrayGraphInterface {
 
     Collection<Integer> getAllLabels();
 
-    HashMap<Integer, String> getLabelIdToNameDict();
+    AbstractMap<Integer, String> getNodeLabelDict();
+
+    AbstractMap<Integer, String> getEdgeLabelDict();
 }

@@ -10,7 +10,7 @@ public abstract class AbstractWalkAlgorithm {
     protected Log log;
     protected HeavyGraph graph;
 
-    public AbstractWalkAlgorithm(HeavyGraph graph, Log logy){
+    public AbstractWalkAlgorithm(HeavyGraph graph, Log log){
         this.idMapping = graph;
         this.graph = graph;
         this.log = log;
@@ -23,4 +23,13 @@ public abstract class AbstractWalkAlgorithm {
     protected int getMappedId(long nodeId) {
         return idMapping.toMappedNodeId(nodeId);
     }
+
+    protected long[] translateIdsToOriginal(int[] mappedIds){
+        long[] originalIds = new long[mappedIds.length];
+        for(int i = 0; i < mappedIds.length; i++){
+            originalIds[i] = getOriginalId(mappedIds[i]);
+        }
+        return originalIds;
+    }
+
 }

@@ -1,6 +1,6 @@
 package org.neo4j.graphalgo.impl.walking;
 
-import org.neo4j.graphalgo.NodeWalkerProc;
+import org.neo4j.graphalgo.walkingProcs.NodeWalkerProc;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -31,19 +31,19 @@ public class WalkDatabaseOutput extends AbstractWalkOutput {
         pathIds.add(result);
     }
 
-    public Stream<NodeWalkerProc.WalkResult> getStream() {
+    public Stream<WalkResult> getStream() {
         return Stream.generate(
-                () -> new NodeWalkerProc.WalkResult(convertIdsToPath(pathIterator.next()))).limit(pathIds.size());
+                () -> new WalkResult(convertIdsToPath(pathIterator.next()))).limit(pathIds.size());
     }
 
     public int numberOfResults(){
         return pathIds.size();
     }
 
-    private NodeWalkerProc.WalkPath convertIdsToPath(long[] pathIds){
+    private WalkPath convertIdsToPath(long[] pathIds){
 //        NodeWalkerProc.WalkPath path = new NodeWalkerProc.WalkPath(pathIds[1].length);
         int pathLength = pathIds.length;
-        NodeWalkerProc.WalkPath path = new NodeWalkerProc.WalkPath(pathLength);
+        WalkPath path = new WalkPath(pathLength);
         try (Transaction tx = db.beginTx()) {
             // path[0] contains Ids of nodes, path[1] contains Ids of relationships
             for(int i = 0; i < pathLength - 1; i++){

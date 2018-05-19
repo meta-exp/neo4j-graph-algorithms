@@ -21,14 +21,14 @@ package org.neo4j.graphalgo.core.heavyweight;
 import org.neo4j.collection.primitive.PrimitiveIntIterable;
 import org.neo4j.collection.primitive.PrimitiveIntIterator;
 import org.neo4j.graphalgo.api.*;
+import org.neo4j.graphalgo.core.heavyweight.Labels.GraphLabeler;
 import org.neo4j.graphalgo.core.IdMap;
-import org.neo4j.graphalgo.core.LabelImporter;
+import org.neo4j.graphalgo.core.heavyweight.Labels.NullLabeler;
 import org.neo4j.graphalgo.core.utils.RawValues;
 import org.neo4j.graphdb.Direction;
 
 import java.util.*;
 import java.util.function.IntPredicate;
-import java.util.stream.Collectors;
 
 /**
  * Heavy weighted graph built of an adjacency matrix.
@@ -46,7 +46,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     private WeightMapping nodeProperties;
     private boolean canRelease = true;
     // Watch Out! There is no default value. If The nodeId does not exist as key, null will be returned.
-    private AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap;
+    private GraphLabeler labelMapping;
     private Collection<Integer> labels = null;
     private Collection<Integer> edgeLabels = null;
 
@@ -57,11 +57,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
             final WeightMapping relationshipWeights,
             final WeightMapping nodeWeights,
             final WeightMapping nodeProperties) {
-        this.nodeIdMap = nodeIdMap;
-        this.container = container;
-        this.relationshipWeights = relationshipWeights;
-        this.nodeWeights = nodeWeights;
-        this.nodeProperties = nodeProperties;
+        this(nodeIdMap, container, relationshipWeights, nodeWeights, nodeWeights, new NullLabeler());
     }
 
     HeavyGraph(
@@ -70,74 +66,52 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
             final WeightMapping relationshipWeights,
             final WeightMapping nodeWeights,
             final WeightMapping nodeProperties,
-            final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap) {
+            final GraphLabeler labelMapping) {
         this.nodeIdMap = nodeIdMap;
         this.container = container;
         this.relationshipWeights = relationshipWeights;
         this.nodeWeights = nodeWeights;
         this.nodeProperties = nodeProperties;
-        this.labelMap = labelMap;
+        this.labelMapping = labelMapping;
     }
 
     @Override
     public int getLabel(int nodeId) {
-        if (labelMap == null) {
-            return -1;
-        }
-        return (int) labelMap.getKey().get(nodeId).get(0).getId();
+        return labelMapping.getLabel(nodeId);
     }
 
     @Override
     public Integer[] getLabels(int nodeId){
-        if (labelMap == null){
-            return new Integer[0];
-        }
-        return labelMap.getKey().get(nodeId).stream().map(tuple -> tuple.getId()).toArray(Integer[]::new);
+        return labelMapping.getLabels(nodeId);
     }
 
     @Override
     public Collection<Integer> getAllLabels()
     {
-        if(labels == null) {
-            labels = new HashSet<>();
-            for (ArrayList<LabelImporter.IdNameTuple> labelTuples : labelMap.getKey().values()) {
-                for (LabelImporter.IdNameTuple pair : labelTuples) {
-                    labels.add(pair.getId());
-                }
-            }
-        }
-        return labels;
+        return labelMapping.getAllNodeLabels();
     }
 
     @Override
     public Collection<Integer> getAllEdgeLabels()
     {
-        if(edgeLabels == null) edgeLabels = labelMap.getValue().values().stream().collect(Collectors.toSet());
-        return edgeLabels;
+        return labelMapping.getAllEdgeLabels();
     }
 
     @Override
-    public HashMap<Integer, String> getLabelIdToNameDict()
+    public AbstractMap<Integer, String> getNodeLabelDict()
     {
-        HashMap<Integer, String> labelIdToNameDict = new HashMap<>();
-        for (ArrayList<LabelImporter.IdNameTuple> labels : labelMap.getKey().values()) {
-            for (LabelImporter.IdNameTuple pair : labels) {
-                labelIdToNameDict.put(pair.getId(), pair.getName());
-            }
-        }
+        return labelMapping.getNodeLabelDict();
+    }
 
-        return labelIdToNameDict;
+    @Override
+    public AbstractMap<Integer, String> getEdgeLabelDict()
+    {
+        return labelMapping.getNodeLabelDict();
     }
 
     @Override
     public int getEdgeLabel(long nodeId1, long nodeId2) {
-        AbstractMap.SimpleEntry<Long, Long> key = new AbstractMap.SimpleEntry<>(nodeId1, nodeId2);
-        Integer label = labelMap.getValue().get(key);
-        if (label == null) {
-            key = new AbstractMap.SimpleEntry<>(nodeId2, nodeId1);
-            label = labelMap.getValue().get(key);
-        }
-        return label;
+        return labelMapping.getEdgeLabel(nodeId1, nodeId2);
     }
 
     @Override

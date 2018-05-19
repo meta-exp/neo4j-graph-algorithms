@@ -23,16 +23,13 @@ import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.api.GraphSetup;
 import org.neo4j.graphalgo.api.WeightMapping;
 import org.neo4j.graphalgo.core.IdMap;
-import org.neo4j.graphalgo.core.LabelImporter;
+import org.neo4j.graphalgo.core.heavyweight.Labels.GraphLabeler;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
 import org.neo4j.helpers.Exceptions;
 import org.neo4j.kernel.api.exceptions.EntityNotFoundException;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.function.Supplier;
 
 /**
@@ -64,7 +61,7 @@ public class HeavyGraphFactory extends GraphFactory {
 
         final IdMap idMap = loadIdMap();
 
-        final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap = loadLabelMap(idMap, setup.loadWithLabels);
+        final GraphLabeler labelMap = loadLabelMap(idMap, setup.loadWithLabels);
 
 
         final Supplier<WeightMapping> relWeights = () -> newWeightMap(
@@ -122,11 +119,11 @@ public class HeavyGraphFactory extends GraphFactory {
             final Supplier<WeightMapping> relWeightsSupplier,
             final Supplier<WeightMapping> nodeWeightsSupplier,
             final Supplier<WeightMapping> nodePropsSupplier,
-            final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Long, Long>, Integer>> labelMap,
+            final GraphLabeler labeler,
             Collection<RelationshipImporter> tasks) {
         if (tasks.size() == 1) {
             RelationshipImporter importer = tasks.iterator().next();
-            return importer.toGraph(idMap, labelMap);
+            return importer.toGraph(idMap, labeler);
         }
 
         final AdjacencyMatrix matrix = new AdjacencyMatrix(nodeCount, setup.sort);
@@ -144,6 +141,6 @@ public class HeavyGraphFactory extends GraphFactory {
                 relWeights,
                 nodeWeights,
                 nodeProps,
-                labelMap);
+                labeler);
     }
 }

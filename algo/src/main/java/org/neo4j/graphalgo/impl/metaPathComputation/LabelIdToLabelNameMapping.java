@@ -3,6 +3,7 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
 import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.impl.Algorithm;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 
 public class LabelIdToLabelNameMapping extends Algorithm<LabelIdToLabelNameMapping> {
@@ -16,7 +17,7 @@ public class LabelIdToLabelNameMapping extends Algorithm<LabelIdToLabelNameMappi
 
     public LabelIdToLabelNameMapping.Result getLabelIdToLabelNameMapping()
     {
-        return new Result(arrayGraphInterface.getLabelIdToNameDict());
+        return new Result(arrayGraphInterface.getNodeLabelDict());
     }
 
     @Override
@@ -32,8 +33,8 @@ public class LabelIdToLabelNameMapping extends Algorithm<LabelIdToLabelNameMappi
      */
     public static final class Result {
 
-        HashMap<Integer, String> labelIdToLabelNameDict;
-        public Result(HashMap<Integer, String> labelIdToLabelNameDict) {
+        AbstractMap<Integer, String> labelIdToLabelNameDict;
+        public Result(AbstractMap<Integer, String> labelIdToLabelNameDict) {
             this.labelIdToLabelNameDict = labelIdToLabelNameDict;
         }
 
@@ -42,7 +43,7 @@ public class LabelIdToLabelNameMapping extends Algorithm<LabelIdToLabelNameMappi
             return "Result{}";
         }
 
-        public HashMap<Integer, String> getLabelIdToLabelNameDict() {
+        public AbstractMap<Integer, String> getLabelIdToLabelNameDict() {
             return labelIdToLabelNameDict;
         }
     }

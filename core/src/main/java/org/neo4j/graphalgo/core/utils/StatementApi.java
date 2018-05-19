@@ -18,6 +18,7 @@
  */
 package org.neo4j.graphalgo.core.utils;
 
+import org.neo4j.graphalgo.core.heavyweight.Labels.LabelMapping;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.Statement;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;

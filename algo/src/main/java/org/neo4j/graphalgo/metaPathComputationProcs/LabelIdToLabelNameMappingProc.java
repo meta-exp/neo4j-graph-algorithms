@@ -11,6 +11,8 @@ import org.neo4j.logging.Log;
 import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Procedure;
+
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
@@ -41,7 +43,7 @@ public class LabelIdToLabelNameMappingProc {
 
 
         final LabelIdToLabelNameMapping algo = new LabelIdToLabelNameMapping(graph);
-        HashMap<Integer, String> labelMapping;
+        AbstractMap<Integer, String> labelMapping;
         labelMapping = algo.getLabelIdToLabelNameMapping().getLabelIdToLabelNameDict();
         builder.setLabelIdToLabelNameDict(labelMapping);
         graph.release();
