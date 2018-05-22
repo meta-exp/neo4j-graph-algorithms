@@ -14,7 +14,7 @@ public class GetSchema extends MetaPathComputation {
 
     private HeavyGraph graph;
     private IntIntHashMap labelDictionary;//maybe change to array if it stays integer->integer
-    private IntIntHashMap reverseLabelDictionary;//also change to Array
+    private IntIntHashMap reversedLabelDictionary;//also change to Array
     private int amountOfLabels;
     private int numberOfCores;
 
@@ -22,7 +22,7 @@ public class GetSchema extends MetaPathComputation {
         this.graph = graph;
         this.amountOfLabels = graph.getAllLabels().size();
         this.labelDictionary = new IntIntHashMap();
-        this.reverseLabelDictionary = new IntIntHashMap();
+        this.reversedLabelDictionary = new IntIntHashMap();
         this.numberOfCores = Runtime.getRuntime().availableProcessors();
     }
 
@@ -43,9 +43,9 @@ public class GetSchema extends MetaPathComputation {
             notYetComputed = true;
         }
 
-        if(notYetComputed) schema = computeSchema();
+        if (notYetComputed) schema = computeSchema();
 
-        return new Result(schema, labelDictionary, reverseLabelDictionary);
+        return new Result(schema, labelDictionary, reversedLabelDictionary);
     }
 
 
@@ -115,7 +115,7 @@ public class GetSchema extends MetaPathComputation {
         int labelCounter = 0;
         for (int label : graph.getAllLabels()) {
             labelDictionary.put(label, labelCounter);
-            reverseLabelDictionary.put(labelCounter, label);
+            reversedLabelDictionary.put(labelCounter, label);
             labelCounter++;
         }
     }
@@ -178,7 +178,7 @@ public class GetSchema extends MetaPathComputation {
     }
 
 
-    //TODO------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------
     public Stream<ComputeAllMetaPaths.Result> resultStream() {
         return IntStream.range(0, 1).mapToObj(result -> new ComputeAllMetaPaths.Result(new HashSet<>()));
     }//no clue what this is all about
@@ -213,7 +213,7 @@ public class GetSchema extends MetaPathComputation {
             return "Result{}";
         }
 
-        public ArrayList<HashSet<Pair>> getSchemaAdjacencies() {
+        public ArrayList<HashSet<Pair>> getSchema() {
             return schema;
         }
 

@@ -110,7 +110,7 @@ public class GetSchemaTest {
         pair = new Pair(2,1);
         expectedSchema.get(2).add(pair);
 
-        ArrayList<HashSet<Pair>> schema = result.getSchemaAdjacencies();
+        ArrayList<HashSet<Pair>> schema = result.getSchema();
         assertEquals(expectedSchema.size(), schema.size());
         for (int i = 0; i < schema.size(); i++) {
             HashSet<Pair> row1 = schema.get(i);

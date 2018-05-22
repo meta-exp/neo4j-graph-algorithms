@@ -5,7 +5,9 @@ import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-
+import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
@@ -30,7 +32,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private int printCount = 0;
     private double estimatedCount;
     private long startTime;
-    private HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer> labelDictionary;
+    private HashMap<Pair, Integer> labelDictionary;
 
     public ComputeAllMetaPaths(HeavyGraph graph, IdMapping idMapping,
                                ArrayGraphInterface arrayGraphInterface,
@@ -91,13 +93,13 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         labelCountDict.put(nodeLabel, 1 + (labelCountDict.get(nodeLabel) == null ? 0 : labelCountDict.get(nodeLabel)));
 
 
-        Integer nodeLabelId = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, nodeLabel));
+        Integer nodeLabelId = labelDictionary.get(new Pair(edgeLabel, nodeLabel));
         initialInstances.get(nodeLabelId).add(node);
         return true;
     }
 
     private int assignIdToNodeLabel(int edgeLabel, int nodeLabel) {
-        labelDictionary.put(new AbstractMap.SimpleEntry<>(edgeLabel, nodeLabel), currentLabelId);
+        labelDictionary.put(new Pair(edgeLabel, nodeLabel), currentLabelId);
         currentLabelId++;
         return currentLabelId - 1;
     }
@@ -110,21 +112,18 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
     private void computeMetaPathsFromAllNodeLabels() {
-        ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
+        int processorCount = Runtime.getRuntime().availableProcessors();
+        debugOut.println("ProcessorCount: " + processorCount);
+        ExecutorService executor = Executors.newFixedThreadPool(processorCount);
+
         int i = 0;
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, nodeLabel, metaPathLength);//TODO use less threads
-            thread.start();
-            threads.add(thread);
+            Runnable worker = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, nodeLabel, metaPathLength);
+            executor.execute(worker);
             i++;
         }
-        for (ComputeMetaPathFromNodeLabelThread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        executor.shutdown();
+        while(!executor.isTerminated()){}
     }
 
     private void computeMetaPathFromNodeLabel(ArrayList<Integer> currentMetaPath, HashMap<Integer, Integer> currentInstances, int metaPathLength) {
@@ -136,7 +135,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
         for (int edgeLabel : arrayGraphInterface.getAllEdgeLabels()) {
             for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-                int instancesArrayIndex = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, nodeLabel));
+                int instancesArrayIndex = labelDictionary.get(new Pair(edgeLabel, nodeLabel));
                 HashMap<Integer, Integer> nextInstancesForLabel = nextInstances.get(instancesArrayIndex);
                 if (!nextInstancesForLabel.isEmpty()) {
                     nextInstances.set(instancesArrayIndex, null);
@@ -151,6 +150,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
                     }
 
                     addAndLogMetaPath(newMetaPath, instanceCountSum);
+                    computeMetaPathFromNodeLabel(newMetaPath, nextInstancesForLabel, metaPathLength - 1);
                 }
             }
         }
@@ -184,7 +184,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             for (int nodeId : arrayGraphInterface.getAdjacentNodes(instance)) {
                 int label = arrayGraphInterface.getLabel(nodeId); //get the id of the label of the node
                 int edgeLabel = arrayGraphInterface.getEdgeLabel(instance, nodeId);
-                int labelID = labelDictionary.get(new AbstractMap.SimpleEntry<>(edgeLabel, label));
+                int labelID = labelDictionary.get(new Pair(edgeLabel, label));
 
                 boolean incrementMissing = nextInstances.get(labelID).get(nodeId) == null;
                 int oldCount = currentInstances.get(instance);
@@ -231,7 +231,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
     private HashMap<Integer, Integer> initInstancesRow(int startNodeLabel) {
         int startEdgeLabel = arrayGraphInterface.getAllEdgeLabels().iterator().next();
-        int startNodeLabelId = labelDictionary.get(new AbstractMap.SimpleEntry<>(startEdgeLabel, startNodeLabel));
+        int startNodeLabelId = labelDictionary.get(new Pair(startEdgeLabel, startNodeLabel));
         HashSet<Integer> row = initialInstances.get(startNodeLabelId);
         HashMap<Integer, Integer> dictRow = new HashMap<>();
         for (int instance : row) {
