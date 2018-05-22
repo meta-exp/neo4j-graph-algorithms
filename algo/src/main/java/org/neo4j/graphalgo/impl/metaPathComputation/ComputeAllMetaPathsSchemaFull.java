@@ -209,10 +209,6 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
 
     //TODO -------------------------------------------------------------------
 
-    public Stream<ComputeAllMetaPaths.Result> resultStream() {
-        return IntStream.range(0, 1).mapToObj(result -> new ComputeAllMetaPaths.Result(new HashSet<>()));
-    }
-
     @Override
     public ComputeAllMetaPathsSchemaFull me() {
         return this;

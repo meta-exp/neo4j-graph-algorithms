@@ -31,9 +31,9 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     private double estimatedCount;
     private long startTime;
     private HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer> labelDictionary;
-    List<Integer> startNodes;
-    List<Integer> endNodes;
-    HashMap<Integer, HashSet<AbstractMap.SimpleEntry<IntArrayList, IntArrayList>>> highDegreeIndex;
+    private List<Integer> startNodes;
+    private List<Integer> endNodes;
+    private HashMap<Integer, HashSet<AbstractMap.SimpleEntry<IntArrayList, IntArrayList>>> highDegreeIndex;
 
     public ComputeAllMetaPathsForInstances(HeavyGraph graph, ArrayGraphInterface arrayGraphInterface, int metaPathLength, List<Integer> startNodes, List<Integer> endNodes) throws IOException {
         this.arrayGraphInterface = arrayGraphInterface;
@@ -294,9 +294,6 @@ public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
     }
 
     //TODO------------------------------------------------------------------------------------------------------------------
-    public Stream<org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths.Result> resultStream() {
-        return IntStream.range(0, 1).mapToObj(result -> new org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths.Result(new HashSet<>()));
-    }
 
     @Override
     public ComputeAllMetaPathsForInstances me() { return this; }
