@@ -210,9 +210,6 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
     }*/
 
     //TODO------------------------------------------------------------------------------------------------------------------
-    public Stream<org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths.Result> resultStream() {
-        return IntStream.range(0, 1).mapToObj(result -> new org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths.Result(new HashSet<>()));
-    }
 
     @Override
     public MetaPathPrecomputeHighDegreeNodes me() {

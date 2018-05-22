@@ -28,8 +28,8 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
     private List<Relationship> rels = null;
     private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
     private PrintStream out;
-    int printCount = 0;
-    double estimatedCount;
+    private int printCount = 0;
+    private double estimatedCount;
     private long startTime;
     private HashMap<Integer, String> idTypeMappingNodes = new HashMap<>();
     private HashMap<Integer, String> idTypeMappingEdges = new HashMap<>();
@@ -82,7 +82,7 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
         return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges, metaPathWeightsDict);
     }
 
-    private void getMetaGraph() throws Exception {
+    private void getMetaGraph() {
         org.neo4j.graphdb.Result result;
         try (Transaction tx = api.beginTx()) {
             result = api.execute("CALL apoc.meta.graph()");
@@ -368,9 +368,6 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
 
     //TODO -------------------------------------------------------------------
 
-    public Stream<ComputeAllMetaPaths.Result> resultStream() {
-        return IntStream.range(0, 1).mapToObj(result -> new ComputeAllMetaPaths.Result(new HashSet<>()));
-    }
 
     @Override
     public ComputeAllMetaPathsSchemaFullWeights me() {
