@@ -51,12 +51,11 @@ public class ComputeAllMetaPathsSchemaFullProc {
         HashMap<Integer, Integer> reversedLabelDictionary = gson.fromJson((String) row.get("reverseLabelDictionary"), HashMap.class);
 
         final ComputeAllMetaPathsSchemaFull algo = new ComputeAllMetaPathsSchemaFull(length, schema, reversedLabelDictionary);
-        HashSet<String> metaPaths;
+
         ComputeAllMetaPathsSchemaFull.Result result = algo.compute();
-        metaPaths = result.getFinalMetaPaths();
+        HashSet<String> metaPaths = result.getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);
 
         return Stream.of(builder.build());
-
     }
 }

@@ -42,8 +42,9 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
     private void startThreads() {
         int processorCount = Runtime.getRuntime().availableProcessors();
         debugOut.println("ProcessorCount: " + processorCount);
+        debugOut.println("schema-size: " + schema.size());
+        debugOut.println("reverseLabelDictionary-size: " + reversedLabelDictionary.size());
         ExecutorService executor = Executors.newFixedThreadPool(processorCount);
-
 
         for (int i = 0; i < schema.size(); i++) {
             Runnable worker = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, i, metaPathLength);
