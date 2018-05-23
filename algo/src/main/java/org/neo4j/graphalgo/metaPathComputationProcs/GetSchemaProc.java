@@ -14,6 +14,9 @@ import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Procedure;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Stream;
@@ -35,23 +38,46 @@ public class GetSchemaProc {
     public Stream<GetSchemaResult> GetSchema() {
 
         final GetSchemaResult.Builder builder = GetSchemaResult.builder();
-        final HeavyGraph graph;
 
-        graph = (HeavyGraph) new GraphLoader(api)
-                .asUndirected(true)
-                .withLabelAsProperty(true)
-                .load(HeavyGraphFactory.class);
+        ArrayList<HashSet<Pair>> schema = null;
+        IntIntHashMap reversedLabelDictionary = null;
+        boolean notYetComputed = false;
+        try {
+            FileInputStream fileIn = new FileInputStream("metagraph.ser");
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            schema = (ArrayList<HashSet<Pair>>) in.readObject();
+            in.close();
+            fileIn.close();
 
-        final GetSchema algo = new GetSchema(graph);
+            fileIn = new FileInputStream("reversedLabelDictionary.ser");
+            in = new ObjectInputStream(fileIn);
+            reversedLabelDictionary = (IntIntHashMap) in.readObject();
+        } catch (IOException i) {
+            notYetComputed = true;
+        } catch (ClassNotFoundException c) {
+            c.printStackTrace();
+            notYetComputed = true;
+        }
 
-        GetSchema.Result result = algo.compute();
-        ArrayList<HashSet<Pair>> schema = result.getSchema();
-        IntIntHashMap reverseDictionary = result.getReverseLabelDictionary();
+        if(notYetComputed){
+            final HeavyGraph graph;
+
+            graph = (HeavyGraph) new GraphLoader(api)
+                    .asUndirected(true)
+                    .withLabelAsProperty(true)
+                    .load(HeavyGraphFactory.class);
+
+            final GetSchema algo = new GetSchema(graph);
+            graph.release();
+            GetSchema.Result result = algo.compute();
+
+            schema = result.getSchema();
+            reversedLabelDictionary = result.getReverseLabelDictionary();
+        }
+
         builder.setSchema(schema);
-        builder.setReverseLabelDictionary(reverseDictionary);
-        graph.release();
+        builder.setReverseLabelDictionary(reversedLabelDictionary);
 
         return Stream.of(builder.build());
-
     }
 }

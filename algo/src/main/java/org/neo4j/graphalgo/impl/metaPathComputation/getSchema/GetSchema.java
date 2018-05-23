@@ -27,24 +27,7 @@ public class GetSchema extends MetaPathComputation {
     }
 
     public Result compute() {
-        ArrayList<HashSet<Pair>> schema = null;
-        boolean notYetComputed = false;
-
-        try {
-            FileInputStream fileIn = new FileInputStream("metagraph.ser");
-            ObjectInputStream in = new ObjectInputStream(fileIn);
-            schema = (ArrayList<HashSet<Pair>>) in.readObject();
-            in.close();
-            fileIn.close();
-        } catch (IOException i) {
-            notYetComputed = true;
-        } catch (ClassNotFoundException c) {
-            c.printStackTrace();
-            notYetComputed = true;
-        }
-
-        if (notYetComputed) schema = computeSchema();
-
+        ArrayList<HashSet<Pair>> schema = computeSchema();
         return new Result(schema, labelDictionary, reversedLabelDictionary);
     }
 
@@ -61,6 +44,13 @@ public class GetSchema extends MetaPathComputation {
             out.writeObject(schema);
             out.close();
             fileOut.close();
+
+            fileOut = new FileOutputStream("reversedLabelDictionary.ser");
+            out = new ObjectOutputStream(fileOut);
+            out.writeObject(reversedLabelDictionary);
+            out.close();
+            fileOut.close();
+
         } catch (IOException i) {
             i.printStackTrace();
         }

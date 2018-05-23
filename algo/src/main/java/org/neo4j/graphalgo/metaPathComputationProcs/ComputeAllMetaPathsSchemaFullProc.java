@@ -1,8 +1,13 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsBetweenTypes;
+import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsSchemaFull;
+import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.GetSchema;
+import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsSchemaFullResult;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
@@ -11,8 +16,10 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class ComputeAllMetaPathsSchemaFullProc {
@@ -35,18 +42,22 @@ public class ComputeAllMetaPathsSchemaFullProc {
 
         final ComputeAllMetaPathsSchemaFullResult.Builder builder = ComputeAllMetaPathsSchemaFullResult.builder();
 
-        final ComputeAllMetaPathsSchemaFull algo = new ComputeAllMetaPathsSchemaFull(length, api);
+        org.neo4j.graphdb.Result queryResult;
+        try (Transaction tx = api.beginTx()) {
+            queryResult = api.execute("CALL algo.GetSchema();");
+            tx.success();
+        }
+        Map<String, Object> row = queryResult.next();
+        ArrayList<HashSet<Pair>> schema =  (ArrayList<HashSet<Pair>>) row.get("schema");
+        IntIntHashMap reversedLabelDictionary = (IntIntHashMap) row.get("reverseLabelDictionary");
+
+
+        final ComputeAllMetaPathsSchemaFull algo = new ComputeAllMetaPathsSchemaFull(length, schema, reversedLabelDictionary);
         HashSet<String> metaPaths;
         ComputeAllMetaPathsSchemaFull.Result result = algo.compute();
         metaPaths = result.getFinalMetaPaths();
-        HashMap<Integer, String> nodesIDTypeDict = result.getIDTypeNodeDict();
-        HashMap <Integer, String> edgesIDTypeDict = result.getIDTypeEdgeDict();
         builder.setMetaPaths(metaPaths);
-        builder.setNodesIDTypeDict(nodesIDTypeDict);
-        builder.setEdgesIDTypeDict(edgesIDTypeDict);
 
-        //return algo.resultStream();
-        //System.out.println(Stream.of(builder.build()));
         return Stream.of(builder.build());
 
     }
