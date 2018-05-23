@@ -1,6 +1,5 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -15,12 +14,12 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
     private PrintStream debugOut;
     private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
     private ArrayList<HashSet<Pair>> schema;
-    private IntIntHashMap reversedLabelDictionary;
+    private HashMap<Integer, Integer> reversedLabelDictionary;
     private PrintStream out;
     private long startTime;
     private long endTime;
 
-    public ComputeAllMetaPathsSchemaFull(int metaPathLength, ArrayList<HashSet<Pair>> schema, IntIntHashMap reversedLabelDictionary) throws Exception {
+    public ComputeAllMetaPathsSchemaFull(int metaPathLength, ArrayList<HashSet<Pair>> schema, HashMap<Integer, Integer> reversedLabelDictionary) throws Exception {
         this.metaPathLength = metaPathLength;
         this.schema = schema;
         this.reversedLabelDictionary = reversedLabelDictionary;

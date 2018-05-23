@@ -3,6 +3,7 @@ package org.neo4j.graphalgo.metaPathComputationProcs;
 import com.carrotsearch.hppc.IntIntHashMap;
 import com.google.gson.Gson;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsSchemaFull;
+import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsSchemaFullResult;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
@@ -14,6 +15,7 @@ import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -45,8 +47,8 @@ public class ComputeAllMetaPathsSchemaFullProc {
         }
         Map<String, Object> row = queryResult.next();
         Gson gson = new Gson();
-        ArrayList schema =  gson.fromJson((String) row.get("schema"), ArrayList.class);
-        IntIntHashMap reversedLabelDictionary = gson.fromJson((String) row.get("reverseLabelDictionary"), IntIntHashMap.class);
+        ArrayList<HashSet<Pair>> schema =  gson.fromJson((String) row.get("schema"), ArrayList.class);
+        HashMap<Integer, Integer> reversedLabelDictionary = gson.fromJson((String) row.get("reverseLabelDictionary"), HashMap.class);
 
         final ComputeAllMetaPathsSchemaFull algo = new ComputeAllMetaPathsSchemaFull(length, schema, reversedLabelDictionary);
         HashSet<String> metaPaths;
