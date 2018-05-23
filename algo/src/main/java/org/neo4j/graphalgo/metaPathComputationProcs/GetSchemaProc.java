@@ -68,8 +68,8 @@ public class GetSchemaProc {
                     .load(HeavyGraphFactory.class);
 
             final GetSchema algo = new GetSchema(graph);
-            graph.release();
             GetSchema.Result result = algo.compute();
+            graph.release();
 
             schema = result.getSchema();
             reversedLabelDictionary = result.getReverseLabelDictionary();
