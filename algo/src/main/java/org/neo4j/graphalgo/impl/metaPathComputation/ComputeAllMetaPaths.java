@@ -53,6 +53,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
     public Result compute() {
         debugOut.println("started computation");
+        debugOut.println("length: " + metaPathLength);
         startTime = System.nanoTime();
         HashSet<String> finalMetaPaths = computeAllMetaPaths();
         long endTime = System.nanoTime();
