@@ -169,9 +169,6 @@ public class GetSchema extends MetaPathComputation {
 
 
     //------------------------------------------------------------------------------------------------------------------
-    public Stream<ComputeAllMetaPaths.Result> resultStream() {
-        return IntStream.range(0, 1).mapToObj(result -> new ComputeAllMetaPaths.Result(new HashSet<>()));
-    }//no clue what this is all about
 
     @Override
     public GetSchema me() {

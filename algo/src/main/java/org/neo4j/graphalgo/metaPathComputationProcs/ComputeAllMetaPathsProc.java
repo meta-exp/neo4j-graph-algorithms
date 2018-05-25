@@ -13,6 +13,7 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Stream;
 
@@ -47,7 +48,7 @@ public class ComputeAllMetaPathsProc {
 
 
         final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, graph, graph, graph, length);
-        HashSet<String> metaPaths;
+        ArrayList<String> metaPaths;
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);
         graph.release();

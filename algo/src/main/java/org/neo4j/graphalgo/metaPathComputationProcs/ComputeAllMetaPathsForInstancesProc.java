@@ -5,6 +5,7 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsForInstances;
+import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsForInstancesResult;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -36,7 +37,7 @@ public class ComputeAllMetaPathsForInstancesProc {
     @Description("CALL algo.computeAllMetaPathsForInstances(startNodes:long[], endNodes:long[], length:int) YIELD length: \n" +
             "Compute all metaPaths up to a metapath-length given by 'length' that start with a startNode and end with a endNOde and saves them to a File called 'Precomputed_MetaPaths_Instances.txt' \n")
 
-    public Stream<ComputeAllMetaPathsResult> computeAllMetaPaths(
+    public Stream<ComputeAllMetaPathsForInstancesResult> computeAllMetaPaths(
             @Name(value = "startNodes", defaultValue = "{}") String startNodesString,
             @Name(value = "endNodes", defaultValue = "{}") String endNodesString,
             @Name(value = "length", defaultValue = "5") String lengthString) throws IOException {
@@ -55,7 +56,7 @@ public class ComputeAllMetaPathsForInstancesProc {
             startNodes[i] = Long.parseLong(startNodesAsStrings[i]);
         }
 
-        final ComputeAllMetaPathsResult.Builder builder = ComputeAllMetaPathsResult.builder();
+        final ComputeAllMetaPathsForInstancesResult.Builder builder = ComputeAllMetaPathsForInstancesResult.builder();
 
         final HeavyGraph graph;
 
@@ -77,9 +78,7 @@ public class ComputeAllMetaPathsForInstancesProc {
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);
         graph.release();
-        //return algo.resultStream();
-        //System.out.println(Stream.of(builder.build()));
-        return Stream.of(builder.build());
+       return Stream.of(builder.build());
     }
 
     public void convertIds(IdMapping idMapping, Long[] incomingIds, HashSet<Integer> convertedIds) {
