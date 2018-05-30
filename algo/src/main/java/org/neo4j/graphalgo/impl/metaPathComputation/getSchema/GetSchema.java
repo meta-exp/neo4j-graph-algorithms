@@ -4,6 +4,7 @@ import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
 import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathComputation;
+import scala.Int;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -14,7 +15,7 @@ public class GetSchema extends MetaPathComputation {
 
     private HeavyGraph graph;
     private IntIntHashMap labelDictionary;//maybe change to array if it stays integer->integer
-    private IntIntHashMap reversedLabelDictionary;//also change to Array
+    private HashMap<Integer, Integer> reversedLabelDictionary;//also change to Array
     private int amountOfLabels;
     private int numberOfCores;
 
@@ -22,7 +23,7 @@ public class GetSchema extends MetaPathComputation {
         this.graph = graph;
         this.amountOfLabels = graph.getAllLabels().size();
         this.labelDictionary = new IntIntHashMap();
-        this.reversedLabelDictionary = new IntIntHashMap();
+        this.reversedLabelDictionary = new HashMap<>();
         this.numberOfCores = Runtime.getRuntime().availableProcessors();
     }
 
@@ -187,9 +188,9 @@ public class GetSchema extends MetaPathComputation {
 
         ArrayList<HashSet<Pair>> schema;
         IntIntHashMap labelDictionary;
-        IntIntHashMap reverseLabelDictionary;
+        HashMap<Integer, Integer> reverseLabelDictionary;
 
-        public Result(ArrayList<HashSet<Pair>> schema, IntIntHashMap labelDictionary, IntIntHashMap reverseLabelDictionary) {
+        public Result(ArrayList<HashSet<Pair>> schema, IntIntHashMap labelDictionary, HashMap<Integer, Integer> reverseLabelDictionary) {
             this.schema = schema;
             this.labelDictionary = labelDictionary;
             this.reverseLabelDictionary = reverseLabelDictionary;
@@ -208,7 +209,7 @@ public class GetSchema extends MetaPathComputation {
             return labelDictionary;
         }
 
-        public IntIntHashMap getReverseLabelDictionary() {
+        public HashMap<Integer, Integer> getReverseLabelDictionary() {
             return reverseLabelDictionary;
         }
     }

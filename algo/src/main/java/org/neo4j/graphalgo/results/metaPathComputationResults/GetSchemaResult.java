@@ -1,7 +1,5 @@
 package org.neo4j.graphalgo.results.metaPathComputationResults;
 
-import com.carrotsearch.hppc.IntIntHashMap;
-import com.carrotsearch.hppc.cursors.IntCursor;
 import com.google.gson.Gson;
 import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
 import org.neo4j.graphalgo.results.AbstractResultBuilder;
@@ -14,16 +12,10 @@ public class GetSchemaResult {
     public final String schema;
     public final String reverseLabelDictionary;
 
-    private GetSchemaResult(ArrayList<HashSet<Pair>> schema, IntIntHashMap reverseLabelDictionary) {
-
-        HashMap<Integer, Integer> convertedReversedLabelDictionary = new HashMap<>();
-        for (IntCursor key : reverseLabelDictionary.keys()) {
-            convertedReversedLabelDictionary.put(key.value, reverseLabelDictionary.get(key.value));
-        }
-
+    private GetSchemaResult(ArrayList<HashSet<Pair>> schema, HashMap<Integer, Integer> reverseLabelDictionary) {
         Gson gson = new Gson();
         this.schema = gson.toJson(schema);
-        this.reverseLabelDictionary = gson.toJson(convertedReversedLabelDictionary);
+        this.reverseLabelDictionary = gson.toJson(reverseLabelDictionary);
     }
 
     public static GetSchemaResult.Builder builder() {
@@ -33,13 +25,13 @@ public class GetSchemaResult {
     public static class Builder extends AbstractResultBuilder<GetSchemaResult> {
 
         private ArrayList<HashSet<Pair>> schema;
-        private IntIntHashMap reverseLabelDictionary;
+        private HashMap<Integer, Integer> reverseLabelDictionary;
 
         public void setSchema(ArrayList<HashSet<Pair>> schema) {
             this.schema = schema;
         }
 
-        public void setReverseLabelDictionary(IntIntHashMap reverseLabelDictionary) {
+        public void setReverseLabelDictionary(HashMap<Integer, Integer> reverseLabelDictionary) {
             this.reverseLabelDictionary = reverseLabelDictionary;
         }
 

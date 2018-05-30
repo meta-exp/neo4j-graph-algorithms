@@ -18,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.stream.Stream;
 
@@ -40,7 +41,7 @@ public class GetSchemaProc {
         final GetSchemaResult.Builder builder = GetSchemaResult.builder();
 
         ArrayList<HashSet<Pair>> schema = null;
-        IntIntHashMap reversedLabelDictionary = null;
+        HashMap<Integer, Integer> reversedLabelDictionary = null;
         boolean notYetComputed = false;
         try {
             FileInputStream fileIn = new FileInputStream("metagraph.ser");
@@ -51,7 +52,7 @@ public class GetSchemaProc {
 
             fileIn = new FileInputStream("reversedLabelDictionary.ser");
             in = new ObjectInputStream(fileIn);
-            reversedLabelDictionary = (IntIntHashMap) in.readObject();
+            reversedLabelDictionary = (HashMap<Integer, Integer>) in.readObject();
         } catch (IOException i) {
             notYetComputed = true;
         } catch (ClassNotFoundException c) {
