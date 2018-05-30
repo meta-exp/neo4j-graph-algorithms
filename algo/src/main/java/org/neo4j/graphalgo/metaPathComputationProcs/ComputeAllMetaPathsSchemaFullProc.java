@@ -1,6 +1,5 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import com.carrotsearch.hppc.IntIntHashMap;
 import com.google.gson.Gson;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsSchemaFull;
 import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
@@ -47,8 +46,8 @@ public class ComputeAllMetaPathsSchemaFullProc {
         }
         Map<String, Object> row = queryResult.next();
         Gson gson = new Gson();
-        ArrayList<HashSet<Pair>> schema =  gson.fromJson((String) row.get("schema"), ArrayList.class);
-        HashMap<Integer, Integer> reversedLabelDictionary = gson.fromJson((String) row.get("reverseLabelDictionary"), HashMap.class);
+        ArrayList<HashSet<Pair>> schema =  (ArrayList<HashSet<Pair>>) gson.fromJson((String) row.get("schema"), ArrayList.class);
+        HashMap<Integer, Integer> reversedLabelDictionary = (HashMap<Integer, Integer>) gson.fromJson((String) row.get("reverseLabelDictionary"), HashMap.class);
 
         final ComputeAllMetaPathsSchemaFull algo = new ComputeAllMetaPathsSchemaFull(length, schema, reversedLabelDictionary);
 

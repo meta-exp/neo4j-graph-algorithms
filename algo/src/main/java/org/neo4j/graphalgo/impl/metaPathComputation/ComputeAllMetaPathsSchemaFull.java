@@ -58,7 +58,7 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
     public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) {
         ArrayList<Integer> initialMetaPath = new ArrayList<>();
         initialMetaPath.add(reversedLabelDictionary.get(nodeID)); //because nodeID is already a type of nodes in the real graph//convert to heavyGraph nodeType
-        System.out.println(nodeID);
+
         addAndLogMetaPath(initialMetaPath);
         computeMetaPathFromNodeLabel(initialMetaPath, nodeID, metaPathLength - 1);
     }
