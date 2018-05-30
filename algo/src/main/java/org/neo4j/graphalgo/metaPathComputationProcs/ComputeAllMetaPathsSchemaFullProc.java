@@ -1,6 +1,7 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsSchemaFull;
 import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsSchemaFullResult;
@@ -46,8 +47,8 @@ public class ComputeAllMetaPathsSchemaFullProc {
         }
         Map<String, Object> row = queryResult.next();
         Gson gson = new Gson();
-        ArrayList<HashSet<Pair>> schema =  (ArrayList<HashSet<Pair>>) gson.fromJson((String) row.get("schema"), ArrayList.class);
-        HashMap<Integer, Integer> reversedLabelDictionary = (HashMap<Integer, Integer>) gson.fromJson((String) row.get("reverseLabelDictionary"), HashMap.class);
+        ArrayList<HashSet<Pair>> schema = gson.fromJson((String) row.get("schema"), new TypeToken<ArrayList<HashSet<Pair>>>(){}.getType());
+        HashMap<Integer, Integer> reversedLabelDictionary = gson.fromJson((String) row.get("reverseLabelDictionary"),  new TypeToken<HashMap<Integer, Integer>>(){}.getType());
 
         final ComputeAllMetaPathsSchemaFull algo = new ComputeAllMetaPathsSchemaFull(length, schema, reversedLabelDictionary);
 
