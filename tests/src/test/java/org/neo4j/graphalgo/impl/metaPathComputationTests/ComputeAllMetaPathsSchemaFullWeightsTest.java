@@ -92,8 +92,9 @@ public class ComputeAllMetaPathsSchemaFullWeightsTest {
         algo.setIDTypeMappingEdges(idTypeMappingEdges);
     }
 
+    //Is different to testComputeMetaPathWeights because getTwoMPWeights is an actual method and the tested methods in testComputeMetaPathWeights build on the results of it to compute the weights for longer m-p
     @Test
-    public void testGetTwoMPWeights() throws InterruptedException {
+    public void testGetTwoLongMPWeights() throws InterruptedException {
         HashSet<Integer> nodeLabelIDs = new HashSet<>(Arrays.asList(-1, -2, -3));
         algo.setNodeLabelIDs(nodeLabelIDs);
         HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>();
@@ -102,16 +103,16 @@ public class ComputeAllMetaPathsSchemaFullWeightsTest {
         adjacentNodesDict.put(-3, new HashSet<>(Arrays.asList(new AbstractMap.SimpleEntry<>(-1, -10), new AbstractMap.SimpleEntry<>(-2, -10), new AbstractMap.SimpleEntry<>(-3, -10))));
         algo.setAdjacentNodesDict(adjacentNodesDict);
         algo.getTwoMPWeights();
-        HashMap<String, Double> actualTwoMPWeightDict = new HashMap<>();
-        actualTwoMPWeightDict.put("-1|-10|-1", (double) 2 / 26);
-        actualTwoMPWeightDict.put("-1|-10|-2", (double) 2 / 26);
-        actualTwoMPWeightDict.put("-1|-10|-3", (double) 5 / 26);
-        actualTwoMPWeightDict.put("-2|-10|-1", (double) 2 / 26);
-        actualTwoMPWeightDict.put("-2|-10|-3", (double) 4 / 26);
-        actualTwoMPWeightDict.put("-3|-10|-1", (double) 5 / 26);
-        actualTwoMPWeightDict.put("-3|-10|-2", (double) 4 / 26);
-        actualTwoMPWeightDict.put("-3|-10|-3", (double) 2 / 26);
-        assertEquals(actualTwoMPWeightDict, algo.getTwoMPWeightDict());
+        HashMap<String, Double> actualTwoLongMPWeightDict = new HashMap<>();
+        actualTwoLongMPWeightDict.put("-1|-10|-1", (double) 2 / 26);
+        actualTwoLongMPWeightDict.put("-1|-10|-2", (double) 2 / 26);
+        actualTwoLongMPWeightDict.put("-1|-10|-3", (double) 5 / 26);
+        actualTwoLongMPWeightDict.put("-2|-10|-1", (double) 2 / 26);
+        actualTwoLongMPWeightDict.put("-2|-10|-3", (double) 4 / 26);
+        actualTwoLongMPWeightDict.put("-3|-10|-1", (double) 5 / 26);
+        actualTwoLongMPWeightDict.put("-3|-10|-2", (double) 4 / 26);
+        actualTwoLongMPWeightDict.put("-3|-10|-3", (double) 2 / 26);
+        assertEquals(actualTwoLongMPWeightDict, algo.getTwoMPWeightDict());
     }
 
     @Test

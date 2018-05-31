@@ -1,20 +1,13 @@
 
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-        import org.bouncycastle.crypto.OutputLengthException;
         import org.neo4j.graphdb.*;
-
         import org.neo4j.kernel.internal.GraphDatabaseAPI;
-
         import java.io.FileOutputStream;
         import java.io.PrintStream;
         import java.util.*;
         import java.util.concurrent.Semaphore;
         import java.util.stream.Collectors;
-        import java.util.stream.IntStream;
-        import java.util.stream.Stream;
-
-        import static java.lang.Math.max;
         import static java.lang.Math.toIntExact;
 
 public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
@@ -49,6 +42,11 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         getMetaGraph();
         estimatedCount = Math.pow(nodes.size(), metaPathLength + 1);
         initializeDictionaries();
+        computeAllMetaPaths();
+        return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges);
+    }
+
+    public HashSet<String> computeAllMetaPaths(){
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         int i = 0;
 
@@ -66,8 +64,7 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges);
+        return duplicateFreeMetaPaths;
     }
 
     private void getMetaGraph() throws Exception {
@@ -205,6 +202,10 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
 
     public void setAdjacentNodesDict(HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict) {
         this.adjacentNodesDict = adjacentNodesDict;
+    }
+
+    public void setNodes(List<Node> nodes) {
+        this.nodes = nodes;
     }
 
     //TODO -------------------------------------------------------------------
