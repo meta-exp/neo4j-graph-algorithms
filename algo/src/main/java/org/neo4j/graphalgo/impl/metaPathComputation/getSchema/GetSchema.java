@@ -18,20 +18,30 @@ public class GetSchema extends MetaPathComputation {
     private HashMap<Integer, Integer> reversedLabelDictionary;//also change to Array
     private int amountOfLabels;
     private int numberOfCores;
+    private PrintStream debugOut;
+    private long startTime;
+    private long endTime;
 
-    public GetSchema(HeavyGraph graph) {
+    public GetSchema(HeavyGraph graph) throws FileNotFoundException {
         this.graph = graph;
         this.amountOfLabels = graph.getAllLabels().size();
         this.labelDictionary = new IntIntHashMap();
         this.reversedLabelDictionary = new HashMap<>();
         this.numberOfCores = Runtime.getRuntime().availableProcessors();
+
+        this.debugOut = new PrintStream(new FileOutputStream("Get_Schema_Debug.txt"));
     }
 
     public Result compute() {
+        debugOut.println("START GET_SCHEMA");
+
+        startTime = System.nanoTime();
         ArrayList<HashSet<Pair>> schema = computeSchema();
+        endTime = System.nanoTime();
+
+        debugOut.println("FINISH GET_SCHEMA after " + (endTime - startTime) / 1000000 + " milliseconds");
         return new Result(schema, labelDictionary, reversedLabelDictionary);
     }
-
 
     private ArrayList<HashSet<Pair>> computeSchema() {
         initializeLabelDict();
