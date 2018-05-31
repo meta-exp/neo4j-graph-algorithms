@@ -12,6 +12,7 @@ import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -65,7 +66,7 @@ public class GetSchemaTest {
     }
 
     @Before
-    public void setupGraph() {
+    public void setupGraph() throws FileNotFoundException {
         graph = (HeavyGraph) new GraphLoader(api)
                 .asUndirected(true)
                 .withLabelAsProperty(true)

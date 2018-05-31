@@ -15,6 +15,7 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Procedure;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ public class GetSchemaProc {
     @Description("CALL algo.GetSchema() YIELD schema: \n" +
             "return schema as adjacency list \n")
 
-    public Stream<GetSchemaResult> GetSchema() {
+    public Stream<GetSchemaResult> GetSchema() throws FileNotFoundException {
 
         final GetSchemaResult.Builder builder = GetSchemaResult.builder();
 
