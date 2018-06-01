@@ -3,7 +3,7 @@ package org.neo4j.graphalgo.metaPathComputationProcs;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsSchemaFull;
-import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
+import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsSchemaFullResult;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;
@@ -13,7 +13,8 @@ import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
-
+import org.neo4j.graphdb.Result;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,15 +41,18 @@ public class ComputeAllMetaPathsSchemaFullProc {
 
         final ComputeAllMetaPathsSchemaFullResult.Builder builder = ComputeAllMetaPathsSchemaFullResult.builder();
 
-        org.neo4j.graphdb.Result queryResult;
+        Result queryResult;
         try (Transaction tx = api.beginTx()) {
             queryResult = api.execute("CALL algo.GetSchema();");
             tx.success();
         }
         Map<String, Object> row = queryResult.next();
         Gson gson = new Gson();
-        ArrayList<HashSet<Pair>> schema = gson.fromJson((String) row.get("schema"), new TypeToken<ArrayList<HashSet<Pair>>>(){}.getType());
-        HashMap<Integer, Integer> reversedLabelDictionary = gson.fromJson((String) row.get("reverseLabelDictionary"),  new TypeToken<HashMap<Integer, Integer>>(){}.getType());
+
+        Type schemaType = new TypeToken<ArrayList<HashSet<Pair>>>() {}.getType();
+        Type reverseLabelDictionaryType = new TypeToken<HashMap<Integer, Integer>>(){}.getType();
+        ArrayList<HashSet<Pair>> schema = gson.fromJson((String) row.get("schema"), schemaType);
+        HashMap<Integer, Integer> reversedLabelDictionary = gson.fromJson((String) row.get("reverseLabelDictionary"),  reverseLabelDictionaryType);
 
         final ComputeAllMetaPathsSchemaFull algo = new ComputeAllMetaPathsSchemaFull(length, schema, reversedLabelDictionary);
 

@@ -1,11 +1,10 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.GetSchema;
-import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
+import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
 import org.neo4j.graphalgo.results.metaPathComputationResults.GetSchemaResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -54,6 +53,8 @@ public class GetSchemaProc {
             fileIn = new FileInputStream("reversedLabelDictionary.ser");
             in = new ObjectInputStream(fileIn);
             reversedLabelDictionary = (HashMap<Integer, Integer>) in.readObject();
+            in.close();
+            fileIn.close();
         } catch (IOException i) {
             notYetComputed = true;
         } catch (ClassNotFoundException c) {

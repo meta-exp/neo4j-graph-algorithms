@@ -1,6 +1,6 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
+import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.*;
@@ -24,8 +24,8 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         this.schema = schema;
         this.reversedLabelDictionary = reversedLabelDictionary;
 
-        this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full_Debug.txt"));
-        this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full.txt"));//ends up in root/tests //or in dockerhome
+        this.debugOut = new PrintStream(new BufferedOutputStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full_Debug.txt")));
+        this.out = new PrintStream(new BufferedOutputStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full.txt")));//ends up in root/tests //or in dockerhome
     }
 
     public Result compute() {

@@ -5,7 +5,7 @@ import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.io.FileOutputStream;
@@ -13,8 +13,6 @@ import java.io.PrintStream;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static java.lang.Float.max;
 

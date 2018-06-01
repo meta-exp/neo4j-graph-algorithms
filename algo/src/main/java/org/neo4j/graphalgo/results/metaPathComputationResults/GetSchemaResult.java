@@ -1,7 +1,7 @@
 package org.neo4j.graphalgo.results.metaPathComputationResults;
 
 import com.google.gson.Gson;
-import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
+import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
 import org.neo4j.graphalgo.results.AbstractResultBuilder;
 import java.util.ArrayList;
 import java.util.HashMap;

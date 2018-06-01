@@ -10,7 +10,7 @@ import org.neo4j.graphalgo.metaPathComputationProcs.GettingStartedProc;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.Pair;
+import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class GetSchemaTest {
     @BeforeClass
     public static void setup() throws Exception {
         final String cypher =
-                        "CREATE (a:A {name:\"a\"})\n" +
+                "CREATE (a:A {name:\"a\"})\n" +
                         "CREATE (b:B {name:\"b\"})\n" +
                         "CREATE (c:A {name:\"c\"})\n" +
                         "CREATE (i:A {name:\"i\"})\n" +
@@ -80,35 +80,35 @@ public class GetSchemaTest {
         GetSchema.Result result = algo.compute();
         ArrayList<HashSet<Pair>> expectedSchema = new ArrayList<>();
 
-        for(int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++) {
             expectedSchema.add(new HashSet<>());
         }
 
-        Pair pair = new Pair(0,0);
+        Pair pair = new Pair(0, 0);
         expectedSchema.get(0).add(pair);
-        pair = new Pair(1,0);
+        pair = new Pair(1, 0);
         expectedSchema.get(0).add(pair);
-        pair = new Pair(2,0);
+        pair = new Pair(2, 0);
         expectedSchema.get(0).add(pair);
-        pair = new Pair(2,1);
+        pair = new Pair(2, 1);
         expectedSchema.get(0).add(pair);
 
-        pair = new Pair(0,0);
+        pair = new Pair(0, 0);
         expectedSchema.get(1).add(pair);
-        pair = new Pair(2,0);
+        pair = new Pair(2, 0);
         expectedSchema.get(1).add(pair);
-        pair = new Pair(2,1);
+        pair = new Pair(2, 1);
         expectedSchema.get(1).add(pair);
 
-        pair = new Pair(0,0);
+        pair = new Pair(0, 0);
         expectedSchema.get(2).add(pair);
-        pair = new Pair(0,1);
+        pair = new Pair(0, 1);
         expectedSchema.get(2).add(pair);
-        pair = new Pair(1,0);
+        pair = new Pair(1, 0);
         expectedSchema.get(2).add(pair);
-        pair = new Pair(1,1);
+        pair = new Pair(1, 1);
         expectedSchema.get(2).add(pair);
-        pair = new Pair(2,1);
+        pair = new Pair(2, 1);
         expectedSchema.get(2).add(pair);
 
         ArrayList<HashSet<Pair>> schema = result.getSchema();
@@ -120,7 +120,7 @@ public class GetSchemaTest {
             for (Pair expectedPair : row2) {
                 boolean pairFound = false;
                 for (Pair actualPair : row1) {
-                    if(expectedPair.equals(actualPair)) {
+                    if (expectedPair.equals(actualPair)) {
                         pairFound = true;
                     }
                 }

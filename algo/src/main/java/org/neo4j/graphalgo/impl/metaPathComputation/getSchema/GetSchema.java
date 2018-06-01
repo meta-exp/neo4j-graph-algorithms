@@ -2,13 +2,10 @@ package org.neo4j.graphalgo.impl.metaPathComputation.getSchema;
 
 import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
 import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathComputation;
-import scala.Int;
+import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
 
 import java.util.*;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import java.io.*;
 
 public class GetSchema extends MetaPathComputation {
