@@ -2,6 +2,7 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -18,41 +19,60 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
     private PrintStream out;
     private long startTime;
     private long endTime;
+    private BufferedOutputStream buffer;
 
     public ComputeAllMetaPathsSchemaFull(int metaPathLength, ArrayList<HashSet<Pair>> schema, HashMap<Integer, Integer> reversedLabelDictionary) throws Exception {
         this.metaPathLength = metaPathLength;
         this.schema = schema;
         this.reversedLabelDictionary = reversedLabelDictionary;
 
-        this.debugOut = new PrintStream(new BufferedOutputStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full_Debug.txt")));
-        this.out = new PrintStream(new BufferedOutputStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full.txt")));//ends up in root/tests //or in dockerhome
+        this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full_Debug.txt"));
+        this.buffer = new BufferedOutputStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full.txt"), 100*1024);
+        this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full.txt"));//ends up in root/tests //or in dockerhome
     }
 
-    public Result compute() {
+    public Result compute() throws IOException {
         debugOut.println("START SCHEMA_FULL");
 
         startTime = System.nanoTime();
-        startThreads();
+        List<Runnable> threads = startThreads();
+        mergeThreads(threads);
         endTime = System.nanoTime();
         debugOut.println("FINISH SCHEMA_FULL after " + (endTime - startTime) / 1000000 + " milliseconds");
+
+        for(String mp : duplicateFreeMetaPaths)
+        {
+            out.println(mp);
+        }
 
         return new Result(duplicateFreeMetaPaths);
     }
 
-    private void startThreads() {
+    private void mergeThreads(List<Runnable> threads) {
+        for(Runnable thread : threads)
+        {
+            duplicateFreeMetaPaths.addAll(((ComputeMetaPathFromNodeIdThread) thread).getDuplicateFreeMetaPaths());
+        }
+    }
+
+    private List<Runnable> startThreads() {
         int processorCount = Runtime.getRuntime().availableProcessors();
+        List<Runnable> threads = new ArrayList<>();
         debugOut.println("ProcessorCount: " + processorCount);
         debugOut.println("schema-size: " + schema.size());
         debugOut.println("reverseLabelDictionary-size: " + reversedLabelDictionary.size());
         ExecutorService executor = Executors.newFixedThreadPool(processorCount);
 
         for (int i = 0; i < schema.size(); i++) {
-            Runnable worker = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, i, metaPathLength);
+            Runnable worker = new ComputeMetaPathFromNodeIdThread(this, "thread-" + i, i, metaPathLength);
+            threads.add(worker);
             executor.execute(worker);
         }
         executor.shutdown();
         while (!executor.isTerminated()) {
         }
+
+        return threads;
     }
 
     public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) {
@@ -66,8 +86,8 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
     private void computeMetaPathFromNodeLabel(ArrayList<Integer> currentMetaPath, int currentInstance, int metaPathLength) {
         if (metaPathLength <= 0) return;
 
-        HashSet<Pair> neighbourNodes_edges = schema.get(currentInstance);
-        for (Pair neighbourNode_edge : neighbourNodes_edges) {
+        HashSet<Pair> neighbourNodesAndEdges = schema.get(currentInstance);
+        for (Pair neighbourNode_edge : neighbourNodesAndEdges) {
             ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
             int nodeID = neighbourNode_edge.first();
             int edgeID = neighbourNode_edge.second();
@@ -82,7 +102,7 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
     private void addAndLogMetaPath(ArrayList<Integer> newMetaPath) {
         String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
         duplicateFreeMetaPaths.add(joinedMetaPath);
-        out.println(joinedMetaPath);
+        //out.println(joinedMetaPath);
     }
 
     private ArrayList<Integer> copyMetaPath(ArrayList<Integer> currentMetaPath) {
@@ -92,6 +112,35 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         }
 
         return newMetaPath;
+    }
+
+    private class ComputeMetaPathFromNodeIdThread extends Thread {
+        private MetaPathComputation parent;
+        private String threadName;
+        private int nodeId;
+        private int metaPathLength;
+        private HashSet<String> duplicateFreeMetaPaths;
+
+        ComputeMetaPathFromNodeIdThread(MetaPathComputation parent, String threadName, int nodeId, int metaPathLength) {
+            this.parent = parent;
+            this.threadName = threadName;
+            this.nodeId = nodeId;
+            this.metaPathLength = metaPathLength;
+            this.duplicateFreeMetaPaths = new HashSet<>();
+        }
+
+        public void run() {
+            parent.computeMetaPathFromNodeLabel(nodeId, metaPathLength);
+        }
+
+        public String getThreadName() {
+            return threadName;
+        }
+
+        public HashSet<String> getDuplicateFreeMetaPaths()
+        {
+            return duplicateFreeMetaPaths;
+        }
     }
 
     //TODO -------------------------------------------------------------------

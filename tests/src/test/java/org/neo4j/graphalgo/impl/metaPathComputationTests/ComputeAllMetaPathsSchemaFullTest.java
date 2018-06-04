@@ -122,7 +122,7 @@ public class ComputeAllMetaPathsSchemaFullTest {
             System.out.println(mp);
         }
 
-        ArrayList<String> expectedMetaPaths = new ArrayList<>(Arrays.asList(
+        HashSet<String> expectedMetaPaths = new HashSet<>(Arrays.asList(
                 "0|0|0|0|0" ,
                 "0|0|0|0|1" ,
                 "0|0|0|0|2" ,
@@ -161,6 +161,7 @@ public class ComputeAllMetaPathsSchemaFullTest {
         {
             assert(expectedMetaPaths.contains(mp));
         }
+        //assertEquals(expectedMetaPaths, actualMetaPaths);
 
         assertEquals(expectedMetaPaths.size(), actualMetaPaths.size());
     }
