@@ -127,5 +127,16 @@ public class GetSchemaTest {
                 assertEquals(true, pairFound);
             }
         }
+
+        /*for(HashSet<Pair> neighbours : schema)
+        {
+            String outputstring = "";
+            for(Pair neighbourPair : neighbours)
+            {
+                outputstring += "(" + neighbourPair.first() + " " + neighbourPair.second() + ") ";
+            }
+            outputstring += "\n";
+            System.out.println(outputstring);
+        }*/
     }
 }

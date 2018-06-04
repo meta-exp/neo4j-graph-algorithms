@@ -3,6 +3,7 @@ package org.neo4j.graphalgo.impl.metaPathComputationTests;
 import org.junit.*;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsSchemaFull;
+import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
@@ -27,7 +28,6 @@ public class ComputeAllMetaPathsSchemaFullTest {
 
     private static GraphDatabaseAPI api;
     private ComputeAllMetaPathsSchemaFull algo;
-    private final HashSet<String> metaPaths = new HashSet<>(Arrays.asList("-1|-10|-1|-10|-2", "-1|-10|-1|-10|-3", "-2|-10|-1", "-3|-10|-1", "-3|-10|-1|-10|-2|-10|-3|-10|-3|-10|-1|-10|-1"));
 
     @BeforeClass
     public static void setup() throws KernelException, Exception {
@@ -77,42 +77,85 @@ public class ComputeAllMetaPathsSchemaFullTest {
 
     }
 
-    @Ignore//TODO could be a problem if we consider the direction of edges//comment still relevant?
+    //TODO could be a problem if we consider the direction of edges//concerns testPairHashSet.
+
+
     @Test
-    public void testPairHashSet() {
-        org.neo4j.graphdb.Result queryResult;
-        final String cypher2 = "CALL algo.computeAllMetaPathsSchemaFull('3');";
-        try (Transaction tx = api.beginTx()) {
-            queryResult = api.execute(cypher2);
-            tx.success();
+    public void testSchemaFull() throws Exception {
+
+        ArrayList<HashSet<Pair>> expectedSchema = new ArrayList<>();
+
+        for (int i = 0; i < 3; i++) {
+            expectedSchema.add(new HashSet<>());
         }
 
-        Map<String, Object> row = queryResult.next();
-        List<String> actualMetaPaths =  (List<String>) row.get("metaPaths");
+        Pair pair = new Pair(0, 0);
+        expectedSchema.get(0).add(pair);
+        pair = new Pair(1, 0);
+        expectedSchema.get(0).add(pair);
+        pair = new Pair(2, 0);
+        expectedSchema.get(0).add(pair);
+
+        pair = new Pair(0, 0);
+        expectedSchema.get(1).add(pair);
+        pair = new Pair(2, 0);
+        expectedSchema.get(1).add(pair);
+
+        pair = new Pair(0, 0);
+        expectedSchema.get(2).add(pair);
+        pair = new Pair(1, 0);
+        expectedSchema.get(2).add(pair);
+        pair = new Pair(2, 0);
+        expectedSchema.get(2).add(pair);
+
+        HashMap<Integer, Integer> reversedLabelDictionary = new HashMap<>();
+        reversedLabelDictionary.put(0, 0);
+        reversedLabelDictionary.put(1, 1);
+        reversedLabelDictionary.put(2, 2);
+
+        algo = new ComputeAllMetaPathsSchemaFull(3, expectedSchema, reversedLabelDictionary);
+        ComputeAllMetaPathsSchemaFull.Result result = algo.compute();
+        HashSet<String> actualMetaPaths = result.getFinalMetaPaths();
+
+        for(String mp : actualMetaPaths)
+        {
+            System.out.println(mp);
+        }
 
         ArrayList<String> expectedMetaPaths = new ArrayList<>(Arrays.asList(
-                "0 | 0 | 0 | 0 | 0" ,
-                "0 | 0 | 0 | 0 | 1" ,
-                "0 | 0 | 0 | 0 | 2" ,
-                "0 | 0 | 1 | 0 | 0" ,
-                "0 | 0 | 1 | 0 | 2" ,
-                "0 | 0 | 2 | 0 | 0" ,
-                "0 | 0 | 2 | 0 | 1" ,
-                "0 | 0 | 2 | 0 | 2" ,
-                "1 | 0 | 0 | 0 | 0" ,
-                "1 | 0 | 0 | 0 | 1" ,
-                "1 | 0 | 0 | 0 | 2" ,
-                "1 | 0 | 2 | 0 | 0" ,
-                "1 | 0 | 2 | 0 | 1" ,
-                "1 | 0 | 2 | 0 | 2" ,
-                "2 | 0 | 0 | 0 | 0" ,
-                "2 | 0 | 0 | 0 | 1" ,
-                "2 | 0 | 0 | 0 | 2" ,
-                "2 | 0 | 1 | 0 | 0" ,
-                "2 | 0 | 1 | 0 | 2" ,
-                "2 | 0 | 2 | 0 | 0" ,
-                "2 | 0 | 2 | 0 | 1" ,
-                "2 | 0 | 2 | 0 | 2"));
+                "0|0|0|0|0" ,
+                "0|0|0|0|1" ,
+                "0|0|0|0|2" ,
+                "0|0|0" ,
+                "0|0|1" ,
+                "0|0|2" ,
+                "1|0|0" ,
+                "1|0|2" ,
+                "2|0|0" ,
+                "2|0|1" ,
+                "2|0|2" ,
+                "0" ,
+                "1" ,
+                "2" ,
+                "0|0|1|0|0" ,
+                "0|0|1|0|2" ,
+                "0|0|2|0|0" ,
+                "0|0|2|0|1" ,
+                "0|0|2|0|2" ,
+                "1|0|0|0|0" ,
+                "1|0|0|0|1" ,
+                "1|0|0|0|2" ,
+                "1|0|2|0|0" ,
+                "1|0|2|0|1" ,
+                "1|0|2|0|2" ,
+                "2|0|0|0|0" ,
+                "2|0|0|0|1" ,
+                "2|0|0|0|2" ,
+                "2|0|1|0|0" ,
+                "2|0|1|0|2" ,
+                "2|0|2|0|0" ,
+                "2|0|2|0|1" ,
+                "2|0|2|0|2"));
 
         for(String mp : actualMetaPaths)
         {
