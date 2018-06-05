@@ -3,6 +3,7 @@ package org.neo4j.graphalgo.impl.walking;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.logging.Log;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -35,6 +36,7 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
     public Stream<WalkResult> findMetaPathInstances(String metaPath, AbstractWalkOutput output) {
         int[] emptyArray = {};
         int[] types = parseMetaPath(metaPath);
+
         for (int nodeId = 0; nodeId < graph.nodeCount(); nodeId++) {
             doExtraction(nodeId, emptyArray, types, output);
         }
@@ -64,8 +66,9 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
     public void doExtraction(int nodeId, int[] previousResults, int[] types, AbstractWalkOutput output){
         int typeIndex = previousResults.length * 2; // types array contains types for edges and nodes, prev-array contains only nodes
         int currentNodeType = types[typeIndex];
-        // End this walk if it doesn't match the required types anymore
-        if(graph.getLabel(nodeId) != currentNodeType){
+        // End this walk if it doesn't match the required types anymore, a label of -1 means no label is attached to this node
+        int label = graph.getLabel(nodeId);
+        if(label == -1 || graph.getLabel(nodeId) != currentNodeType){
             return;
         }
 

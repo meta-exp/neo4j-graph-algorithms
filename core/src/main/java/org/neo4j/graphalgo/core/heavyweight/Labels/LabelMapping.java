@@ -1,9 +1,6 @@
 package org.neo4j.graphalgo.core.heavyweight.Labels;
 
-import java.util.AbstractMap;
-import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.*;
 
 public class LabelMapping implements GraphLabeler {
     private HashMap<Integer, ArrayDeque<Integer>> nodeLabelsMap = new HashMap<>();
@@ -15,7 +12,12 @@ public class LabelMapping implements GraphLabeler {
 
     @Override
     public int getLabel(int nodeId) {
-        return getNodeMapping(nodeId).getFirst();
+        ArrayDeque<Integer> labels = getNodeMapping(nodeId);
+        if(labels.isEmpty()){
+            // Return -1 if this node has no labels
+            return -1;
+        }
+        return labels.getFirst();
     }
 
     @Override

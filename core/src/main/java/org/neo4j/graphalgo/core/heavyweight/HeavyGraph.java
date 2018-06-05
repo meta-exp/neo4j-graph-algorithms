@@ -106,7 +106,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     @Override
     public AbstractMap<Integer, String> getEdgeLabelDict()
     {
-        return labelMapping.getNodeLabelDict();
+        return labelMapping.getEdgeLabelDict();
     }
 
     @Override
