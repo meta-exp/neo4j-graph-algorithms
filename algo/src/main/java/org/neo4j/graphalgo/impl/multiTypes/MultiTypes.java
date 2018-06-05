@@ -4,7 +4,6 @@ import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -20,7 +19,7 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     public MultiTypes(GraphDatabaseService db,
                       String edgeType,
                       String typeLabel,
-                      Log log) throws IOException {
+                      Log log) {
         this.log = log;
         this.typeLabel = typeLabel;
         this.db = db;

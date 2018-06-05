@@ -3,7 +3,7 @@ package org.neo4j.graphalgo.impl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.neo4j.graphalgo.GettingStartedProc;
+import org.neo4j.graphalgo.MultiTypesProc;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.impl.multiTypes.MultiTypes;
 import org.neo4j.graphdb.Label;
@@ -54,7 +54,7 @@ public class MultiTypeTest {
 
         api.getDependencyResolver()
                 .resolveDependency(Procedures.class)
-                .registerProcedure(GettingStartedProc.class);
+                .registerProcedure(MultiTypesProc.class);
 
         try (Transaction tx = api.beginTx()) {
             api.execute(cypher);
