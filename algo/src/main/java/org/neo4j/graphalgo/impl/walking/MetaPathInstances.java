@@ -6,6 +6,7 @@ import org.neo4j.logging.Log;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class MetaPathInstances extends AbstractWalkAlgorithm {
@@ -67,8 +68,8 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
         int typeIndex = previousResults.length * 2; // types array contains types for edges and nodes, prev-array contains only nodes
         int currentNodeType = types[typeIndex];
         // End this walk if it doesn't match the required types anymore, a label of -1 means no label is attached to this node
-        int label = graph.getLabel(nodeId);
-        if(label == -1 || graph.getLabel(nodeId) != currentNodeType){
+        Integer[] labels = graph.getLabels(nodeId);
+        if(!Arrays.stream(labels).anyMatch(x -> x == currentNodeType)){
             return;
         }
 

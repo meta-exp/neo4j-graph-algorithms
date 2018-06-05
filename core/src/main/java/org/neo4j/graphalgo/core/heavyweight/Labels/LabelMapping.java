@@ -24,7 +24,8 @@ public class LabelMapping implements GraphLabeler {
 
     @Override
     public Integer[] getLabels(int nodeId){
-        return (Integer[]) getNodeMapping(nodeId).toArray();
+        ArrayDeque<Integer> deque = getNodeMapping(nodeId);
+        return deque.toArray(new Integer[deque.size()]);
     }
 
     @Override
