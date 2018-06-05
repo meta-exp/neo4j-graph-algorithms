@@ -49,8 +49,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         debugOut.println("length: " + metaPathLength);
         startTime = System.nanoTime();
         ArrayList<String> finalMetaPaths = computeAllMetaPaths();
-        for(String mp : finalMetaPaths)
-        {
+        for (String mp : finalMetaPaths) {
             out.println(mp);
         }
         long endTime = System.nanoTime();
@@ -72,9 +71,8 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
     private void mergeThreads(List<Runnable> threads) {
-        for(Runnable thread : threads)
-        {
-            duplicateFreeMetaPaths.addAll(((ComputeMetaPathFromNodeLabelThread)thread).duplicateFreeMetaPathsOfThread);
+        for (Runnable thread : threads) {
+            duplicateFreeMetaPaths.addAll(((ComputeMetaPathFromNodeLabelThread) thread).duplicateFreeMetaPathsOfThread);
         }
     }
 
@@ -89,8 +87,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         }
 
         graph.forEachNode(node -> initializeNode(node, labelCountDict));
-        for(int label : arrayGraphInterface.getAllLabels())
-        {
+        for (int label : arrayGraphInterface.getAllLabels()) {
             createMetaPathWithLengthOne(label, labelCountDict.get(label));
         }
     }
@@ -140,7 +137,8 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         }
         executor.shutdown();
 
-        while(!executor.isTerminated()){}
+        while (!executor.isTerminated()) {
+        }
 
         return threads;
     }
@@ -255,7 +253,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         }
 
     }
-
 
 
     //TODO------------------------------------------------------------------------------------------------------------------
