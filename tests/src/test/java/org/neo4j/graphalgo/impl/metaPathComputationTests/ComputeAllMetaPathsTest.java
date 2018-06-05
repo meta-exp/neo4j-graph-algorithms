@@ -20,13 +20,14 @@ import java.util.*;
 import static org.junit.Assert.assertEquals;
 
 
-/**         5     5      5
- *      (1)---(2)---(3)----.
- *    5/ 2    2     2     2 \     5
- *  (0)---(7)---(8)---(9)---(10)-//->(0)
- *    3\    3     3     3   /
- *      (4)---(5)---(6)----°
- *
+/**
+ * 5     5      5
+ * (1)---(2)---(3)----.
+ * 5/ 2    2     2     2 \     5
+ * (0)---(7)---(8)---(9)---(10)-//->(0)
+ * 3\    3     3     3   /
+ * (4)---(5)---(6)----°
+ * <p>
  * S->X: {S,G,H,I,X}:8, {S,D,E,F,X}:12, {S,A,B,C,X}:20
  */
 
@@ -39,7 +40,7 @@ public class ComputeAllMetaPathsTest {
     @BeforeClass
     public static void setup() throws KernelException, Exception {
         final String cypher =
-                        "CREATE (a:A {name:\"a\"})\n" +
+                "CREATE (a:A {name:\"a\"})\n" +
                         "CREATE (b:B {name:\"b\"})\n" +
                         "CREATE (c:A {name:\"c\"})\n" +
                         "CREATE (i:A {name:\"i\"})\n" +
@@ -86,7 +87,7 @@ public class ComputeAllMetaPathsTest {
                 .load(HeavyGraphFactory.class);
 
 
-        algo = new ComputeAllMetaPaths(graph, graph,3);
+        algo = new ComputeAllMetaPaths(graph, graph, 3);
     }
 
     @Test
@@ -99,7 +100,7 @@ public class ComputeAllMetaPathsTest {
 
         for (String expectedMetaPath : allExpectedMetaPaths) {
             System.out.println("expected: " + expectedMetaPath);
-            assert(allMetaPaths.contains(expectedMetaPath));
+            assert (allMetaPaths.contains(expectedMetaPath));
 
         }
         for (String mpath : allMetaPaths) {
