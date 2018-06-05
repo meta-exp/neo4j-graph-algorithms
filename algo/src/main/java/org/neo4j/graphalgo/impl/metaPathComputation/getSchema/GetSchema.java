@@ -2,52 +2,43 @@ package org.neo4j.graphalgo.impl.metaPathComputation.getSchema;
 
 import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
 import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathComputation;
+import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
 
 import java.util.*;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import java.io.*;
 
 public class GetSchema extends MetaPathComputation {
 
     private HeavyGraph graph;
     private IntIntHashMap labelDictionary;//maybe change to array if it stays integer->integer
-    private IntIntHashMap reversedLabelDictionary;//also change to Array
+    private HashMap<Integer, Integer> reversedLabelDictionary;//also change to Array
     private int amountOfLabels;
     private int numberOfCores;
+    private PrintStream debugOut;
+    private long startTime;
+    private long endTime;
 
-    public GetSchema(HeavyGraph graph) {
+    public GetSchema(HeavyGraph graph) throws FileNotFoundException {
         this.graph = graph;
         this.amountOfLabels = graph.getAllLabels().size();
         this.labelDictionary = new IntIntHashMap();
-        this.reversedLabelDictionary = new IntIntHashMap();
+        this.reversedLabelDictionary = new HashMap<>();
         this.numberOfCores = Runtime.getRuntime().availableProcessors();
+
+        this.debugOut = new PrintStream(new FileOutputStream("Get_Schema_Debug.txt"));
     }
 
     public Result compute() {
-        ArrayList<HashSet<Pair>> schema = null;
-        boolean notYetComputed = false;
+        debugOut.println("START GET_SCHEMA");
 
-        try {
-            FileInputStream fileIn = new FileInputStream("metagraph.ser");
-            ObjectInputStream in = new ObjectInputStream(fileIn);
-            schema = (ArrayList<HashSet<Pair>>) in.readObject();
-            in.close();
-            fileIn.close();
-        } catch (IOException i) {
-            notYetComputed = true;
-        } catch (ClassNotFoundException c) {
-            c.printStackTrace();
-            notYetComputed = true;
-        }
+        startTime = System.nanoTime();
+        ArrayList<HashSet<Pair>> schema = computeSchema();
+        endTime = System.nanoTime();
 
-        if (notYetComputed) schema = computeSchema();
-
+        debugOut.println("FINISH GET_SCHEMA after " + (endTime - startTime) / 1000000 + " milliseconds");
         return new Result(schema, labelDictionary, reversedLabelDictionary);
     }
-
 
     private ArrayList<HashSet<Pair>> computeSchema() {
         initializeLabelDict();
@@ -61,6 +52,13 @@ public class GetSchema extends MetaPathComputation {
             out.writeObject(schema);
             out.close();
             fileOut.close();
+
+            fileOut = new FileOutputStream("reversedLabelDictionary.ser");
+            out = new ObjectOutputStream(fileOut);
+            out.writeObject(reversedLabelDictionary);
+            out.close();
+            fileOut.close();
+
         } catch (IOException i) {
             i.printStackTrace();
         }
@@ -197,9 +195,9 @@ public class GetSchema extends MetaPathComputation {
 
         ArrayList<HashSet<Pair>> schema;
         IntIntHashMap labelDictionary;
-        IntIntHashMap reverseLabelDictionary;
+        HashMap<Integer, Integer> reverseLabelDictionary;
 
-        public Result(ArrayList<HashSet<Pair>> schema, IntIntHashMap labelDictionary, IntIntHashMap reverseLabelDictionary) {
+        public Result(ArrayList<HashSet<Pair>> schema, IntIntHashMap labelDictionary, HashMap<Integer, Integer> reverseLabelDictionary) {
             this.schema = schema;
             this.labelDictionary = labelDictionary;
             this.reverseLabelDictionary = reverseLabelDictionary;
@@ -218,7 +216,7 @@ public class GetSchema extends MetaPathComputation {
             return labelDictionary;
         }
 
-        public IntIntHashMap getReverseLabelDictionary() {
+        public HashMap<Integer, Integer> getReverseLabelDictionary() {
             return reverseLabelDictionary;
         }
     }
