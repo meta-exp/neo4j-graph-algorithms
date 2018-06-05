@@ -47,7 +47,7 @@ public class ComputeAllMetaPathsProc {
                 .load(HeavyGraphFactory.class);
 
 
-        final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, graph, graph, graph, length);
+        final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, graph, length);
         ArrayList<String> metaPaths;
         metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);
