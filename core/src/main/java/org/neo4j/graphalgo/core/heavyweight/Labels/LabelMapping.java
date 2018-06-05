@@ -1,10 +1,12 @@
 package org.neo4j.graphalgo.core.heavyweight.Labels;
 
+import org.neo4j.graphalgo.core.utils.RawValues;
+
 import java.util.*;
 
 public class LabelMapping implements GraphLabeler {
     private HashMap<Integer, ArrayDeque<Integer>> nodeLabelsMap = new HashMap<>();
-    private HashMap<long[], Integer> edgeLabelMap = new HashMap<>();
+    private HashMap<Long, Integer> edgeLabelMap = new HashMap<>();
     private HashMap<Integer, String> nodeLabelToString = new HashMap<>(), edgeLabelToString = new HashMap<>();
 
     public LabelMapping(){
@@ -49,15 +51,14 @@ public class LabelMapping implements GraphLabeler {
     }
 
     @Override
-    public int getEdgeLabel(long nodeId1, long nodeId2) {
-        long[] edgeTuple = {nodeId1, nodeId2};
-        long[] reversedTuple = {nodeId2, nodeId1};
-        return edgeLabelMap.getOrDefault(edgeTuple, edgeLabelMap.getOrDefault(reversedTuple, -1));
+    public int getEdgeLabel(int nodeId1, int nodeId2) {
+        long combined = RawValues.combineSorted(nodeId1, nodeId2);
+        return edgeLabelMap.getOrDefault(combined, -1);
     }
 
-    public void putEdgeMapping(long nodeId1, long nodeId2, int typeId){
-        long[] edgeTuple = {nodeId1, nodeId2};
-        edgeLabelMap.put(edgeTuple, typeId);
+    public void putEdgeMapping(int nodeId1, int nodeId2, int typeId){
+        long combined = RawValues.combineSorted(nodeId1, nodeId2);
+        edgeLabelMap.put(combined, typeId);
     }
 
     public void putEdgeStringMapping(int typeId, String name){

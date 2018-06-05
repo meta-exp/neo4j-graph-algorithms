@@ -36,7 +36,9 @@ public class LabelImporter extends StatementTask<LabelMapping, EntityNotFoundExc
             long relationshipId = relationships.next();
             readOp.relationshipVisit(relationshipId, (relationship, typeId, startNodeId, endNodeId) ->
                     {
-                        labelMapping.putEdgeMapping(startNodeId, endNodeId, typeId);
+                        int mapped_start = mapping.toMappedNodeId(startNodeId);
+                        int mapped_end = mapping.toMappedNodeId(endNodeId);
+                        labelMapping.putEdgeMapping(mapped_start, mapped_end, typeId);
                         String name = api.getRelationshipById(relationshipId).getType().name();
                         labelMapping.putEdgeStringMapping(typeId, name);
                     });

@@ -16,5 +16,5 @@ public interface GraphLabeler {
 
     public AbstractMap<Integer, String> getEdgeLabelDict();
 
-    public int getEdgeLabel(long nodeId1, long nodeId2);
+    public int getEdgeLabel(int nodeId1, int nodeId2);
 }

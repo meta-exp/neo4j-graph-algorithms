@@ -110,7 +110,7 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     }
 
     @Override
-    public int getEdgeLabel(long nodeId1, long nodeId2) {
+    public int getEdgeLabel(int nodeId1, int nodeId2) {
         return labelMapping.getEdgeLabel(nodeId1, nodeId2);
     }
 

@@ -44,7 +44,7 @@ public class NullLabeler implements GraphLabeler {
     }
 
     @Override
-    public int getEdgeLabel(long nodeId1, long nodeId2) {
+    public int getEdgeLabel(int nodeId1, int nodeId2) {
         System.out.println("Warning: Using NullLabeler, LabelMapping is probably not loaded");
         return -1;
     }
