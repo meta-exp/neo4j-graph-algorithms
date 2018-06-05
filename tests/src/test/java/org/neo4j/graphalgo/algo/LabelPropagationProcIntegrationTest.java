@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.neo4j.graphalgo.algo;
+/*package org.neo4j.graphalgo.algo;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -191,7 +191,7 @@ public class LabelPropagationProcIntegrationTest {
         Map<String, Object> params = parParams();
 
         exceptions.expect(IllegalArgumentException.class);
-        exceptions.expectMessage("The selected graph is not suitable for this algo, please use either 'heavy' or 'cypher'.");
+        exceptions.expectMessage("The graph algorithm only supports these graph types; [heavy, cypher]");
 
         for (final String graph : Arrays.asList("light", "huge", "kernel")) {
             params.put("graph", graph);
@@ -229,3 +229,4 @@ public class LabelPropagationProcIntegrationTest {
         return MapUtil.map("batchSize", parallel ? 1 : 100, "concurrency", parallel ? 1 : 8);
     }
 }
+*/

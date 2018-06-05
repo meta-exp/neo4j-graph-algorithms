@@ -20,9 +20,13 @@ package org.neo4j.graphalgo.core;
 
 import org.neo4j.graphalgo.api.GraphFactory;
 import org.neo4j.graphalgo.core.heavyweight.HeavyCypherGraphFactory;
+import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.huge.HugeGraphFactory;
+import org.neo4j.graphalgo.core.lightweight.LightGraph;
 import org.neo4j.graphalgo.core.lightweight.LightGraphFactory;
+import org.neo4j.graphalgo.core.loadgraph.LoadGraphFactory;
+import org.neo4j.graphalgo.core.neo4jview.GraphView;
 import org.neo4j.graphalgo.core.neo4jview.GraphViewFactory;
 import org.neo4j.graphalgo.core.utils.Directions;
 import org.neo4j.graphalgo.core.utils.ParallelUtil;
@@ -32,6 +36,8 @@ import org.neo4j.graphdb.Direction;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.Arrays.asList;
 
 /**
  * Wrapper around configuration options map
@@ -265,12 +271,19 @@ public class ProcedureConfiguration {
         return Directions.fromString(getDirectionName(defaultDirection.name()));
     }
 
+    public Class<? extends GraphFactory> getGraphImpl() {
+        return getGraphImpl(ProcedureConstants.DEFAULT_GRAPH_IMPL);
+    }
+
+    public String getGraphName(String defaultValue) {
+        return  getString(ProcedureConstants.GRAPH_IMPL_PARAM,defaultValue);
+    }
     /**
      * return the Graph-Implementation Factory class
      *
      * @return
      */
-    public Class<? extends GraphFactory> getGraphImpl() {
+    public Class<? extends GraphFactory> getGraphImpl(String defaultGraphImpl) {
         final String graphImpl = getString(
                 ProcedureConstants.GRAPH_IMPL_PARAM,
                 ProcedureConstants.DEFAULT_GRAPH_IMPL);
@@ -286,6 +299,9 @@ public class ProcedureConfiguration {
             case "huge":
                 return HugeGraphFactory.class;
             default:
+                if (validCustomName(graphImpl) && LoadGraphFactory.check(graphImpl)) {
+                    return LoadGraphFactory.class;
+                }
                 throw new IllegalArgumentException("Unknown impl: " + graphImpl);
         }
     }
@@ -305,6 +321,24 @@ public class ProcedureConfiguration {
                 .map(ProcedureConfiguration::reverseGraphLookup)
                 .collect(Collectors.joining("' or '", "'", "'."));
         throw new IllegalArgumentException("The selected graph is not suitable for this algo, please use either " + allowedGraphs);
+    }
+    private static Set<String> RESERVED = new HashSet<>(asList(HeavyGraph.TYPE,HeavyCypherGraphFactory.TYPE,
+            LightGraph.TYPE, GraphView.TYPE, HeavyGraph.TYPE));
+
+    public static boolean validCustomName(String name) {
+        return name != null && !name.trim().isEmpty() && !RESERVED.contains(name.trim().toLowerCase());
+    }
+
+    @SafeVarargs
+    public final Class<? extends GraphFactory> getGraphImpl(
+            String defaultImpl,
+            String ... alloweds) {
+        String graphName = getGraphName(defaultImpl);
+        List<String> allowedNames = asList(alloweds);
+        if (allowedNames.contains(graphName) || allowedNames.contains(LoadGraphFactory.getType(graphName))) {
+            return getGraphImpl(defaultImpl);
+        }
+        throw new IllegalArgumentException("The graph algorithm only supports these graph types; "+allowedNames);
     }
 
     /**

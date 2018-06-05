@@ -37,6 +37,7 @@ import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.core.utils.ProgressTimer;
 import org.neo4j.test.rule.ImpermanentDatabaseRule;
+
 import java.util.Arrays;
 import java.util.Collection;
 
