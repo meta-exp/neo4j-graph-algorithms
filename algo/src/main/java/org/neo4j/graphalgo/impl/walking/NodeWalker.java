@@ -79,9 +79,7 @@ public class NodeWalker extends AbstractWalkAlgorithm {
 
 
     private void startWalks(AbstractWalkOutput output, Stream<Integer> nodeStream, long numberOfElements, long steps) {
-        int cores = Runtime.getRuntime().availableProcessors();
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(cores * 4);
-        executor.setCorePoolSize(cores * 4);
+        ThreadPoolExecutor executor = getExecutor();
 
         long startTime = System.nanoTime();
 
