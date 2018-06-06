@@ -94,8 +94,9 @@ public class Hierarchy extends Algorithm<Hierarchy> {
             foundNode.addLabel(label);
         }
 
-        if (depth <= maxDepth) {
-            foundNode.addLabel(getLabel(foundNode));
+        Label ownLabel = getLabel(foundNode);
+        if (depth <= maxDepth && ownLabel != null) {
+            foundNode.addLabel(ownLabel);
         }
 
         if (!typeLabelName.isEmpty()) {
@@ -105,11 +106,9 @@ public class Hierarchy extends Algorithm<Hierarchy> {
 
 
     private Label getLabel(Node labelNode) {
-        String name = Long.toString(labelNode.getId());
-        if (labelNode.hasProperty(nameProperty))
-            name = (String) labelNode.getProperty(nameProperty);
-
-        return Label.label(name);
+        if (labelNode.hasProperty(nameProperty) && !labelNode.getProperty(nameProperty).equals(""))
+            return Label.label((String) labelNode.getProperty(nameProperty));
+        return null;
     }
 
     /* Unnecessary abstract methods... */

@@ -39,13 +39,15 @@ public class HierarchyTest {
 
     private static void setupData() throws Exception {
         final String cypher =
-                        "CREATE (a:Entity {name:'A'})\n" +
-                        "CREATE (b:Entity {name:'B'})\n" +
-                        "CREATE (c:Entity {name:'C'})\n" +
-                        "CREATE (d:Entity {name:'D'})\n" +
+                        "CREATE (a:Entity {name:'A', id: 'A'})\n" +
+                        "CREATE (b:Entity {name:'B', id: 'B'})\n" +
+                        "CREATE (b1:Entity {name:'', id: 'B1'})\n" +
+                        "CREATE (c:Entity {name:'C', id: 'C'})\n" +
+                        "CREATE (d:Entity {name:'D', id: 'D'})\n" +
 
                         "CREATE" +
                         " (b)-[:OF_TYPE]->(a),\n" +
+                        " (b1)-[:OF_TYPE]->(a),\n" +
                         " (c)-[:OF_TYPE]->(a),\n" +
                         " (d)-[:OF_TYPE]->(b), \n" +
                         " (d)-[:OF_TYPE]->(c)";
@@ -85,6 +87,12 @@ public class HierarchyTest {
     }
 
     @Test
+    public void testNodeShouldNotHaveEmptyLabels() throws Exception {
+        String[] labels = {"Entity", "A", "Class"};
+        testCorrectLabels("B1", Arrays.asList(labels));
+    }
+
+    @Test
     public void testNodeCHasCorrectLabels() throws Exception {
         String[] labels = {"Entity", "A", "C", "Class"};
         testCorrectLabels("C", Arrays.asList(labels));
@@ -99,7 +107,7 @@ public class HierarchyTest {
     private void testCorrectLabels(String name, List<String> expectedLabels) {
         try (Transaction transaction = api.beginTx()) {
 
-            Node node = api.findNode(Label.label("Entity"), "name", name);
+            Node node = api.findNode(Label.label("Entity"), "id", name);
 
             for (Label label : node.getLabels()) {
                 assertTrue("Didn't expect label " + label.name(), expectedLabels.contains(label.name()));
