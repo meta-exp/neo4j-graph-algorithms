@@ -6,11 +6,15 @@ import org.neo4j.logging.Log;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class MultiTypes extends Algorithm<MultiTypes> {
 
     private static final String LABEL_NAME_PROPERTY = "name";
+    private static final int THREADS = Runtime.getRuntime().availableProcessors() * 2;
     public Log log;
     private String typeLabel;
     private GraphDatabaseService db;
@@ -41,21 +45,17 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     }
 
     public void compute() {
-
-        LinkedList<Thread> threads = new LinkedList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(THREADS);
 
         for (long nodeId : getTypeNodeIds()) {
             Thread thread = new LabelingThread(this::updateNodeNeighbors, nodeId);
-            threads.add(thread);
-            thread.run();
+            executor.execute(thread);
         }
-
-        for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (Exception e) {
-                log.error(e.getLocalizedMessage());
-            }
+        executor.shutdown();
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
+        } catch (InterruptedException e) {
+            log.error("Thread join timed out");
         }
     }
 

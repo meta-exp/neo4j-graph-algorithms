@@ -13,7 +13,8 @@ public class Hierarchy extends Algorithm<Hierarchy> {
 
     private String nameProperty;
     public Log log;
-    private String typeLabel;
+    private String typeLabelName;
+    private Label typeLabel;
     private GraphDatabaseService db;
     private RelationshipType followLabel;
     private Set<Long> currentNodes = new HashSet<>();
@@ -22,9 +23,11 @@ public class Hierarchy extends Algorithm<Hierarchy> {
     public Hierarchy(GraphDatabaseService db,
                      String followLabel,
                      String nameProperty,
+                     String typeLabel,
                      Log log) {
         this.log = log;
-        this.typeLabel = typeLabel;
+        this.typeLabelName = typeLabel;
+        this.typeLabel = Label.label(typeLabelName);
         this.db = db;
         this.followLabel = findRelationType(followLabel);
         this.nameProperty = nameProperty;
@@ -93,6 +96,10 @@ public class Hierarchy extends Algorithm<Hierarchy> {
 
         if (depth <= maxDepth) {
             foundNode.addLabel(getLabel(foundNode));
+        }
+
+        if (!typeLabelName.isEmpty()) {
+            foundNode.addLabel(typeLabel);
         }
     }
 
