@@ -20,16 +20,18 @@ public class HierarchyProc {
     public Log log;
 
     @Procedure(value = "algo.hierarchy", mode = Mode.WRITE)
-    @Description("algo.multiTypes(edgeType:String, startNodeId:Number) YIELD success, executionTime" +
+    @Description("algo.multiTypes(edgeType:String, nameProperty:String, startNodeId:Number, maxDepth:Number) YIELD success, executionTime" +
             "- ...") // TODO: Description
     public Stream<Result> hierarchy(
             @Name(value = "followLabel", defaultValue = "subclass_of") String followLabel,
-            @Name(value = "startNodeId") Number startNodeId) {
+            @Name(value = "nameProperty", defaultValue = "label") String nameProperty,
+            @Name(value = "startNodeId") Number startNodeId,
+            @Name(value = "maxDepth", defaultValue = "10") Number maxDepth) {
 
-        final Hierarchy algo = new Hierarchy(db, followLabel, log);
+        final Hierarchy algo = new Hierarchy(db, followLabel, nameProperty, log);
 
         long startTime = System.currentTimeMillis();
-        algo.compute(startNodeId.longValue());
+        algo.compute(startNodeId.longValue(), maxDepth.intValue());
         long executionTime = System.currentTimeMillis() - startTime;
 
         return Stream.of(new Result(true, executionTime));
