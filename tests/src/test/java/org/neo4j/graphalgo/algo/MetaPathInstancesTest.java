@@ -82,8 +82,7 @@ public class MetaPathInstancesTest {
         int count = 0;
         while(results.hasNext()) {
             count++;
-            Record record = results.next();
-            System.out.print("");
+            results.next();
         }
 
         assertTrue( count == 9);

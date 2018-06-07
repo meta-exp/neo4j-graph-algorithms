@@ -4,9 +4,6 @@ import org.neo4j.graphalgo.api.IdMapping;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.logging.Log;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-
 public abstract class AbstractWalkAlgorithm {
 
     private IdMapping idMapping;
@@ -34,14 +31,5 @@ public abstract class AbstractWalkAlgorithm {
         }
         return originalIds;
     }
-
-    protected ThreadPoolExecutor getExecutor(){
-        int cores = Runtime.getRuntime().availableProcessors();
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(cores * 4);
-        executor.setCorePoolSize(cores * 4);
-
-        return executor;
-    }
-
 
 }

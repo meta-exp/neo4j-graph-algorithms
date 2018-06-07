@@ -5,10 +5,6 @@ import org.neo4j.logging.Log;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Phaser;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -16,18 +12,12 @@ import java.util.stream.Stream;
 public class MetaPathInstances extends AbstractWalkAlgorithm {
 
     private Map<String, Integer> nodeLabelToString, edgeLabelToString;
-    private ThreadPoolExecutor executor;
-    private Phaser phaser;
-
 
     public MetaPathInstances(HeavyGraph graph, Log log){
         super(graph, log);
 
         this.nodeLabelToString = getNodeLabelToIdDict();
         this.edgeLabelToString = getEdgeLabelToIdDict();
-        this.executor = getExecutor();
-        this.phaser = new Phaser();
-
     }
 
     private Map<String, Integer> getNodeLabelToIdDict(){
@@ -48,20 +38,8 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
         int[] emptyArray = {};
         int[] types = parseMetaPath(metaPath);
 
-        phaser.register();
         for (int nodeId = 0; nodeId < graph.nodeCount(); nodeId++) {
-            final int executorNodeId = nodeId;
-            executor.execute(() -> {
-                startExtraction(executorNodeId, emptyArray, types, output);
-            });
-        }
-
-        phaser.arriveAndAwaitAdvance();
-        executor.shutdown();
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
-        } catch (InterruptedException e) {
-            log.error("Thread join timed out");
+            doExtraction(nodeId, emptyArray, types, output);
         }
 
         output.endInput();
@@ -86,14 +64,8 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
         return typeIds;
     }
 
-    public void startExtraction(final int nodeId, final int[] previousResults, final int[] types, final AbstractWalkOutput output){
-        phaser.register(); // Do not end computation while any extraction is still running
-        doExtraction(nodeId, previousResults, types, output);
-        phaser.arrive();
-    }
-
-    public void doExtraction(final int nodeId, final int[] previousResults, final int[] types, final AbstractWalkOutput output){
-        int typeIndex = previousResults.length * 2; // types array contains types for edges and nodes, prev-array contains only node ids
+    public void doExtraction(int nodeId, int[] previousResults, int[] types, AbstractWalkOutput output){
+        int typeIndex = previousResults.length * 2; // types array contains types for edges and nodes, prev-array contains only nodes
         int currentNodeType = types[typeIndex];
         // End this walk if it doesn't match the required types anymore, a label of -1 means no label is attached to this node
         Integer[] labels = graph.getLabels(nodeId);
@@ -116,9 +88,7 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
             int edgeType = graph.getEdgeLabel(nodeId, neighbourId);
 
             if(edgeType == nextEdgeType){
-                executor.execute(() -> {
-                    startExtraction(neighbourId, resultsSoFar, types, output);
-                });
+                doExtraction(neighbourId, resultsSoFar, types, output);
             }
         }
     }
