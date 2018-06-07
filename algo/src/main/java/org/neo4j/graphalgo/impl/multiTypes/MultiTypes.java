@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 
 public class MultiTypes extends Algorithm<MultiTypes> {
 
-    private static final String LABEL_NAME_PROPERTY = "name";
+    private String labelNameProperty = "name";
     private static final int THREADS = Runtime.getRuntime().availableProcessors() * 2;
     public Log log;
     private String typeLabel;
@@ -23,9 +23,11 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     public MultiTypes(GraphDatabaseService db,
                       String edgeType,
                       String typeLabel,
+                      String labelNameProperty,
                       Log log) {
         this.log = log;
         this.typeLabel = typeLabel;
+        this.labelNameProperty = labelNameProperty;
         this.db = db;
         this.relationType = findRelationType(edgeType);
     }
@@ -94,8 +96,8 @@ public class MultiTypes extends Algorithm<MultiTypes> {
 
     private Label getLabel(Node labelNode) {
         String name = Long.toString(labelNode.getId());
-        if (labelNode.hasProperty(LABEL_NAME_PROPERTY))
-            name = (String) labelNode.getProperty(LABEL_NAME_PROPERTY);
+        if (labelNode.hasProperty(labelNameProperty))
+            name = (String) labelNode.getProperty(labelNameProperty);
 
         return Label.label(name);
     }

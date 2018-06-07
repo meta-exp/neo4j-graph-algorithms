@@ -62,7 +62,7 @@ public class MultiTypeSingleNodeTest {
 
     private static void setupAlgo() throws Exception {
 
-        algo = new MultiTypes(api, "OF_TYPE", "Type", null);
+        algo = new MultiTypes(api, "OF_TYPE", "Type", "name", null);
         try (Transaction transaction = api.beginTx()) {
             Node node = api.findNode(Label.label("Type"), "name", "b");
             algo.updateNodeNeighbors(node.getId());

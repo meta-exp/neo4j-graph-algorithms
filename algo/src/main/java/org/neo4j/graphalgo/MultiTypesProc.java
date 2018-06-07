@@ -25,9 +25,10 @@ public class MultiTypesProc {
             "to a graph where each node has their label in the label attribute.")
     public Stream<Result> multiTypes(
             @Name(value = "edgeType", defaultValue = "/type/object/type") String edgeType,
-            @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
+            @Name(value = "typeLabel", defaultValue = "Type") String typeLabel,
+            @Name(value = "labelNameProperty", defaultValue = "name") String labelNameProperty) {
 
-        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel, log);
+        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel, labelNameProperty, log);
 
         long startTime = System.currentTimeMillis();
         algo.compute();
@@ -43,9 +44,10 @@ public class MultiTypesProc {
     public Stream<Result> multiTypesSingleNode(
             @Name(value = "nodeId") Number nodeId,
             @Name(value = "edgeType", defaultValue = "/type/object/type") String edgeType,
-            @Name(value = "typeLabel", defaultValue = "Type") String typeLabel) throws Exception {
+            @Name(value = "typeLabel", defaultValue = "Type") String typeLabel,
+            @Name(value = "labelNameProperty", defaultValue = "name") String labelNameProperty) {
 
-        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel, log);
+        final MultiTypes algo = new MultiTypes(db, edgeType, typeLabel, labelNameProperty, log);
         long startTime = System.currentTimeMillis();
 //        try (Transaction transaction = api.beginTx()) {
 //            Node node = api.getNodeById(nodeId.longValue());
