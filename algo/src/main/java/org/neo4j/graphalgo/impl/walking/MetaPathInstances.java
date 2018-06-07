@@ -48,19 +48,21 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
         int[] emptyArray = {};
         int[] types = parseMetaPath(metaPath);
 
+        phaser.register();
         for (int nodeId = 0; nodeId < graph.nodeCount(); nodeId++) {
-            continueWithNextNode(nodeId, emptyArray, types, output);
+            final int executorNodeId = nodeId;
+            executor.execute(() -> {
+                startExtraction(executorNodeId, emptyArray, types, output);
+            });
         }
 
-        phaser.awaitAdvance(0);
+        phaser.arriveAndAwaitAdvance();
         executor.shutdown();
-        System.out.println("Starting waiting for threads");
         try {
             executor.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
         } catch (InterruptedException e) {
             log.error("Thread join timed out");
         }
-        System.out.println("Ended waiting for threads");
 
         output.endInput();
 
@@ -84,7 +86,13 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
         return typeIds;
     }
 
-    private void continueWithNextNode(final int nodeId, final int[] previousResults, final int[] types, final AbstractWalkOutput output){
+    public void startExtraction(final int nodeId, final int[] previousResults, final int[] types, final AbstractWalkOutput output){
+        phaser.register(); // Do not end computation while any extraction is still running
+        doExtraction(nodeId, previousResults, types, output);
+        phaser.arrive();
+    }
+
+    public void doExtraction(final int nodeId, final int[] previousResults, final int[] types, final AbstractWalkOutput output){
         int typeIndex = previousResults.length * 2; // types array contains types for edges and nodes, prev-array contains only node ids
         int currentNodeType = types[typeIndex];
         // End this walk if it doesn't match the required types anymore, a label of -1 means no label is attached to this node
@@ -97,33 +105,20 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
 
         // If this walk completes the required types, end it and save it
         if(typeIndex + 1 == types.length){
-//            System.out.printf("Found path %s", Arrays.toString(resultsSoFar));
             output.addResult(translateIdsToOriginal(resultsSoFar));
             return;
         }
 
-        startEdgeCheck(nodeId, resultsSoFar, types, output);
-    }
-
-    public void startEdgeCheck(final int nodeId, final int[] previousResults, final int[] types, final AbstractWalkOutput output){
-        executor.execute(() -> {
-            phaser.register(); // Do not end computation while any extraction is still running
-            checkEdges(nodeId, previousResults, types, output);
-            phaser.arriveAndDeregister();
-        });
-    }
-
-    public void checkEdges(final int nodeId, final int[] previousResults, final int[] types, final AbstractWalkOutput output){
-        int edgeIndex = previousResults.length * 2 - 1;
-        int nextEdgeType = types[edgeIndex];
-
+        int nextEdgeType = types[typeIndex + 1];
         int[] neighbours = graph.getAdjacentNodes(nodeId);
         for(int i = 0; i < neighbours.length; i++){
             int neighbourId = neighbours[i];
             int edgeType = graph.getEdgeLabel(nodeId, neighbourId);
 
             if(edgeType == nextEdgeType){
-                continueWithNextNode(neighbourId, previousResults, types, output);
+                executor.execute(() -> {
+                    startExtraction(neighbourId, resultsSoFar, types, output);
+                });
             }
         }
     }
