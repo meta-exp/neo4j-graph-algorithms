@@ -5,10 +5,7 @@ import org.neo4j.logging.Log;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Phaser;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -16,7 +13,7 @@ import java.util.stream.Stream;
 public class MetaPathInstances extends AbstractWalkAlgorithm {
 
     private Map<String, Integer> nodeLabelToString, edgeLabelToString;
-    private ThreadPoolExecutor executor;
+    private BoundedExecutor executor;
     private Phaser phaser;
 
 
@@ -25,7 +22,7 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
 
         this.nodeLabelToString = getNodeLabelToIdDict();
         this.edgeLabelToString = getEdgeLabelToIdDict();
-        this.executor = getExecutor();
+        this.executor = getBoundedExecutor();
         this.phaser = new Phaser();
 
     }
@@ -44,7 +41,7 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
                 .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     }
 
-    public Stream<WalkResult> findMetaPathInstances(String metaPath, AbstractWalkOutput output) {
+    public Stream<WalkResult> findMetaPathInstances(String metaPath, AbstractWalkOutput output){
         int[] emptyArray = {};
         int[] types = parseMetaPath(metaPath);
 
@@ -53,10 +50,10 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
         }
 
         phaser.awaitAdvance(0);
-        executor.shutdown();
+        executor.getExecutor().shutdown();
         System.out.println("Starting waiting for threads");
         try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
+            executor.getExecutor().awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
         } catch (InterruptedException e) {
             log.error("Thread join timed out");
         }
@@ -97,7 +94,6 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
 
         // If this walk completes the required types, end it and save it
         if(typeIndex + 1 == types.length){
-//            System.out.printf("Found path %s", Arrays.toString(resultsSoFar));
             output.addResult(translateIdsToOriginal(resultsSoFar));
             return;
         }
@@ -106,11 +102,15 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
     }
 
     public void startEdgeCheck(final int nodeId, final int[] previousResults, final int[] types, final AbstractWalkOutput output){
-        executor.execute(() -> {
-            phaser.register(); // Do not end computation while any extraction is still running
-            checkEdges(nodeId, previousResults, types, output);
-            phaser.arriveAndDeregister();
-        });
+        try {
+            executor.submitTask(() -> {
+                phaser.register(); // Do not end computation while any extraction is still running
+                checkEdges(nodeId, previousResults, types, output);
+                phaser.arriveAndDeregister();
+            });
+        } catch (InterruptedException e){
+            log.error("Thread waiting timed out");
+        }
     }
 
     public void checkEdges(final int nodeId, final int[] previousResults, final int[] types, final AbstractWalkOutput output){
@@ -135,6 +135,44 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
         newArray[len] = item;
 
         return newArray;
+    }
+
+    private BoundedExecutor getBoundedExecutor(){
+        ThreadPoolExecutor executor = super.getExecutor();
+        return new BoundedExecutor(executor, executor.getCorePoolSize() * 1000);
+    }
+
+    public class BoundedExecutor {
+        private final ExecutorService exec;
+        private final Semaphore semaphore;
+
+        public BoundedExecutor(ExecutorService exec, int bound) {
+            this.exec = exec;
+            this.semaphore = new Semaphore(bound);
+        }
+
+        public void submitTask(final Runnable command)
+                throws InterruptedException, RejectedExecutionException {
+            semaphore.acquire();
+            try {
+                exec.execute(new Runnable() {
+                    public void run() {
+                        try {
+                            command.run();
+                        } finally {
+                            semaphore.release();
+                        }
+                    }
+                });
+            } catch (RejectedExecutionException e) {
+                semaphore.release();
+                throw e;
+            }
+        }
+
+        public ExecutorService getExecutor(){
+            return exec;
+        }
     }
 
 
