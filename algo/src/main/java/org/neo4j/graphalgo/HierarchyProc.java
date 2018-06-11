@@ -22,7 +22,7 @@ public class HierarchyProc {
     @Procedure(value = "algo.hierarchy", mode = Mode.WRITE)
     @Description("algo.multiTypes(startNodeId:Number, edgeType:String, nameProperty:String, maxDepth:Number, typeLabel:String) " +
             "YIELD success, executionTime" +
-            "- ...") // TODO: Description
+            "- Version 1.0: Creates a type hierarchy of nodes.")
     public Stream<Result> hierarchy(
             @Name(value = "startNodeId") Number startNodeId,
             @Name(value = "maxDepth") Number maxDepth,
