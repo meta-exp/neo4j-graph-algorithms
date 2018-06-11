@@ -8,11 +8,12 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 
 public class Hierarchy extends Algorithm<Hierarchy> {
 
-    private String nameProperty;
     public Log log;
+    private String nameProperty;
     private String typeLabelName;
     private Label typeLabel;
     private GraphDatabaseService db;
@@ -62,11 +63,12 @@ public class Hierarchy extends Algorithm<Hierarchy> {
             depth++;
             final int newDepth = depth;
 
-            currentNodes = currentNodes.parallelStream().map((currentNode) ->
+            final Set<Long> nextNodes = currentNodes.stream().map((currentNode) ->
                     processNode(currentNode, maxDepth, newDepth)
             ).collect(() -> new HashSet<>(),
                     (previous, next) -> previous.addAll(next),
                     (left, right) -> left.addAll(right));
+            currentNodes = nextNodes;
         } while (!currentNodes.isEmpty());
     }
 
@@ -75,14 +77,16 @@ public class Hierarchy extends Algorithm<Hierarchy> {
 
         try (Transaction transaction = db.beginTx()) {
             Node nodeInstance = db.getNodeById(nodeId);
-
-            for (Relationship relation : nodeInstance.getRelationships(this.followLabel, Direction.INCOMING)) {
-                foundNodes.add(relation.getStartNodeId());
-                findNode(relation.getStartNode(),
-                        nodeInstance.getLabels(),
-                        maxDepth,
-                        depth);
-            }
+            StreamSupport
+                    .stream(nodeInstance.getRelationships(this.followLabel, Direction.INCOMING).spliterator(), false)
+                    .map((relation) -> {
+                        foundNodes.add(relation.getStartNodeId());
+                        findNode(relation.getStartNode(),
+                                nodeInstance.getLabels(),
+                                maxDepth,
+                                depth);
+                        return relation;
+                    }).count();
             transaction.success();
         }
 
