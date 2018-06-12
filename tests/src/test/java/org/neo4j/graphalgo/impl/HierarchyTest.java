@@ -15,6 +15,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class HierarchyTest {
@@ -109,9 +110,12 @@ public class HierarchyTest {
 
             Node node = api.findNode(Label.label("Entity"), "id", name);
 
+            int count = 0;
             for (Label label : node.getLabels()) {
                 assertTrue("Didn't expect label " + label.name(), expectedLabels.contains(label.name()));
+                count++;
             }
+            assertEquals(expectedLabels.size(), count);
 
             transaction.success();
         }

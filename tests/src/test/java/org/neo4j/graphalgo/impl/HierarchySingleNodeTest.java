@@ -15,6 +15,7 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class HierarchySingleNodeTest {
@@ -68,26 +69,26 @@ public class HierarchySingleNodeTest {
         algo = new Hierarchy(api, "OF_TYPE", "name", "Class", null);
         try (Transaction transaction = api.beginTx()) {
             Node node = api.findNode(Label.label("Entity"), "name", "A");
-            algo.processNode(node.getId(), DEPTH, 1);
+            algo.processNode(node.getId(), 1, 1);
             transaction.success();
         }
     }
 
     @Test
     public void testNodeAHasCorrectLabels() throws Exception {
-        String[] labels = {"Entity", "A", "Class"};
+        String[] labels = {"Entity"};
         testCorrectLabels("A", Arrays.asList(labels));
     }
 
     @Test
     public void testNodeBHasCorrectLabels() throws Exception {
-        String[] labels = {"Entity", "A", "B", "Class"};
+        String[] labels = {"Entity", "B", "Class"};
         testCorrectLabels("B", Arrays.asList(labels));
     }
 
     @Test
     public void testNodeCHasCorrectLabels() throws Exception {
-        String[] labels = {"Entity", "A", "C", "Class"};
+        String[] labels = {"Entity", "C", "Class"};
         testCorrectLabels("C", Arrays.asList(labels));
     }
 
@@ -102,9 +103,12 @@ public class HierarchySingleNodeTest {
 
             Node node = api.findNode(Label.label("Entity"), "id", name);
 
+            int count = 0;
             for (Label label : node.getLabels()) {
                 assertTrue("Didn't expect label " + label.name(), expectedLabels.contains(label.name()));
+                count++;
             }
+            assertEquals("Should have right number of labels.", expectedLabels.size(), count);
 
             transaction.success();
         }
