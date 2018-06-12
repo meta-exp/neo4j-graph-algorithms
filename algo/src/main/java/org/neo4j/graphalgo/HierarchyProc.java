@@ -39,6 +39,26 @@ public class HierarchyProc {
         return Stream.of(new Result(true, executionTime));
     }
 
+    @Procedure(value = "algo.hierarchySingleNode", mode = Mode.WRITE)
+    @Description("algo.multiTypes(nodeId:Number, edgeType:String, nameProperty:String, maxDepth:Number, typeLabel:String) " +
+            "YIELD success, executionTime" +
+            "- Version 1.0: Creates a type hierarchy of nodes.")
+    public Stream<Result> hierarchySingleNode(
+            @Name(value = "startNodeId") Number nodeId,
+            @Name(value = "maxDepth") Number maxDepth,
+            @Name(value = "followLabel", defaultValue = "subclass_of") String followLabel,
+            @Name(value = "nameProperty", defaultValue = "label") String nameProperty,
+            @Name(value = "typeLabel", defaultValue = "") String typeLabel) {
+
+        final Hierarchy algo = new Hierarchy(db, followLabel, nameProperty, typeLabel, log);
+
+        long startTime = System.currentTimeMillis();
+        algo.processNode(nodeId.longValue(), maxDepth.intValue(), 1);
+        long executionTime = System.currentTimeMillis() - startTime;
+
+        return Stream.of(new Result(true, executionTime));
+    }
+
     public class Result {
         public boolean success;
         public long executionTime;

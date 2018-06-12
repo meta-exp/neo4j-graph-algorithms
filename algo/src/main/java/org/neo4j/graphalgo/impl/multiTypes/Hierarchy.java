@@ -72,7 +72,7 @@ public class Hierarchy extends Algorithm<Hierarchy> {
         } while (!currentNodes.isEmpty());
     }
 
-    private List<Long> processNode(long nodeId, int maxDepth, int depth) {
+    public List<Long> processNode(long nodeId, int maxDepth, int depth) {
         LinkedList<Long> foundNodes = new LinkedList<>();
 
         try (Transaction transaction = db.beginTx()) {
