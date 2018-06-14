@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 import static java.lang.Math.max;
 import static java.lang.Math.toIntExact;
 
+@Deprecated
 public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
 
     private int metaPathLength;
