@@ -138,6 +138,11 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         executor.shutdown();
 
         while (!executor.isTerminated()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         return threads;
