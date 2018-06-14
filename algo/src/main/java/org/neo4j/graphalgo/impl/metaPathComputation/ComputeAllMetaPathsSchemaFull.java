@@ -66,6 +66,11 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         }
         executor.shutdown();
         while (!executor.isTerminated()) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         return threads;
