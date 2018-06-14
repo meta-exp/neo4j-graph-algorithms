@@ -191,7 +191,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
 
-    public class ComputeMetaPathFromNodeLabelThread extends Thread {
+    private class ComputeMetaPathFromNodeLabelThread extends Thread {
         int nodeLabel;
         int metaPathLength;
         ArrayList<String> duplicateFreeMetaPathsOfThread;
@@ -236,22 +236,12 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
                             instanceCountSum += count;
                         }
 
-                        addMetaPath(newMetaPath, instanceCountSum);
+                        ComputeAllMetaPaths.this.addMetaPathGlobal(newMetaPath, instanceCountSum);
                         computeMetaPathFromNodeLabel(newMetaPath, nextInstancesForLabel, metaPathLength - 1);
                     }
                 }
             }
         }
-
-        private String addMetaPath(ArrayList<Integer> newMetaPath, long instanceCountSum) {
-            String joinedMetaPath;
-            joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining(" | "));
-            joinedMetaPath += "\t" + instanceCountSum;
-            duplicateFreeMetaPathsOfThread.add(joinedMetaPath);
-
-            return joinedMetaPath;
-        }
-
     }
 
 
