@@ -1,8 +1,10 @@
 package org.neo4j.graphalgo.algo;
 
+import com.googlecode.junittoolbox.ParallelRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.neo4j.graphalgo.HierarchyProc;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphdb.Result;
@@ -21,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+@RunWith(ParallelRunner.class)
 public class HierarchyProcTest {
 
     private GraphDatabaseAPI db;
