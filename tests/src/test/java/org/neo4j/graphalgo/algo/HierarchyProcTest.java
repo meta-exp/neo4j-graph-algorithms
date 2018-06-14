@@ -19,15 +19,17 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 public class HierarchyProcTest {
 
     private GraphDatabaseAPI db;
 
-    private static final String CYPHER_PATH = "resources/wikidata_subgraph_small.cypher";
+    private static final String CYPHER_PATH_SMALL = "resources/wikidata_subgraph_small.cypher";
+    private static final String CYPHER_PATH_BIG = "resources/wikidata_subgraph_5000.cypher";
 
-    private static void create_graph(GraphDatabaseAPI db) throws IOException {
-            try (Stream<String> stream = Files.lines(Paths.get(CYPHER_PATH))) {
+    private static void create_graph(GraphDatabaseAPI db, String cypher_path) throws IOException {
+            try (Stream<String> stream = Files.lines(Paths.get(cypher_path))) {
                 stream.forEach(line -> {
                     try (Transaction tx = db.beginTx()) {
                         db.execute(line).close();
@@ -44,44 +46,89 @@ public class HierarchyProcTest {
 
 
     @Before
-    public void setup() throws KernelException, IOException {
+    public void setup() {
         db = TestDatabaseCreator.createTestDatabase();
-        create_graph(db);
-
-        db.getDependencyResolver()
-                .resolveDependency(Procedures.class)
-                .registerProcedure(HierarchyProc.class);
     }
 
-    @Test
-    public void testMultiTypesProcCall() {
-        runQuery(
-              "MATCH (n) WHERE n.label='entity' " +
-                    "CALL algo.hierarchy(ID(n), 3, 'SUBCLASS_OF', 'label', 'CLASS') YIELD success, executionTime " +
-                    "RETURN executionTime",
-                row -> assertNotNull(row.getNumber("executionTime")));
+    private void setup_db(String cypher_path) {
+		try {
+			create_graph(db, cypher_path);
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("Error occured while creating the database");
+		}
 
-        runQuery("MATCH (m) WITH COUNT(m) as total " +
+		try {
+			db.getDependencyResolver()
+					.resolveDependency(Procedures.class)
+					.registerProcedure(HierarchyProc.class);
+		} catch (KernelException e) {
+			e.printStackTrace();
+			fail("Error occured while resolving the dependencies");
+		}
+	}
+
+    @Test
+    public void testMultiTypesProcCallSmall() {
+		setup_db(CYPHER_PATH_SMALL);
+		runHierarchyQuery();
+
+		checkHierarchyQuery();
+	}
+
+	@Test
+	public void testMultiTypesProcCallBig() {
+		setup_db(CYPHER_PATH_BIG);
+		runHierarchyQuery();
+
+		checkHierarchyQuery();
+	}
+
+	private void runHierarchyQuery() {
+		runQuery(
+				"MATCH (n) WHERE n.label='entity' " +
+						"CALL algo.hierarchy(ID(n), 3, 'SUBCLASS_OF', 'label', 'CLASS') YIELD success, executionTime " +
+						"RETURN executionTime",
+				row -> assertNotNull(row.getNumber("executionTime")));
+	}
+
+	private void checkHierarchyQuery() {
+		runQuery("MATCH (m) WITH COUNT(m) as total " +
                         "MATCH (n:CLASS) WITH COUNT(n) as classes, total as total " +
                         "RETURN total, classes",
                 row -> assertEquals(row.getNumber("classes"), row.getNumber("total")));
-    }
+	}
 
-    @Test
-    public void testMultiTypesSingleNodeProcCall() {
-        runQuery(
-                "MATCH (n) WHERE n.label='entity' " +
-                        "CALL algo.hierarchySingleNode(ID(n), 'SUBCLASS_OF', 'label', 'CLASS') YIELD success, executionTime " +
-                        "RETURN executionTime",
-                row -> assertNotNull(row.getNumber("executionTime")));
+	@Test
+    public void testMultiTypesSingleNodeProcCallSmall() {
+		setup_db(CYPHER_PATH_SMALL);
+		runHierarchySingleNodeQuery();
+		checkHierarchySingleNodeQuery();
+	}
 
-        runQuery("MATCH (m)<-[:SUBCLASS_OF]-(n) WHERE m.label='entity' WITH COUNT(m) as total " +
-                        "MATCH (m)<-[:SUBCLASS_OF]-(n:CLASS) WHERE m.label='entity' WITH COUNT(n) as classes, total as total " +
-                        "RETURN total, classes",
-                row -> assertEquals(row.getNumber("classes"), row.getNumber("total")));
-    }
+	@Test
+	public void testMultiTypesSingleNodeProcCallBig() {
+		setup_db(CYPHER_PATH_BIG);
+		runHierarchySingleNodeQuery();
+		checkHierarchySingleNodeQuery();
+	}
 
-    private void runQuery(
+	private void runHierarchySingleNodeQuery() {
+		runQuery(
+				"MATCH (n) WHERE n.label='entity' " +
+						"CALL algo.hierarchySingleNode(ID(n), 'SUBCLASS_OF', 'label', 'CLASS') YIELD success, executionTime " +
+						"RETURN executionTime",
+				row -> assertNotNull(row.getNumber("executionTime")));
+	}
+
+	private void checkHierarchySingleNodeQuery() {
+		runQuery("MATCH (m)<-[:SUBCLASS_OF]-(n) WHERE m.label='entity' WITH COUNT(m) as total " +
+						"MATCH (m)<-[:SUBCLASS_OF]-(n:CLASS) WHERE m.label='entity' WITH COUNT(n) as classes, total as total " +
+						"RETURN total, classes",
+				row -> assertEquals(row.getNumber("classes"), row.getNumber("total")));
+	}
+
+	private void runQuery(
             String query,
             Consumer<Result.ResultRow> check) {
         try (Result result = db.execute(query)) {
