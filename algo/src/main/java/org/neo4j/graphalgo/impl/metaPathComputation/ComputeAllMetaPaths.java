@@ -146,6 +146,11 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         executor.shutdown();
 
         while (!executor.isTerminated()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         return threads;
@@ -202,7 +207,8 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         return dictRow;
     }
 
-    public class ComputeMetaPathFromNodeLabelThread extends Thread {
+
+    private class ComputeMetaPathFromNodeLabelThread extends Thread {
         int nodeLabel;
         int metaPathLength;
         ArrayList<String> duplicateFreeMetaPathsOfThread;
@@ -254,7 +260,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
                             instanceCountSum += count;
                         }
 
-                        addMetaPath(newMetaPath, instanceCountSum);
+                        ComputeAllMetaPaths.this.addMetaPathGlobal(newMetaPath, instanceCountSum);
                         computeMetaPathFromNodeLabel(newMetaPath, nextInstancesForLabel, metaPathLength - 1);
                     }
                 }

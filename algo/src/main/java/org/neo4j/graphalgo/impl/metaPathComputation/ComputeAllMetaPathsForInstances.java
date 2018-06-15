@@ -18,6 +18,7 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
 
         import static java.lang.Float.max;
 
+@Deprecated
 public class ComputeAllMetaPathsForInstances extends MetaPathComputation {
 
     private ArrayGraphInterface arrayGraphInterface;
