@@ -1,5 +1,6 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
+import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -84,34 +85,15 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
         return newMetaPath;
     }
 
-    private abstract class ComputeMetaPathThread implements Runnable {
+    private class ComputeMetaPathFromNodeIdThread implements Runnable {
+        private int nodeId;
+        private int metaPathLength;
+        private HashSet<String> duplicateFreeMetaPathsOfThread;
 
-        protected int             nodeId;
-        protected int             metaPathLength;
-        protected HashSet<String> duplicateFreeMetaPathsOfThread;
-
-        private ComputeMetaPathThread(int nodeId, int metaPathLength) {
+        ComputeMetaPathFromNodeIdThread(int nodeId, int metaPathLength) {
             this.nodeId = nodeId;
             this.metaPathLength = metaPathLength;
             this.duplicateFreeMetaPathsOfThread = new HashSet<>();
-        }
-
-        protected void addAndLogMetaPath(ArrayList<Integer> newMetaPath) {
-            String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
-            duplicateFreeMetaPathsOfThread.add(joinedMetaPath);
-        }
-
-        public HashSet<String> getDuplicateFreeMetaPaths() {
-            return duplicateFreeMetaPathsOfThread;
-        }
-
-        public abstract void run();
-    }
-
-    private class ComputeMetaPathFromNodeIdThread extends ComputeMetaPathThread implements Runnable {
-
-        ComputeMetaPathFromNodeIdThread(int nodeId, int metaPathLength) {
-            super(nodeId, metaPathLength);
         }
 
         public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) {
@@ -138,8 +120,17 @@ public class ComputeAllMetaPathsSchemaFull extends MetaPathComputation {
             }
         }
 
+        private void addAndLogMetaPath(ArrayList<Integer> newMetaPath) {
+            String joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
+            duplicateFreeMetaPathsOfThread.add(joinedMetaPath);
+        }
+
         public void run() {
             computeMetaPathFromNodeLabel(nodeId, metaPathLength);
+        }
+
+        public HashSet<String> getDuplicateFreeMetaPaths() {
+            return duplicateFreeMetaPathsOfThread;
         }
     }
 
