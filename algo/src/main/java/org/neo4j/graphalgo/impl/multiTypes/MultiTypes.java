@@ -4,6 +4,7 @@ import org.neo4j.graphalgo.impl.Algorithm;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -83,10 +84,12 @@ public class MultiTypes extends Algorithm<MultiTypes> {
         try (Transaction transaction = db.beginTx()) {
             Node nodeInstance = db.getNodeById(nodeId);
 
-            Label label = getLabel(nodeInstance);
+            Label[] labels = getLabels(nodeInstance);
 
             for (Relationship relation : nodeInstance.getRelationships(this.relationType, Direction.INCOMING)) {
-                relation.getStartNode().addLabel(label);
+                for(Label label: labels) {
+                    relation.getStartNode().addLabel(label);
+                }
             }
             transaction.success();
         }
@@ -94,12 +97,12 @@ public class MultiTypes extends Algorithm<MultiTypes> {
         return true;
     }
 
-    private Label getLabel(Node labelNode) {
-        String name = Long.toString(labelNode.getId());
-        if (labelNode.hasProperty(labelNameProperty))
-            name = (String) labelNode.getProperty(labelNameProperty);
-
-        return Label.label(name);
+    private Label[] getLabels(Node labelNode) {
+        ArrayList<Label> labels = new ArrayList<>();
+        for(Label label: labelNode.getLabels()) {
+            labels.add(label);
+        }
+        return (Label[]) labels.toArray();
     }
 
     /* Things I don't understand */
