@@ -2,10 +2,7 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
 
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
@@ -18,14 +15,18 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
     private PrintStream debugOut;
     private HeavyGraph graph;
 
-    public ComputeAllMetaPathsBetweenInstances(HeavyGraph graph, int metaPathLength) throws Exception {
+    public ComputeAllMetaPathsBetweenInstances(HeavyGraph graph, int metaPathLength){
         this.metaPathLength = metaPathLength;
         this.graph = graph;
 
-        this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full_Debug.txt"));
+        try {
+            this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Between_Instances_Debug.txt"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
-    public Result compute() throws IOException {
+    public Result compute() {
         debugOut.println("START BETWEEN_INSTANCES");
 
         long startTime = System.nanoTime();
@@ -88,6 +89,7 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
 
             computeMetaPathFromNodeID(initialMetaPath, start_nodeId, end_nodeID, metaPathLength - 1);
             try {
+                new File("between_instances").mkdir();
                 PrintStream out = new PrintStream(new FileOutputStream("between_instances/MetaPaths_" + graph.toOriginalNodeId(start_nodeId) + "_" + graph.toOriginalNodeId(end_nodeID) + ".txt"));
                 for (String mp : duplicateFreeMetaPathsOfThread) {
                     out.println(mp);
