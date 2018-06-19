@@ -104,7 +104,7 @@ public class MultiTypes extends Algorithm<MultiTypes> {
         for(Label label: labelNode.getLabels()) {
             labels.add(label);
         }
-        return (Label[]) labels.toArray();
+        return labels.toArray(new Label[labels.size()]);
     }
 
     /* Things I don't understand */
