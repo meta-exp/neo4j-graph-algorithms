@@ -16,6 +16,7 @@ public class Hierarchy extends Algorithm<Hierarchy> {
     private GraphDatabaseService db;
     private RelationshipType followLabel;
     private Set<Long> currentNodes = new HashSet<>();
+    private int count = 0;
 
 
     public Hierarchy(GraphDatabaseService db,
@@ -53,6 +54,7 @@ public class Hierarchy extends Algorithm<Hierarchy> {
 
         do {
             depth++;
+            log.info("Starting loop: " + depth);
             final int newDepth = depth;
 
             currentNodes = currentNodes.stream().map((currentNode) ->
@@ -60,10 +62,16 @@ public class Hierarchy extends Algorithm<Hierarchy> {
             ).collect(() -> new HashSet<>(),
                     (previous, next) -> previous.addAll(next),
                     (left, right) -> left.addAll(right));
+            log.info("Size of current nodes is " + currentNodes.size()+ " in depth " + depth);
+            log.info(Integer.toString(count));
+            System.out.println(count);
+            count = 0;
         } while (!currentNodes.isEmpty());
     }
 
     public List<Long> processNode(long nodeId, int maxDepth, int depth) {
+        count = count + 1;
+        //log.info("Process node " + nodeId);
         LinkedList<Long> foundNodes = new LinkedList<>();
         Iterable<Label> labels;
 
@@ -84,7 +92,7 @@ public class Hierarchy extends Algorithm<Hierarchy> {
                 labels,
                 maxDepth,
                 depth));
-
+        //log.info("Found "+foundNodes.size()+ " nodes while processing node " + nodeId);
         return foundNodes;
     }
 

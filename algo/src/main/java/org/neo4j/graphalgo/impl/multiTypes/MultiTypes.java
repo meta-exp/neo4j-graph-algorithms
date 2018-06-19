@@ -50,6 +50,7 @@ public class MultiTypes extends Algorithm<MultiTypes> {
     public void compute() {
         ExecutorService executor = Executors.newFixedThreadPool(THREADS);
 
+        log.info("Start computation...");
         for (long nodeId : getTypeNodeIds()) {
             Thread thread = new LabelingThread(this::updateNodeNeighbors, nodeId);
             executor.execute(thread);
@@ -57,6 +58,7 @@ public class MultiTypes extends Algorithm<MultiTypes> {
         executor.shutdown();
         try {
             executor.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
+            log.info("Computation terminated.");
         } catch (InterruptedException e) {
             log.error("Thread join timed out");
         }
