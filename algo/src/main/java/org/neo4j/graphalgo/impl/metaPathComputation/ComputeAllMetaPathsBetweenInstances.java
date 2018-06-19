@@ -1,8 +1,12 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
+import org.neo4j.logging.Log;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
@@ -11,35 +15,30 @@ import java.util.stream.Collectors;
 
 public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
 
-    private int metaPathLength;
-    private PrintStream debugOut;
-    private HeavyGraph graph;
+    private int         metaPathLength;
+    private HeavyGraph  graph;
+    public  Log         log;
 
-    public ComputeAllMetaPathsBetweenInstances(HeavyGraph graph, int metaPathLength){
+    public ComputeAllMetaPathsBetweenInstances(HeavyGraph graph, int metaPathLength,  Log log){
         this.metaPathLength = metaPathLength;
         this.graph = graph;
-
-        try {
-            this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Between_Instances_Debug.txt"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        this.log = log;
     }
 
     public Result compute() {
-        debugOut.println("START BETWEEN_INSTANCES");
+        log.info("START BETWEEN_INSTANCES");
 
         long startTime = System.nanoTime();
         startThreads();
         long endTime = System.nanoTime();
-        debugOut.println("FINISH BETWEEN_INSTANCES after " + (endTime - startTime) / 1000000 + " milliseconds");
+        log.info("FINISH BETWEEN_INSTANCES after " + (endTime - startTime) / 1000000 + " milliseconds");
 
         return new Result(new HashSet<>());
     }
 
     private void startThreads() {
         int processorCount = Runtime.getRuntime().availableProcessors();
-        debugOut.println("ProcessorCount: " + processorCount);
+        log.info("ProcessorCount: " + processorCount);
         ExecutorService executor = Executors.newFixedThreadPool(processorCount);
 
 
@@ -89,6 +88,7 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
 
             computeMetaPathFromNodeID(initialMetaPath, start_nodeId, end_nodeID, metaPathLength - 1);
             try {
+            log.info("Calculated meta-paths between " + start_nodeId + " and " + end_nodeID);
                 new File("between_instances").mkdir();
                 PrintStream out = new PrintStream(new FileOutputStream("between_instances/MetaPaths_" + graph.toOriginalNodeId(start_nodeId) + "_" + graph.toOriginalNodeId(end_nodeID) + ".txt"));
                 for (String mp : duplicateFreeMetaPathsOfThread) {

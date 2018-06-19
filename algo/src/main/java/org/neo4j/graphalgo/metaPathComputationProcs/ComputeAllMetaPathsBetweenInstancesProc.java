@@ -45,8 +45,10 @@ public class ComputeAllMetaPathsBetweenInstancesProc {
                 .load(HeavyGraphFactory.class);
 
 
-        final ComputeAllMetaPathsBetweenInstances algo = new ComputeAllMetaPathsBetweenInstances(graph, length);
+        final ComputeAllMetaPathsBetweenInstances algo = new ComputeAllMetaPathsBetweenInstances(graph, length, log);
+        log.info("Starting meta-path computation...");
         algo.compute();
+        log.info("Finished meta-path computation.");
         graph.release();
         return Stream.of(builder.build());
     }
