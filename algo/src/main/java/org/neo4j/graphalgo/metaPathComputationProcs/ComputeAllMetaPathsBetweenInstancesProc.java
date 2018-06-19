@@ -27,22 +27,23 @@ public class ComputeAllMetaPathsBetweenInstancesProc {
     @Context
     public KernelTransaction transaction;
 
-    @Procedure("algo.computeAllMetaPathsBetweenInstancesProc")
-    @Description("CALL algo.computeAllMetaPathsBetweenInstancesProc(length:int) YIELD length: \n" +
+    @Procedure("algo.computeAllMetaPathsBetweenInstances")
+    @Description("CALL algo.computeAllMetaPathsBetweenInstances(length:int) YIELD length: \n" +
             "Precomputes metapaths between all nodes connected by a edge up to a metapath-length given by 'length' and saves them to a file for each node pair \n")
 
     public Stream<ComputeAllMetaPathsResult> computeAllMetaPathsBetweenInstances(
-            @Name(value = "length", defaultValue = "5") String lengthString) throws Exception {
-        int length = Integer.valueOf(lengthString);
+            @Name(value = "length", defaultValue = "5") int length) throws Exception {
 
         final ComputeAllMetaPathsResult.Builder builder = ComputeAllMetaPathsResult.builder();
 
         final HeavyGraph graph;
 
+        log.info("Loading the graph...");
         graph = (HeavyGraph) new GraphLoader(api)
                 .asUndirected(true)
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
+        log.info("Graph loaded.");
 
 
         final ComputeAllMetaPathsBetweenInstances algo = new ComputeAllMetaPathsBetweenInstances(graph, length, log);
