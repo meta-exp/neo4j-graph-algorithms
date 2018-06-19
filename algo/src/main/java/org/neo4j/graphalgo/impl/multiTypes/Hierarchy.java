@@ -17,6 +17,7 @@ public class Hierarchy extends Algorithm<Hierarchy> {
     private RelationshipType followLabel;
     private Set<Long> currentNodes = new HashSet<>();
     private int count = 0;
+    private HashSet<Long> processedNodes = new HashSet<>();
 
 
     public Hierarchy(GraphDatabaseService db,
@@ -71,6 +72,11 @@ public class Hierarchy extends Algorithm<Hierarchy> {
 
     public List<Long> processNode(long nodeId, int maxDepth, int depth) {
         count = count + 1;
+        if(processedNodes.contains(nodeId)) {
+            // Node was already processed, terminate further processing
+            return new ArrayList<Long>();
+        }
+        processedNodes.add(nodeId);
         //log.info("Process node " + nodeId);
         LinkedList<Long> foundNodes = new LinkedList<>();
         Iterable<Label> labels;
