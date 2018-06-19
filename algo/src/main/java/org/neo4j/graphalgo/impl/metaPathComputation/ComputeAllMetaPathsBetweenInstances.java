@@ -87,13 +87,16 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
             initialMetaPath.add(graph.getLabel(start_nodeId));
 
             computeMetaPathFromNodeID(initialMetaPath, start_nodeId, end_nodeID, metaPathLength - 1);
-            try {
             log.info("Calculated meta-paths between " + start_nodeId + " and " + end_nodeID);
+            if (!new File("between_instances").exists()) {
                 new File("between_instances").mkdir();
+            }
+            try {
                 PrintStream out = new PrintStream(new FileOutputStream("between_instances/MetaPaths_" + graph.toOriginalNodeId(start_nodeId) + "_" + graph.toOriginalNodeId(end_nodeID) + ".txt"));
                 for (String mp : duplicateFreeMetaPathsOfThread) {
                     out.println(mp);
                 }
+                out.flush();
                 out.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
