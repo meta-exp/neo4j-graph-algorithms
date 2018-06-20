@@ -14,6 +14,8 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.logging.Log;
+import org.neo4j.logging.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,6 +33,79 @@ public class ComputeAllMetaPathsBetweenInstancesTest {
     private static GraphDatabaseAPI api;
     private ComputeAllMetaPathsBetweenInstances algo;
     private HeavyGraph graph;
+    private Log testLog = new Log() {
+        @Override public boolean isDebugEnabled() {
+            return false;
+        }
+
+        @Override public Logger debugLogger() {
+            return null;
+        }
+
+        @Override public void debug(String s) {
+            System.out.println("DEBUG: " + s);
+        }
+
+        @Override public void debug(String s, Throwable throwable) {
+
+        }
+
+        @Override public void debug(String s, Object... objects) {
+
+        }
+
+        @Override public Logger infoLogger() {
+            return null;
+        }
+
+        @Override public void info(String s) {
+            System.out.println("INFO: " + s);
+        }
+
+        @Override public void info(String s, Throwable throwable) {
+
+        }
+
+        @Override public void info(String s, Object... objects) {
+
+        }
+
+        @Override public Logger warnLogger() {
+            return null;
+        }
+
+        @Override public void warn(String s) {
+            System.out.println("WARN: " + s);
+        }
+
+        @Override public void warn(String s, Throwable throwable) {
+
+        }
+
+        @Override public void warn(String s, Object... objects) {
+
+        }
+
+        @Override public Logger errorLogger() {
+            return null;
+        }
+
+        @Override public void error(String s) {
+            System.out.println("ERROR: " + s);
+        }
+
+        @Override public void error(String s, Throwable throwable) {
+
+        }
+
+        @Override public void error(String s, Object... objects) {
+
+        }
+
+        @Override public void bulk(Consumer<Log> consumer) {
+
+        }
+    };
 
     @Before
     public void setup() throws KernelException{
@@ -68,7 +143,7 @@ public class ComputeAllMetaPathsBetweenInstancesTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        algo = new ComputeAllMetaPathsBetweenInstances(graph, 2);
+        algo = new ComputeAllMetaPathsBetweenInstances(graph, 2, testLog);
         algo.compute();
 
         runQuery("MATCH (n1 {name: 'a'}), (n2 {name: 'b'}) RETURN ID(n1) as id_n1, ID(n2) as id_n2",
@@ -91,7 +166,7 @@ public class ComputeAllMetaPathsBetweenInstancesTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        algo = new ComputeAllMetaPathsBetweenInstances(graph, 3);
+        algo = new ComputeAllMetaPathsBetweenInstances(graph, 3, testLog);
         algo.compute();
 
         String metapath = "0|0|0";
