@@ -32,7 +32,7 @@ public class ComputeAllMetaPathsBetweenInstancesProc {
             "Precomputes metapaths between all nodes connected by a edge up to a metapath-length given by 'length' and saves them to a file for each node pair \n")
 
     public Stream<ComputeAllMetaPathsResult> computeAllMetaPathsBetweenInstances(
-            @Name(value = "length", defaultValue = "5") int length) throws Exception {
+            @Name(value = "length", defaultValue = "5") Long length) throws Exception {
 
         final ComputeAllMetaPathsResult.Builder builder = ComputeAllMetaPathsResult.builder();
 
@@ -46,7 +46,7 @@ public class ComputeAllMetaPathsBetweenInstancesProc {
         log.info("Graph loaded.");
 
 
-        final ComputeAllMetaPathsBetweenInstances algo = new ComputeAllMetaPathsBetweenInstances(graph, length, log);
+        final ComputeAllMetaPathsBetweenInstances algo = new ComputeAllMetaPathsBetweenInstances(graph, length.intValue(), log);
         log.info("Starting meta-path computation...");
         algo.compute();
         log.info("Finished meta-path computation.");
