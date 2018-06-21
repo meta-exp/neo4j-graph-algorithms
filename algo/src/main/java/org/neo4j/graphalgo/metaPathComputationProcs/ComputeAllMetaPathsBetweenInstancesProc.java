@@ -1,8 +1,10 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
 import org.neo4j.graphalgo.core.GraphLoader;
+import org.neo4j.graphalgo.core.ProcedureConfiguration;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
+import org.neo4j.graphalgo.core.utils.Pools;
 import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsBetweenInstances;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsResult;
 import org.neo4j.kernel.api.KernelTransaction;
@@ -13,6 +15,7 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class ComputeAllMetaPathsBetweenInstancesProc {
@@ -28,18 +31,22 @@ public class ComputeAllMetaPathsBetweenInstancesProc {
     public KernelTransaction transaction;
 
     @Procedure("algo.computeAllMetaPathsBetweenInstances")
-    @Description("CALL algo.computeAllMetaPathsBetweenInstances(length:int) YIELD length: \n" +
+    @Description("CALL algo.computeAllMetaPathsBetweenInstances(length:int, {graph: 'my-graph'}) YIELD length: \n" +
             "Precomputes metapaths between all nodes connected by a edge up to a metapath-length given by 'length' and saves them to a file for each node pair \n")
 
     public Stream<ComputeAllMetaPathsResult> computeAllMetaPathsBetweenInstances(
-            @Name(value = "length", defaultValue = "5") Long length) throws Exception {
+            @Name(value = "length", defaultValue = "5") Long length,
+            @Name(value = "config", defaultValue = "{}") Map<String, Object> config) throws Exception {
+
+        ProcedureConfiguration configuration = ProcedureConfiguration.create(config);
 
         final ComputeAllMetaPathsResult.Builder builder = ComputeAllMetaPathsResult.builder();
 
         final HeavyGraph graph;
 
         log.info("Loading the graph...");
-        graph = (HeavyGraph) new GraphLoader(api)
+        graph = (HeavyGraph) new GraphLoader(api, Pools.DEFAULT)
+                .init(log, null, null, configuration)
                 .asUndirected(true)
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);

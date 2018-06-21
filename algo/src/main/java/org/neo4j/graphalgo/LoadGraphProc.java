@@ -50,7 +50,7 @@ public final class LoadGraphProc {
     @Procedure(name = "algo.graph.load")
     @Description("CALL algo.graph.load(" +
             "name:String, label:String, relationship:String" +
-            "{direction:'OUT/IN/BOTH', undirected:true/false, sorted:true/false, nodeProperty:'value', nodeWeight:'weight', relationshipWeight: 'weight', graph:'heavy/huge/cypher'}) " +
+            "{direction:'OUT/IN/BOTH', undirected:true/false, sorted:true/false, nodeProperty:'value', nodeWeight:'weight', relationshipWeight: 'weight', graph:'heavy/huge/cypher', labelAsProperty:true/false}) " +
             "YIELD nodes, relationships, loadMillis, computeMillis, writeMillis, write, nodeProperty, nodeWeight, relationshipWeight - " +
             "load named graph")
     public Stream<LoadGraphStats> load(
@@ -73,6 +73,7 @@ public final class LoadGraphProc {
         stats.graph = configuration.getString(ProcedureConstants.GRAPH_IMPL_PARAM,"heavy");
         stats.undirected = configuration.get("undirected",false);
         stats.sorted = configuration.get("sorted",false);
+        stats.labelAsProperty = configuration.get("labelAsProperty",false);
         stats.loadNodes = label;
         stats.loadRelationships = relationshipType;
         stats.direction = direction.name();
@@ -99,6 +100,7 @@ public final class LoadGraphProc {
                     .withOptionalRelationshipWeightsFromProperty(relationshipWeight, 1.0d)
                     .withDirection(direction)
                     .withSort(stats.sorted)
+                    .withLabelAsProperty(stats.labelAsProperty)
                     .asUndirected(stats.undirected)
                     .withLabelAsProperty(true)
                     .load(graphImpl);
@@ -116,6 +118,7 @@ public final class LoadGraphProc {
         public boolean sorted;
         public long nodes, loadMillis;
         public boolean alreadyLoaded;
+        public boolean labelAsProperty;
         public String nodeWeight, relationshipWeight, nodeProperty, loadNodes, loadRelationships;
     }
 
