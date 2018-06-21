@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -18,11 +19,21 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
     private int         metaPathLength;
     private HeavyGraph  graph;
     public  Log         log;
+    private float nodePairSkipProbability = 0;
+    private float edgeSkipProbability = 0;
 
     public ComputeAllMetaPathsBetweenInstances(HeavyGraph graph, int metaPathLength,  Log log){
         this.metaPathLength = metaPathLength;
         this.graph = graph;
         this.log = log;
+    }
+
+    public ComputeAllMetaPathsBetweenInstances(HeavyGraph graph, int metaPathLength,  Log log, float nodePairSkipProbability, float edgeSkipProbability){
+        this.metaPathLength = metaPathLength;
+        this.graph = graph;
+        this.log = log;
+        this.nodePairSkipProbability = nodePairSkipProbability;
+        this.edgeSkipProbability = edgeSkipProbability;
     }
 
     public Result compute() {
@@ -41,12 +52,15 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
         log.info("ProcessorCount: " + processorCount);
         ExecutorService executor = Executors.newFixedThreadPool(processorCount);
 
+        Random random = new Random(42);
 
         graph.forEachNode(node -> {
             int[] adjacent_nodes = graph.getAdjacentNodes(node);
             for(int adjacent_node: adjacent_nodes){
-                Runnable worker = new ComputeMetaPathFromNodeIdThread(node, adjacent_node, metaPathLength);
-                executor.execute(worker);
+                if (random.nextFloat() > this.nodePairSkipProbability) {
+                    Runnable worker = new ComputeMetaPathFromNodeIdThread(node, adjacent_node, metaPathLength, this.edgeSkipProbability);
+                    executor.execute(worker);
+                }
             }
             return true;
         });
@@ -74,12 +88,22 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
         private int end_nodeID;
         private int metaPathLength;
         private HashSet<String> duplicateFreeMetaPathsOfThread;
+        private float edgeSkipProbability = 0;
+        private Random random = new Random(42);
 
         ComputeMetaPathFromNodeIdThread(int start_nodeId, int end_nodeID, int metaPathLength) {
             this.start_nodeId = start_nodeId;
             this.end_nodeID = end_nodeID;
             this.metaPathLength = metaPathLength;
             this.duplicateFreeMetaPathsOfThread = new HashSet<>();
+        }
+
+        ComputeMetaPathFromNodeIdThread(int start_nodeId, int end_nodeID, int metaPathLength, float edgeSkipProbability) {
+            this.start_nodeId = start_nodeId;
+            this.end_nodeID = end_nodeID;
+            this.metaPathLength = metaPathLength;
+            this.duplicateFreeMetaPathsOfThread = new HashSet<>();
+            this.edgeSkipProbability = edgeSkipProbability;
         }
 
         public void computeMetaPathFromNodeID(int start_nodeId, int end_nodeID, int metaPathLength) {
@@ -115,10 +139,12 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
             }
 
             for(int node: graph.getAdjacentNodes(currentInstance)) {
-                ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
-                newMetaPath.add(graph.getEdgeLabel(currentInstance, node));
-                newMetaPath.add(graph.getLabel(currentInstance));
-                computeMetaPathFromNodeID(newMetaPath, node, end_nodeID, metaPathLength - 1);
+                if (random.nextFloat() > this.edgeSkipProbability) {
+                    ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
+                    newMetaPath.add(graph.getEdgeLabel(currentInstance, node));
+                    newMetaPath.add(graph.getLabel(currentInstance));
+                    computeMetaPathFromNodeID(newMetaPath, node, end_nodeID, metaPathLength - 1);
+                }
             }
         }
 
