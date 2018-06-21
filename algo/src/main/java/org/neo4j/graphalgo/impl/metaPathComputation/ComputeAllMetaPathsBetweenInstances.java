@@ -99,6 +99,7 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
                 }
                 out.flush();
                 out.close();
+                duplicateFreeMetaPathsOfThread = null;
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 log.error("FileNotFoundException occured: " + e.toString());

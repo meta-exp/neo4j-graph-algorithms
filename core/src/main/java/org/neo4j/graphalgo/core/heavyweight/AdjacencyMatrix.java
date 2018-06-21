@@ -95,10 +95,7 @@ class AdjacencyMatrix {
 
     public int[] getAdjacentNodes(int nodeId){
         int[] adjacentNodes = new int[degree(nodeId, Direction.BOTH)];
-        for(int i = 0; i < degree(nodeId, Direction.INCOMING); i++)
-        {
-            adjacentNodes[i] = incoming[nodeId][i];
-        }
+        System.arraycopy(incoming[nodeId], 0, adjacentNodes, 0, degree(nodeId, Direction.INCOMING));
 
         for(int i = 0; i < degree(nodeId, Direction.OUTGOING); i++)
         {
