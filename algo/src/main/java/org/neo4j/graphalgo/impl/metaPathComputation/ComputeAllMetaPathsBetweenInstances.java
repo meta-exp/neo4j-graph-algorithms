@@ -117,7 +117,8 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
             }
             try {
                 PrintStream out = new PrintStream(new FileOutputStream(
-                        "/tmp/between_instances/MetaPaths-" + metaPathLength + "_" + graph.toOriginalNodeId(start_nodeId) + "_" + graph.toOriginalNodeId(end_nodeID) + ".txt"));
+                        "/tmp/between_instances/MetaPaths-" + metaPathLength + "-" + this.edgeSkipProbability + "_" + graph.toOriginalNodeId(start_nodeId) + "_" + graph
+                                .toOriginalNodeId(end_nodeID) + ".txt"));
                 for (String mp : duplicateFreeMetaPathsOfThread) {
                     out.println(mp);
                 }

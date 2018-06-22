@@ -1,5 +1,6 @@
 package org.neo4j.graphalgo.impl.metaPathComputationTests;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -127,6 +128,7 @@ public class ComputeAllMetaPathsBetweenInstancesTest {
     @After
     public void shutdownGraph() throws Exception {
         api.shutdown();
+        FileUtils.deleteDirectory(new File("/tmp/between_instances/"));
     }
 
     @Test
@@ -143,13 +145,14 @@ public class ComputeAllMetaPathsBetweenInstancesTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        algo = new ComputeAllMetaPathsBetweenInstances(graph, 2, testLog);
+        int length = 2;
+        algo = new ComputeAllMetaPathsBetweenInstances(graph, length, testLog);
         algo.compute();
 
-        runQuery("MATCH (n1 {name: 'a'}), (n2 {name: 'b'}) RETURN ID(n1) as id_n1, ID(n2) as id_n2",
-                row -> assertTrue((new File("between_instances/MetaPaths_" + row.getNumber("id_n1").longValue() + "_" + row.getNumber("id_n2").longValue() + ".txt").exists())));
-        runQuery("MATCH (n1 {name: 'a'}), (n2 {name: 'c'}) RETURN ID(n1) as id_n1, ID(n2) as id_n2",
-                row -> assertFalse((new File("between_instances/MetaPaths_" + row.getNumber("id_n1").longValue() + "_" + row.getNumber("id_n2").longValue() + ".txt").exists())));
+        runQuery("MATCH (n1 {name: 'a'}), (n2 {name: 'b'}) RETURN ID(n1) as id_n1, ID(n2) as id_n2", row -> assertTrue(
+                (new File("/tmp/between_instances/MetaPaths-" + length + "-0.0_" + row.getNumber("id_n1").longValue() + "_" + row.getNumber("id_n2").longValue() + ".txt").exists())));
+        runQuery("MATCH (n1 {name: 'a'}), (n2 {name: 'c'}) RETURN ID(n1) as id_n1, ID(n2) as id_n2", row -> assertFalse(
+                (new File("/tmp/between_instances/MetaPaths-" + length + "-0.0_" + row.getNumber("id_n1").longValue() + "_" + row.getNumber("id_n2").longValue() + ".txt").exists())));
 
     }
 
@@ -166,13 +169,15 @@ public class ComputeAllMetaPathsBetweenInstancesTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        algo = new ComputeAllMetaPathsBetweenInstances(graph, 3, testLog);
+        int length = 3;
+        algo = new ComputeAllMetaPathsBetweenInstances(graph, length, testLog);
         algo.compute();
 
         String metapath = "0|0|0";
 
         runQuery("MATCH (n1 {name: 'a'}), (n2 {name: 'b'}) RETURN ID(n1) as id_n1, ID(n2) as id_n2", row -> {
-            Path file = FileSystems.getDefault().getPath("between_instances", "MetaPaths_" + row.getNumber("id_n1").longValue() + "_" + row.getNumber("id_n2").longValue() + ".txt");
+            Path file = FileSystems.getDefault()
+                    .getPath("/tmp/between_instances", "MetaPaths-" + length + "-0.0_" + row.getNumber("id_n1").longValue() + "_" + row.getNumber("id_n2").longValue() + ".txt");
             try {
                 try (BufferedReader reader = Files.newBufferedReader(file, Charset.forName("US-ASCII"))) {
 					String line = null;

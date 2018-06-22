@@ -32,7 +32,7 @@ public class ComputeAllMetaPathsBetweenInstancesProc {
 
     @Procedure("algo.computeAllMetaPathsBetweenInstances")
     @Description("CALL algo.computeAllMetaPathsBetweenInstances(length:int, nodePairSkipProbability:float, edgeSkipProbability:float, {graph: 'my-graph'}) YIELD length: \n" +
-            "Precomputes metapaths between all nodes connected by a edge up to a metapath-length given by 'length' and saves them to a file for each node pair." +
+            "Precomputes meta paths between all nodes connected by a edge up to a metapath-length given by 'length' and saves them to a file for each node pair." +
             "'nodePairSkipProbability' specifies the probability of skipping one pair of directly connected nodes and 'edgeSkipProbability' specifies the probability to skip an " +
             "edge in the recursive search for matching meta-paths\n")
 
