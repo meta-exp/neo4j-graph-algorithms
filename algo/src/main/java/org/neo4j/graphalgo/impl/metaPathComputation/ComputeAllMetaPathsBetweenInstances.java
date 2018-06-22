@@ -143,7 +143,7 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
                 if (random.nextFloat() > this.edgeSkipProbability) {
                     ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
                     newMetaPath.add(graph.getEdgeLabel(currentInstance, node));
-                    newMetaPath.add(graph.getLabel(currentInstance));
+                    newMetaPath.add(graph.getLabel(node));
                     computeMetaPathFromNodeID(newMetaPath, node, end_nodeID, metaPathLength - 1);
                 }
             }
