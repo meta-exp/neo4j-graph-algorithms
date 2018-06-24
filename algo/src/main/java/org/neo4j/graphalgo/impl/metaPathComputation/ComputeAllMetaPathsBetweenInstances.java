@@ -79,18 +79,19 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
     }
 
     private class ComputeMetaPathFromNodeIdThread implements Runnable {
-        private int start_nodeId;
-        private int end_nodeID;
-        private int metaPathLength;
+        private final int start_nodeId;
+        private final int end_nodeID;
+        private final int metaPathLength;
         private HashSet<String> duplicateFreeMetaPathsOfThread;
-        private float edgeSkipProbability = 0;
-        private Random random = new Random(42);
+        private final float edgeSkipProbability;
+        private final Random random = new Random(42);
 
         ComputeMetaPathFromNodeIdThread(int start_nodeId, int end_nodeID, int metaPathLength) {
             this.start_nodeId = start_nodeId;
             this.end_nodeID = end_nodeID;
             this.metaPathLength = metaPathLength;
             this.duplicateFreeMetaPathsOfThread = new HashSet<>();
+            this.edgeSkipProbability = 0;
         }
 
         ComputeMetaPathFromNodeIdThread(int start_nodeId, int end_nodeID, int metaPathLength, float edgeSkipProbability) {
@@ -154,10 +155,6 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
 
         public void run() {
             computeMetaPathFromNodeID(start_nodeId, end_nodeID, metaPathLength);
-        }
-
-        public HashSet<String> getDuplicateFreeMetaPaths() {
-            return duplicateFreeMetaPathsOfThread;
         }
     }
 
