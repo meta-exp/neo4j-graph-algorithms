@@ -173,7 +173,7 @@ public class ComputeAllMetaPathsBetweenInstancesTest {
         algo = new ComputeAllMetaPathsBetweenInstances(graph, length, testLog);
         algo.compute();
 
-        String metapath = "0|0|0";
+        String metapath = "0|0|1";
 
         runQuery("MATCH (n1 {name: 'a'}), (n2 {name: 'b'}) RETURN ID(n1) as id_n1, ID(n2) as id_n2", row -> {
             Path file = FileSystems.getDefault()
