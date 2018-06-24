@@ -75,12 +75,7 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
     }
 
     private ArrayList<Integer> copyMetaPath(ArrayList<Integer> currentMetaPath) {
-        ArrayList<Integer> newMetaPath = new ArrayList<>();
-        for (int label : currentMetaPath) {
-            newMetaPath.add(label);
-        }
-
-        return newMetaPath;
+        return new ArrayList<>(currentMetaPath);
     }
 
     private class ComputeMetaPathFromNodeIdThread implements Runnable {
