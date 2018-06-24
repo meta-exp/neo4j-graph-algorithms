@@ -108,7 +108,6 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
 
         public void computeMetaPathFromNodeID(int start_nodeId, int end_nodeID, int metaPathLength) {
             ArrayList<Integer> initialMetaPath = new ArrayList<>();
-            initialMetaPath.add(graph.getLabel(start_nodeId));
 
             computeMetaPathFromNodeID(initialMetaPath, start_nodeId, end_nodeID, metaPathLength - 1);
             log.info("Calculated meta-paths between " + start_nodeId + " and " + end_nodeID + " save in " + new File("/tmp/between_instances").getAbsolutePath());
@@ -135,15 +134,19 @@ public class ComputeAllMetaPathsBetweenInstances extends MetaPathComputation {
             if (metaPathLength <= 0) return;
 
             if (currentInstance == end_nodeID) {
-                addAndLogMetaPath(currentMetaPath);
+                ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
+                Integer[] labels = graph.getLabels(currentInstance);
+                newMetaPath.add(random.nextInt(labels.length));
+                addAndLogMetaPath(newMetaPath);
                 return;
             }
 
+            Integer[] labels = graph.getLabels(currentInstance);
             for(int node: graph.getAdjacentNodes(currentInstance)) {
                 if (random.nextFloat() > this.edgeSkipProbability) {
                     ArrayList<Integer> newMetaPath = copyMetaPath(currentMetaPath);
+                    newMetaPath.add(random.nextInt(labels.length));
                     newMetaPath.add(graph.getEdgeLabel(currentInstance, node));
-                    newMetaPath.add(graph.getLabel(node));
                     computeMetaPathFromNodeID(newMetaPath, node, end_nodeID, metaPathLength - 1);
                 }
             }
