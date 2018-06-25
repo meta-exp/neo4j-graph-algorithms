@@ -79,44 +79,53 @@ public class NodeWalker extends AbstractWalkAlgorithm {
 
 
     private void startWalks(AbstractWalkOutput output, Stream<Integer> nodeStream, long numberOfElements, long steps) {
-        ThreadPoolExecutor executor = getExecutor();
+        BoundedExecutor executor = getBoundedExecutor();
 
         long startTime = System.nanoTime();
 
         nodeStream.forEach((nodeId)->{
-            executor.execute(() -> {
-                try {
-                    long[] pathIds = doWalk(nodeId, (int) steps, nextNodeStrategy);
-                    long numberOfResults = output.numberOfResults() + 1;
-                    // log progress ------
-                    if(numberOfResults % 50000 == 2500){ //get a better estimate after 2500 walks
-                        long progress = (numberOfResults*1000) / (numberOfElements*10); // dont convert to float but keep precision
-                        long remainingTime = estimateRemainingTime(startTime, numberOfResults, numberOfElements);
-                        long remainingMinutes = TimeUnit.MINUTES.convert(remainingTime, TimeUnit.NANOSECONDS);
-                        long remainingHours = TimeUnit.HOURS.convert(remainingTime, TimeUnit.NANOSECONDS);
-                        String progressLog = String.format( "Approximately %d %% of all walks done; estimated remaining time is %d minutes or %d hours", progress, remainingMinutes, remainingHours);
-                        log.info(progressLog);
-                    }
-                    // ------
+            try {
+                executor.submitTask(() -> {
+                    startSingleWalk(output, nodeId, (int) steps, numberOfElements, startTime);
+                });
+            } catch (InterruptedException e) {
+                log.error("Thread waiting interrupted");
+            }
 
-                    output.addResult(pathIds);
-                } catch (Exception e) {
-                    String errorMsg = "Error with node " + nodeId + ": " + e.getMessage();
-                    System.out.println(errorMsg);
-                    log.error(errorMsg);
-
-                }
-            });
         });
 
-        executor.shutdown();
+        executor.getExecutor().shutdown();
         try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
+            executor.getExecutor().awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);
         } catch (InterruptedException e) {
             log.error("Thread join timed out");
         }
 
         output.endInput();
+    }
+
+    private void startSingleWalk(AbstractWalkOutput output, int nodeId, int steps, long numberOfElements, long startTime) {
+        try {
+            long[] pathIds = doWalk(nodeId, steps, nextNodeStrategy);
+            long numberOfResults = output.numberOfResults() + 1;
+            // log progress ------
+            if(numberOfResults % 50000 == 2500){ //get a better estimate after 2500 walks
+                long progress = (numberOfResults*1000) / (numberOfElements*10); // dont convert to float but keep precision
+                long remainingTime = estimateRemainingTime(startTime, numberOfResults, numberOfElements);
+                long remainingMinutes = TimeUnit.MINUTES.convert(remainingTime, TimeUnit.NANOSECONDS);
+                long remainingHours = TimeUnit.HOURS.convert(remainingTime, TimeUnit.NANOSECONDS);
+                String progressLog = String.format( "Approximately %d %% of all walks done; estimated remaining time is %d minutes or %d hours", progress, remainingMinutes, remainingHours);
+                log.info(progressLog);
+            }
+            // ------
+
+            output.addResult(pathIds);
+        } catch (Exception e) {
+            String errorMsg = "Error with node " + nodeId + ": " + e.getMessage();
+            System.out.println(errorMsg);
+            log.error(errorMsg);
+
+        }
     }
 
     private long estimateRemainingTime(long startNanoTime, long currentIndex, long size) {
