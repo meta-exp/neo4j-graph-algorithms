@@ -137,43 +137,4 @@ public class MetaPathInstances extends AbstractWalkAlgorithm {
         return newArray;
     }
 
-    private BoundedExecutor getBoundedExecutor(){
-        ThreadPoolExecutor executor = super.getExecutor();
-        return new BoundedExecutor(executor, executor.getCorePoolSize() * 1000);
-    }
-
-    public class BoundedExecutor {
-        private final ExecutorService exec;
-        private final Semaphore semaphore;
-
-        public BoundedExecutor(ExecutorService exec, int bound) {
-            this.exec = exec;
-            this.semaphore = new Semaphore(bound);
-        }
-
-        public void submitTask(final Runnable command)
-                throws InterruptedException, RejectedExecutionException {
-            semaphore.acquire();
-            try {
-                exec.execute(new Runnable() {
-                    public void run() {
-                        try {
-                            command.run();
-                        } finally {
-                            semaphore.release();
-                        }
-                    }
-                });
-            } catch (RejectedExecutionException e) {
-                semaphore.release();
-                throw e;
-            }
-        }
-
-        public ExecutorService getExecutor(){
-            return exec;
-        }
-    }
-
-
 }
