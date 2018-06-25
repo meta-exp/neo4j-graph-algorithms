@@ -76,7 +76,7 @@ public class ComputeMetaPathFromNodeIdThread implements Runnable {
 		}
 
 		Integer[] labels = graph.getLabels(currentInstance);
-		return IntStream.of(graph.getAdjacentNodes(currentInstance)).parallel().filter(x -> random.nextFloat() > this.edgeSkipProbability).mapToObj(node -> {
+		return IntStream.of(graph.getAdjacentNodes(currentInstance)).filter(x -> random.nextFloat() > this.edgeSkipProbability).mapToObj(node -> {
 			ArrayList<Integer[]> newMultiTypeMetaPath = new ArrayList<Integer[]>(currentMultiTypeMetaPath);
 			newMultiTypeMetaPath.add(labels);
 			newMultiTypeMetaPath.add(new Integer[] { graph.getEdgeLabel(currentInstance, node) });
