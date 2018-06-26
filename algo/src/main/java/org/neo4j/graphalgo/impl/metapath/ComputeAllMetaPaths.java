@@ -1,11 +1,13 @@
 package org.neo4j.graphalgo.impl.metapath;
 
-import com.carrotsearch.hppc.IntSet;
-import com.carrotsearch.hppc.ObjectIntHashMap;
-import com.carrotsearch.hppc.ObjectIntMap;
-import io.netty.util.collection.IntObjectMap;
+import com.carrotsearch.hppc.*;
+import com.carrotsearch.hppc.cursors.IntLongCursor;
+import com.carrotsearch.hppc.cursors.LongCursor;
+import com.carrotsearch.hppc.cursors.ObjectCursor;
+import com.carrotsearch.hppc.procedures.ObjectLongProcedure;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.impl.metapath.labels.LabelMapping;
+import org.neo4j.graphalgo.impl.metapath.labels.Tokens;
 
 import java.util.concurrent.*;
 import java.io.FileOutputStream;
@@ -19,106 +21,48 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private HeavyGraph graph;
     private LabelMapping labelMapping;
     private int metaPathLength;
-    private IntObjectMap<IntSet> initialInstances;
     private int currentLabelId = 0;
     private PrintStream out;
     private PrintStream debugOut;
     private int printCount = 0;
     private long startTime;
-    private HashMap<Pair, Integer> labelDictionary;
     private short startEdgeLabel;
 
-    public ComputeAllMetaPaths(HeavyGraph graph, LabelMapping labelMapping, int metaPathLength) throws IOException {
+    public ComputeAllMetaPaths(HeavyGraph graph, LabelMapping labelMapping, int metaPathLength, PrintStream out) throws IOException {
         this.graph = graph;
         this.labelMapping = labelMapping;
         startEdgeLabel = labelMapping.getAllEdgeLabels()[0];
         this.metaPathLength = metaPathLength;
-        this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));//ends up in root/tests //or in dockerhome
+        this.out = out;//ends up in root/tests //or in dockerhome
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Debug.txt"));
-        this.labelDictionary = new HashMap<>();
     }
 
     public Result compute() {
         debugOut.println("started computation");
         debugOut.println("length: " + metaPathLength);
         startTime = System.nanoTime();
-        ArrayList<String> finalMetaPaths = computeAllMetaPaths();
-        for (String mp : finalMetaPaths) {
-            out.println(mp);
-        }
+
+        ObjectLongMap<MetaPath> pathResults = computeMetaPaths();
+        List<String> strings = new ArrayList<>(pathResults.size());
+        pathResults.forEach((ObjectLongProcedure<MetaPath>)(path,count) -> {
+            out.println(path.toString(labelMapping) + ":" + count);
+            strings.add(String.format("%s\t%d",path.toString(),count));
+        });
+
         long endTime = System.nanoTime();
 
         System.out.println("calculation took: " + String.valueOf(endTime - startTime));
         debugOut.println("actual amount of metaPaths: " + printCount);
         debugOut.println("total time past: " + (endTime - startTime));
         debugOut.println("finished computation");
-        return new Result(finalMetaPaths);
-    }
-
-    public ArrayList<String> computeAllMetaPaths() {
-
-        initializeLabelDictAndInitialInstances();
-        List<Runnable> threads = computeMetaPathsFromAllNodeLabels();
-        mergeThreads(threads);
-
-        return duplicateFreeMetaPaths;
-    }
-
-    private void mergeThreads(List<Runnable> threads) {
-        for (Runnable thread : threads) {
-            duplicateFreeMetaPaths.addAll(((ComputeMetaPathFromNodeLabelTask) thread).metaPaths);
-        }
+        return new Result(strings);
     }
 
     private int combineLabels(short firstLabel, short secondLabel) {
         return (int)firstLabel << 16 | (secondLabel & 0xFFFF);
     }
 
-    private void initializeLabelDictAndInitialInstances() {
-        currentLabelId = 0;
-        HashMap<Integer, Integer> labelCountDict = new HashMap<>();
-
-        for (int nodeLabel : labelMapping.getAllNodeLabels()) {
-            for (int edgeLabel : labelMapping.getAllEdgeLabels()) {
-                assignIdToNodeLabel(edgeLabel, nodeLabel);
-            }
-        }
-
-        graph.forEachNode(node -> initializeNode(node, labelCountDict));
-        for (int label : labelMapping.getAllNodeLabels()) {
-            createMetaPathWithLengthOne(label, labelCountDict.get(label));
-        }
-    }
-
-    private boolean initializeNode(int node, HashMap<Integer, Integer> labelCountDict) {
-        short nodeLabel = labelMapping.getLabel(node);
-        labelCountDict.put(nodeLabel, 1 + (labelCountDict.get(nodeLabel) == null ? 0 : labelCountDict.get(nodeLabel)));
-
-        initialInstances.get(combineLabels(startEdgeLabel, nodeLabel)).add(node);
-        return true;
-    }
-
-    private int assignIdToNodeLabel(int edgeLabel, int nodeLabel) {
-        labelDictionary.put(new Pair(edgeLabel, nodeLabel), currentLabelId);
-        currentLabelId++;
-        return currentLabelId - 1;
-    }
-
-    private boolean createMetaPathWithLengthOne(int nodeLabel, int instanceCountSum) {
-        ArrayList<Integer> metaPath = new ArrayList<>();
-        metaPath.add(nodeLabel);
-        addMetaPathGlobal(metaPath, instanceCountSum);
-        return true;
-    }
-
-    private String addMetaPathGlobal(ArrayList<Integer> newMetaPath, long instanceCountSum) {
-        String joinedMetaPath;
-        joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining(" | "));
-        joinedMetaPath += "\t" + instanceCountSum;
-        duplicateFreeMetaPaths.add(joinedMetaPath);
-
-        return joinedMetaPath;
-    }
+    /*
 
     private List<List<String>> computeMetaPathsFromAllNodeLabels() throws InterruptedException {
         int processorCount = Runtime.getRuntime().availableProcessors();
@@ -144,55 +88,110 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             throw new RuntimeException(e);
         }
     }
-    private ArrayList<HashMap<Integer, Integer>> allocateNextInstances() {
-        int nextInstancesSize = labelMapping.getAllNodeLabels().size() * labelMapping.getAllEdgeLabels().size();
-        ArrayList<HashMap<Integer, Integer>> nextInstances = new ArrayList<>(nextInstancesSize);
+    */
+    static class CurrentState  {
+        MetaPath path;
+        int remainingLength;
+        IntLongMap nodes = new IntLongHashMap();
 
-        for (int i = 0; i < nextInstancesSize; i++) {
-            nextInstances.add(new HashMap<>());
+        public CurrentState(short label, int length) {
+            this.path = new MetaPath(label);
+            this.remainingLength = length - 1;
         }
 
-        return nextInstances;
+        public CurrentState() { }
+
+        public CurrentState addNode(int id, long count) {
+            this.nodes.putOrAdd(id,count,count);
+            return this;
+        }
+
+        public CurrentState next(long count, short type, short label, int neighbourId) {
+            CurrentState result = new CurrentState();
+            result.path = path.extend(type, label);
+            result.remainingLength = remainingLength - 1;
+            return result.addNode(neighbourId, count);
+        }
+
+        public long totalCount() {
+            long sum = 0;
+            for (LongCursor cursor : this.nodes.values()) {
+                sum += cursor.value;
+            }
+            return sum;
+        }
     }
-    static class Current {
-        
+
+    private ObjectLongMap<MetaPath> computeMetaPaths() {
+        ObjectContainer<CurrentState> states = loadNodes();
+        ObjectLongMap<MetaPath> pathResults = new ObjectLongHashMap<>();
+        recurse(states, pathResults);
+        return pathResults;
     }
 
-    private ArrayList<HashMap<Integer, Integer>> calculateNextInstances(HashMap<Integer, Integer> currentInstances) {
-        ArrayList<HashMap<Integer, Integer>> nextInstances = allocateNextInstances();
-        for (int instance : currentInstances.keySet()) {
-            for (int nodeId : graph.getAdjacentNodes(instance)) {
-                int label = labelMapping.getLabel(nodeId); //get the id of the label of the node
-                int edgeLabel = labelMapping.getEdgeLabel(instance, nodeId);
-                int labelID = labelDictionary.get(new Pair(edgeLabel, label));
-
-                boolean incrementMissing = nextInstances.get(labelID).get(nodeId) == null;
-                int oldCount = currentInstances.get(instance);
-                int count = oldCount + (incrementMissing ? 0 : nextInstances.get(labelID).get(nodeId));
-
-                nextInstances.get(labelID).put(nodeId, count); // add the node to the corresponding instances array
+    private void recurse(ObjectContainer<CurrentState> states, ObjectLongMap<MetaPath> pathResults) {
+        for (ObjectCursor<CurrentState> cursor : states) {
+            CurrentState current = cursor.value;
+            pathResults.put(current.path, current.totalCount());
+            ObjectContainer<CurrentState> newStates = expand(current);
+            if (newStates != null) {
+               recurse(newStates, pathResults);
             }
         }
-        return nextInstances;
     }
 
-    private ArrayList<Integer> copyMetaPath(ArrayList<Integer> currentMetaPath) {
-        ArrayList<Integer> newMetaPath = new ArrayList<>();
-        newMetaPath.addAll(currentMetaPath);
-
-        return newMetaPath;
-    }
-
-    private HashMap<Integer, Integer> initInstancesRow(int startNodeLabel) {
-        int startNodeLabelId = labelDictionary.get(new Pair(startEdgeLabel, startNodeLabel));
-        HashSet<Integer> row = initialInstances.get(startNodeLabelId);
-        HashMap<Integer, Integer> dictRow = new HashMap<>();
-        for (int instance : row) {
-            dictRow.put(instance, 1);
+    private ObjectContainer<CurrentState> loadNodes() {
+        IntObjectMap<CurrentState> nodesByLabel = new IntObjectHashMap<>();
+        for (short label : labelMapping.getAllNodeLabels()) {
+            nodesByLabel.put(combineLabels((short)0,label), new CurrentState(label, metaPathLength));
         }
-        return dictRow;
+        labelMapping.forEachNode((nodeLabels) -> {
+            for (short nodeLabel : nodeLabels.value) {
+                nodesByLabel.get(combineLabels((short)0,nodeLabel)).addNode(nodeLabels.key, 1);
+            }
+        });
+        return nodesByLabel.values();
     }
 
+
+    private ObjectContainer<CurrentState> expand(CurrentState state) {
+        if (state.remainingLength == 0) return null;
+        IntObjectMap<CurrentState> newStates = new IntObjectHashMap<>();
+        for (IntLongCursor node : state.nodes) {
+            int nodeId = node.key;
+            long count = node.value;
+            for (int neighbourId : graph.getAdjacentNodes(nodeId)) {
+                short label = labelMapping.getLabel(neighbourId);
+                short type = labelMapping.getEdgeLabel(nodeId, neighbourId);
+                int pair = combineLabels(type, label);
+                if (newStates.containsKey(pair)) {
+                    newStates.get(pair).addNode(neighbourId, count);
+                } else  {
+                    CurrentState newState = state.next(count, type, label, neighbourId);
+                    newStates.put(pair, newState);
+                }
+            }
+        }
+        return newStates.values();
+    }
+
+
+    private void drainFutures() {
+        List<Future<String>> futures = new ArrayList<>();
+        Iterator<Future<String>> it = futures.iterator();
+        while (it.hasNext()) {
+            Future<String> next =  it.next();
+            if (next.isDone()) {
+                Future<String> data = futures.get();
+                it.remove();
+            }
+        }
+
+        List<String> strings = futures.stream().map(this::get).collect(Collectors.toList());
+        for (Future<String> future : futures) {
+            future.get();
+        }
+    }
     public static class MetaPath {
         short[] path;
         byte length;
@@ -210,7 +209,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             if (length == 0) return 0;
             int hash = path[0];
             for (int i = 1; i < length; i++) {
-                hash = hash*31 + i;
+                hash = hash*31 + path[i];
             }
             return hash;
         }
@@ -220,18 +219,29 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             if (o == this) return true;
             if (!(o instanceof MetaPath)) return false;
             MetaPath other = (MetaPath) o;
-            if (length == 0) return other.length == 0;
+            if (length != other.length) return false;
             for (int i = 0; i < length; i++) {
                 if (path[i] != other.path[i]) return false;
             }
             return true;
         }
-        public String toString(Tokens labels, Tokens types) {
+        public String toString(LabelMapping mapping) {
+            Tokens labels = mapping.getLabels();
+            Tokens types = mapping.getTypes();
             StringBuilder sb = new StringBuilder(length * 10);
             for (int i = 0; i < length; i++) {
                 int id = path[i];
                 sb.append(i % 2 == 0 ? labels.name(id) : types.name(id));
-                if (i < length -1) sb.append("->");
+                if (i < length -1) sb.append("|");
+            }
+            return sb.toString();
+        }
+
+        public String toString() {
+            StringBuilder sb = new StringBuilder(length * 5);
+            for (int i = 0; i < length; i++) {
+                sb.append((int) path[i]);
+                if (i < length -1) sb.append(" | ");
             }
             return sb.toString();
         }
@@ -246,8 +256,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         public MetaPath copy() {
             MetaPath copy = new MetaPath();
             copy.length = length;
-            int newLength = path.length - length >= 2 ? path.length : path.length + 2;
-            copy.path = Arrays.copyOf(path, newLength);
+            copy.path = Arrays.copyOf(path, path.length + 2);
             return copy;
         }
 
@@ -272,10 +281,11 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         }
 
         public ObjectIntMap<MetaPath> call() {
-            computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
+      //      computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
             return metaPaths;
         }
 
+        /*
         public void computeMetaPathFromNodeLabel(short startNodeLabel, short metaPathLength) {
             MetaPath initialMetaPath = new MetaPath(startNodeLabel);
             HashMap<Integer, Integer> initialInstancesRow = initInstancesRow(startNodeLabel);
@@ -316,6 +326,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
                 }
             }
         }
+        */
     }
 
 
@@ -337,9 +348,9 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
      */
     public static final class Result {
 
-        ArrayList<String> finalMetaPaths;
+        List<String> finalMetaPaths;
 
-        public Result(ArrayList<String> finalMetaPaths) {
+        public Result(List<String> finalMetaPaths) {
             this.finalMetaPaths = finalMetaPaths;
         }
 
@@ -348,7 +359,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             return "Result{}";
         }
 
-        public ArrayList<String> getFinalMetaPaths() {
+        public List<String> getFinalMetaPaths() {
             return finalMetaPaths;
         }
     }

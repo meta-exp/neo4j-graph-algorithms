@@ -4,10 +4,13 @@ import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.IntObjectMap;
 import com.carrotsearch.hppc.LongShortHashMap;
 import com.carrotsearch.hppc.LongShortMap;
+import com.carrotsearch.hppc.cursors.IntObjectCursor;
 import org.neo4j.graphalgo.core.utils.RawValues;
 import org.neo4j.storageengine.api.Token;
 
 import java.util.Iterator;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class LabelMapping implements GraphLabeler {
     private static final short[] NO_LABELS = new short[0];
@@ -31,6 +34,9 @@ public class LabelMapping implements GraphLabeler {
         return labels[0];
     }
 
+    public void forEachNode(Consumer<IntObjectCursor<short[]>> callback) {
+        nodeLabelsMap.forEach(callback);
+    }
     @Override
     public short[] getLabels(int nodeId){
         return getNodeMapping(nodeId);

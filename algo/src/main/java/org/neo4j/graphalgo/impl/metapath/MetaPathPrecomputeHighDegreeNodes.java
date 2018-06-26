@@ -247,7 +247,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
 
         maxDegreeNodes = nodeList.subList((int) (nodeList.size() - Math.ceil((double) nodeList.size() * ratioHighDegreeNodes)), nodeList.size());
         for (int nodeID : maxDegreeNodes) { //TODO always consecutive? (without gap)
-            debugOut.println("nodeID: " + nodeID + "; degree: " + graph.degree(nodeID, Direction.BOTH) + "; label: " + graph.getLabel(nodeID));
+            debugOut.println("nodeID: " + nodeID + "; degree: " + graph.degree(nodeID, Direction.BOTH) + "; label: " ); // TODO gaph.getLabel(nodeID));
 
         }
         return maxDegreeNodes;

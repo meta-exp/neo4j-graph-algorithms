@@ -72,7 +72,7 @@ public class GetSchemaTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        algo = new GetSchema(graph);
+        algo = new GetSchema(graph, null); // TODO
     }
 
     @Test

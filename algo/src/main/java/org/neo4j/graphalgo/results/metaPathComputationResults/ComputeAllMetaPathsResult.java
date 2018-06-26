@@ -3,6 +3,7 @@ package org.neo4j.graphalgo.results.metaPathComputationResults;
 import org.neo4j.graphalgo.results.AbstractResultBuilder;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ComputeAllMetaPathsResult {
 
@@ -20,9 +21,9 @@ public class ComputeAllMetaPathsResult {
 
     public static class Builder extends AbstractResultBuilder<ComputeAllMetaPathsResult> {
 
-        private ArrayList<String> metaPaths;
+        private List<String> metaPaths;
 
-        public void setMetaPaths(ArrayList<String> metaPaths) {
+        public void setMetaPaths(List<String> metaPaths) {
            this.metaPaths = metaPaths;
         }
 

@@ -9,15 +9,20 @@ import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
 import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPaths;
+import org.neo4j.graphalgo.impl.metapath.labels.LabelImporter;
+import org.neo4j.graphalgo.impl.metapath.labels.LabelMapping;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.graphalgo.metaPathComputationProcs.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -86,25 +91,27 @@ public class ComputeAllMetaPathsTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
+        LabelMapping labelMapping = LabelImporter.loadMetaData(graph, api);
 
-        algo = new ComputeAllMetaPaths(graph, graph, 3);
+        PrintStream out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));
+        algo = new ComputeAllMetaPaths(graph, labelMapping, 3, System.out);
     }
 
     @Test
     public void testCalculationOfMetapaths() {
         //assertEquals(0.5, algo.similarity(), 0);
-        ArrayList<String> allMetaPaths = algo.computeAllMetaPaths();//this runs the code two times..
+        List<String> allMetaPaths = algo.compute().getFinalMetaPaths();//this runs the code two times..
         HashSet<String> allExpectedMetaPaths = new HashSet<>(Arrays.asList("0\t4", "1\t2", "2\t2", "0 | 0 | 0 | 0 | 0\t2", "0 | 0 | 0 | 0 | 1\t2", "0 | 0 | 0 | 0 | 2\t3", "0 | 0 | 1 | 0 | 0\t4", "0 | 0 | 1 | 0 | 2\t4", "0 | 0 | 2 | 0 | 0\t13", "0 | 0 | 2 | 0 | 1\t7", "0 | 0 | 2 | 0 | 2\t5",
                 "1 | 0 | 0 | 0 | 0\t2", "1 | 0 | 0 | 0 | 1\t2", "1 | 0 | 0 | 0 | 2\t3", "1 | 0 | 2 | 0 | 0\t7", "1 | 0 | 2 | 0 | 1\t5", "1 | 0 | 2 | 0 | 2\t3", "2 | 0 | 0 | 0 | 0\t3", "2 | 0 | 0 | 0 | 1\t3", "2 | 0 | 0 | 0 | 2\t7", "2 | 0 | 1 | 0 | 0\t4", "2 | 0 | 1 | 0 | 2\t5", "2 | 0 | 2 | 0 | 0\t5", "2 | 0 | 2 | 0 | 1\t3", "2 | 0 | 2 | 0 | 2\t2",
                 "0 | 0 | 1\t2", "0 | 0 | 2\t5", "0 | 0 | 0\t2", "1 | 0 | 0\t2", "1 | 0 | 2\t3", "2 | 0 | 0\t5", "2 | 0 | 1\t3", "2 | 0 | 2\t2")); //0|0|0, 1|0|1, 2|2|2 should not exist, but in this prototype its ok. we are going back to the same node we already were
 
-        for (String expectedMetaPath : allExpectedMetaPaths) {
-            System.out.println("expected: " + expectedMetaPath);
-            assert (allMetaPaths.contains(expectedMetaPath));
-
-        }
         for (String mpath : allMetaPaths) {
             System.out.println(mpath);
+        }
+
+        for (String expectedMetaPath : allExpectedMetaPaths) {
+            assertTrue ("expected: " + expectedMetaPath, allMetaPaths.contains(expectedMetaPath));
+
         }
 
         assertEquals(33, allMetaPaths.size());//this should be 30, ...

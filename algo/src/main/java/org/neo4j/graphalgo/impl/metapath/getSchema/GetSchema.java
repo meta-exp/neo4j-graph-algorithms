@@ -4,12 +4,14 @@ import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.impl.metapath.MetaPathComputation;
 import org.neo4j.graphalgo.impl.metapath.Pair;
+import org.neo4j.graphalgo.impl.metapath.labels.LabelMapping;
 
 import java.util.*;
 import java.io.*;
 
 public class GetSchema extends MetaPathComputation {
 
+    private final LabelMapping mapping;
     private HeavyGraph graph;
     private IntIntHashMap labelDictionary;//maybe change to array if it stays integer->integer
     private HashMap<Integer, Integer> reversedLabelDictionary;//also change to Array
@@ -19,9 +21,10 @@ public class GetSchema extends MetaPathComputation {
     private long startTime;
     private long endTime;
 
-    public GetSchema(HeavyGraph graph) throws FileNotFoundException {
+    public GetSchema(HeavyGraph graph, LabelMapping mapping) throws FileNotFoundException {
         this.graph = graph;
-        this.amountOfLabels = graph.getAllLabels().size();
+        this.mapping = mapping;
+        this.amountOfLabels = mapping.getAllNodeLabels().length;
         this.labelDictionary = new IntIntHashMap();
         this.reversedLabelDictionary = new HashMap<>();
         this.numberOfCores = Runtime.getRuntime().availableProcessors();
@@ -111,7 +114,7 @@ public class GetSchema extends MetaPathComputation {
 
     private void initializeLabelDict() {
         int labelCounter = 0;
-        for (int label : graph.getAllLabels()) {
+        for (int label : mapping.getAllNodeLabels()) {
             labelDictionary.put(label, labelCounter);
             reversedLabelDictionary.put(labelCounter, label);
             labelCounter++;
@@ -120,14 +123,14 @@ public class GetSchema extends MetaPathComputation {
 
     private boolean addNeighboursToSchema(int node, ArrayList<HashSet<Pair>> schema) {
         int[] neighbours = graph.getOutgoingNodes(node);
-        Integer[] labels = graph.getLabels(node);
+        short[] labels = mapping.getLabels(node);
         for (int label : labels) {
             Integer labelId = getLabelId(label);
 
             for (int neighbour : neighbours) {
-                int edgeLabel = graph.getEdgeLabel(node, neighbour);
+                int edgeLabel = mapping.getEdgeLabel(node, neighbour);
 
-                Integer[] neighbourLabels = graph.getLabels(neighbour);
+                short[] neighbourLabels = mapping.getLabels(neighbour);
                 for (int neighbourLabel : neighbourLabels) {
                     Integer neighbourLabelId = getLabelId(neighbourLabel);
 

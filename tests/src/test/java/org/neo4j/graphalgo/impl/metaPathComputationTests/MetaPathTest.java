@@ -4,7 +4,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.neo4j.graphalgo.impl.metapath.MetaPath;
+import org.neo4j.graphalgo.impl.metapath.MetaPathAlgorithm;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 public class MetaPathTest {
 
     private static GraphDatabaseAPI api;
-    private MetaPath algo;
+    private MetaPathAlgorithm algo;
 
     @BeforeClass
     public static void setup() throws KernelException, Exception {
@@ -135,7 +135,7 @@ public class MetaPathTest {
                 .load(HeavyGraphFactory.class);
 
 
-        algo = new MetaPath(graph, graph, graph, startNodeIds, endNodeIds, 10, 8);
+        algo = null; // TODO  new MetaPathAlgorithm(graph, graph, graph, startNodeIds, endNodeIds, 10, 8);
 
         // Something does not work: e.g. 0 - 0 - 0 - 0
         algo.compute();
