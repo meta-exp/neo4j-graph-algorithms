@@ -176,7 +176,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
 
-    private void drainFutures() {
+    /*private void drainFutures() {
         List<Future<String>> futures = new ArrayList<>();
         Iterator<Future<String>> it = futures.iterator();
         while (it.hasNext()) {
@@ -191,7 +191,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         for (Future<String> future : futures) {
             future.get();
         }
-    }
+    }*/
     public static class MetaPath {
         short[] path;
         byte length;
