@@ -1,20 +1,14 @@
 package org.neo4j.graphalgo.impl.metaPathComputation;
 
-import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.api.ArrayGraphInterface;
-import org.neo4j.graphalgo.api.IdMapping;
-import org.neo4j.graphalgo.core.IdMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static java.lang.Float.max;
 
 public class ComputeAllMetaPaths extends MetaPathComputation {
 
@@ -72,7 +66,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
 
     private void mergeThreads(List<Runnable> threads) {
         for (Runnable thread : threads) {
-            duplicateFreeMetaPaths.addAll(((ComputeMetaPathFromNodeLabelThread) thread).duplicateFreeMetaPathsOfThread);
+            duplicateFreeMetaPaths.addAll(((ComputeMetaPathFromNodeLabelTask) thread).duplicateFreeMetaPathsOfThread);
         }
     }
 
@@ -124,30 +118,29 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         return joinedMetaPath;
     }
 
-    private List<Runnable> computeMetaPathsFromAllNodeLabels() {
+    private List<List<String>> computeMetaPathsFromAllNodeLabels() throws InterruptedException {
         int processorCount = Runtime.getRuntime().availableProcessors();
         debugOut.println("ProcessorCount: " + processorCount);
 
         ExecutorService executor = Executors.newFixedThreadPool(processorCount);
-        List<Runnable> threads = new ArrayList<>();
+        List<Future<List<String>>> futures = new ArrayList<>();
         for (int nodeLabel : arrayGraphInterface.getAllLabels()) {
-            Runnable worker = new ComputeMetaPathFromNodeLabelThread(nodeLabel, metaPathLength);
-            threads.add(worker);
-            executor.execute(worker);
+            futures.add(executor.submit(new ComputeMetaPathFromNodeLabelTask(nodeLabel, metaPathLength)));
         }
+
         executor.shutdown();
+        executor.awaitTermination(100, TimeUnit.SECONDS);
 
-        while (!executor.isTerminated()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return threads;
+        return futures.stream().map(this::get).collect(Collectors.toList());
     }
 
+    private <T> T get(Future<T> future) {
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
     private ArrayList<HashMap<Integer, Integer>> allocateNextInstances() {
         int nextInstancesSize = arrayGraphInterface.getAllLabels().size() * arrayGraphInterface.getAllEdgeLabels().size();
         ArrayList<HashMap<Integer, Integer>> nextInstances = new ArrayList<>(nextInstancesSize);
@@ -196,19 +189,21 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
 
-    private class ComputeMetaPathFromNodeLabelThread extends Thread {
+    private class ComputeMetaPathFromNodeLabelTask extends Callable<List<String>> {
         int nodeLabel;
-        int metaPathLength;
-        ArrayList<String> duplicateFreeMetaPathsOfThread;
 
-        ComputeMetaPathFromNodeLabelThread(int nodeLabel, int metaPathLength) {
+        int metaPathLength;
+        List<String> duplicateFreeMetaPathsOfThread;
+
+        ComputeMetaPathFromNodeLabelTask(int nodeLabel, int metaPathLength) {
             this.nodeLabel = nodeLabel;
             this.metaPathLength = metaPathLength;
             this.duplicateFreeMetaPathsOfThread = new ArrayList<>();
         }
 
-        public void run() {
+        public List<String> call() {
             computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
+            return duplicateFreeMetaPathsOfThread;
         }
 
         public void computeMetaPathFromNodeLabel(int startNodeLabel, int metaPathLength) {
@@ -216,6 +211,8 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             initialMetaPath.add(startNodeLabel);
             HashMap<Integer, Integer> initialInstancesRow = initInstancesRow(startNodeLabel);
             computeMetaPathFromNodeLabel(initialMetaPath, initialInstancesRow, metaPathLength - 1);
+
+            uniqueMetaPaths.compute(metaPath, (k,v) -> v == null ? 1 : v + 1);
         }
 
         private void computeMetaPathFromNodeLabel(ArrayList<Integer> currentMetaPath, HashMap<Integer, Integer> currentInstances, int metaPathLength) {
