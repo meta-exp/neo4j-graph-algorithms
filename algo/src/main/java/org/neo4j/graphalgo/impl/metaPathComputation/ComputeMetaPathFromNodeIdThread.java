@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo.metaPathComputationProcs;
+package org.neo4j.graphalgo.impl.metaPathComputation;
 
 import com.google.common.collect.Sets;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;

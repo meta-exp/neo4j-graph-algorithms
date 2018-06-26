@@ -1,7 +1,7 @@
 package org.neo4j.graphalgo.impl.metaPathComputationTests;
 
 import org.junit.Test;
-import org.neo4j.graphalgo.metaPathComputationProcs.ComputeMetaPathFromNodeIdThread;
+import org.neo4j.graphalgo.impl.metaPathComputation.ComputeMetaPathFromNodeIdThread;
 
 import java.util.ArrayList;
 import java.util.Arrays;
