@@ -1,6 +1,5 @@
-package org.neo4j.graphalgo.impl.metaPathComputation;
+package org.neo4j.graphalgo.impl.metapath;
 
-import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;

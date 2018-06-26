@@ -3,7 +3,7 @@ package org.neo4j.graphalgo.metaPathComputationProcs;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
+import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPaths;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -14,7 +14,6 @@ import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.stream.Stream;
 
 public class ComputeAllMetaPathsProc {

@@ -1,6 +1,6 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsBetweenTypes;
+import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPathsBetweenTypes;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsBetweenTypesResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -9,7 +9,7 @@ import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsBetweenTypes.Result;
+import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPathsBetweenTypes.Result;
 
 import java.util.HashMap;
 import java.util.HashSet;

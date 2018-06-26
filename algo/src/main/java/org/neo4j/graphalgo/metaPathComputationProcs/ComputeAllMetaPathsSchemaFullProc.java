@@ -2,8 +2,8 @@ package org.neo4j.graphalgo.metaPathComputationProcs;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsSchemaFull;
-import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
+import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPathsSchemaFull;
+import org.neo4j.graphalgo.impl.metapath.Pair;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsSchemaFullResult;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;

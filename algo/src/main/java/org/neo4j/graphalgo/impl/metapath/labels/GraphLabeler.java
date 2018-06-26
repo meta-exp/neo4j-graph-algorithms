@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo.impl.metaPathComputation.labels;
+package org.neo4j.graphalgo.impl.metapath.labels;
 
 public interface GraphLabeler {
     short getLabel(int nodeId);

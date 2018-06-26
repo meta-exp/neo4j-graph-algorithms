@@ -3,7 +3,7 @@ package org.neo4j.graphalgo.impl.metaPathComputationTests;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.neo4j.graphalgo.impl.metaPathComputation.ReadPrecomputedMetaPaths;
+import org.neo4j.graphalgo.impl.metapath.ReadPrecomputedMetaPaths;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

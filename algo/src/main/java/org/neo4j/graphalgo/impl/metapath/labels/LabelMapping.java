@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo.impl.metaPathComputation.labels;
+package org.neo4j.graphalgo.impl.metapath.labels;
 
 import com.carrotsearch.hppc.IntObjectHashMap;
 import com.carrotsearch.hppc.IntObjectMap;

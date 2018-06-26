@@ -27,7 +27,6 @@ import org.neo4j.graphalgo.api.GraphSetup;
 import org.neo4j.graphalgo.api.WeightMapping;
 import org.neo4j.graphalgo.core.GraphDimensions;
 import org.neo4j.graphalgo.core.IdMap;
-import org.neo4j.graphalgo.core.LabelImporter;
 import org.neo4j.graphalgo.core.WeightMap;
 import org.neo4j.graphalgo.core.utils.ImportProgress;
 import org.neo4j.graphalgo.core.utils.RawValues;
@@ -40,9 +39,6 @@ import org.neo4j.kernel.impl.api.RelationshipVisitor;
 import org.neo4j.kernel.impl.api.store.RelationshipIterator;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.function.Supplier;
 
 
@@ -336,14 +332,13 @@ final class RelationshipImporter extends StatementTask<Void, EntityNotFoundExcep
         weights.put(relId, doubleValue);
     }
 
-    Graph toGraph(final IdMap idMap, final AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer>> labelMap) {
+    Graph toGraph(final IdMap idMap) {
         return new HeavyGraph(
                 idMap,
                 matrix,
                 relWeights,
                 nodeWeights,
-                nodeProps,
-                labelMap);
+                nodeProps);
     }
 
     void writeInto(

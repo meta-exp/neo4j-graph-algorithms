@@ -2,8 +2,8 @@ package org.neo4j.graphalgo.impl.metaPathComputationTests;
 
 import org.junit.*;
 import org.neo4j.graphalgo.TestDatabaseCreator;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsSchemaFull;
-import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
+import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPathsSchemaFull;
+import org.neo4j.graphalgo.impl.metapath.Pair;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;

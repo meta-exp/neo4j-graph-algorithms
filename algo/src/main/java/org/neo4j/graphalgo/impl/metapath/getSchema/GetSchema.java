@@ -1,9 +1,9 @@
-package org.neo4j.graphalgo.impl.metaPathComputation.getSchema;
+package org.neo4j.graphalgo.impl.metapath.getSchema;
 
 import com.carrotsearch.hppc.IntIntHashMap;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathComputation;
-import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
+import org.neo4j.graphalgo.impl.metapath.MetaPathComputation;
+import org.neo4j.graphalgo.impl.metapath.Pair;
 
 import java.util.*;
 import java.io.*;

@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo.impl.metaPathComputation;
+package org.neo4j.graphalgo.impl.metapath;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;

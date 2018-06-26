@@ -82,16 +82,6 @@ public abstract class GraphFactory {
         return nodeImporter.call();
     }
 
-    protected AbstractMap.SimpleEntry<HashMap<Integer, ArrayList<LabelImporter.IdNameTuple>>, HashMap<AbstractMap.SimpleEntry<Integer, Integer>, Integer>> loadLabelMap(IdMap mapping, boolean loadLabels) throws EntityNotFoundException {
-        if (!loadLabels){
-            return null;
-        }
-        final LabelImporter labelImporter = new LabelImporter(
-                api,
-                mapping);
-        return labelImporter.call();
-    }
-
     protected HugeIdMap loadHugeIdMap(AllocationTracker tracker) throws EntityNotFoundException {
         final HugeNodeImporter nodeImporter = new HugeNodeImporter(
                 api,

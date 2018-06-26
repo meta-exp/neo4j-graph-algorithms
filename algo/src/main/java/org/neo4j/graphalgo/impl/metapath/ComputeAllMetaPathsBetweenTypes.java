@@ -1,5 +1,4 @@
-
-package org.neo4j.graphalgo.impl.metaPathComputation;
+package org.neo4j.graphalgo.impl.metapath;
 
 import org.bouncycastle.crypto.OutputLengthException;
 import org.neo4j.graphdb.*;
@@ -11,26 +10,29 @@ import java.io.PrintStream;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static java.lang.Math.max;
 import static java.lang.Math.toIntExact;
 
-public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
+@Deprecated
+public class ComputeAllMetaPathsBetweenTypes extends MetaPathComputation {
 
     private int metaPathLength;
     private PrintStream debugOut;
     public GraphDatabaseAPI api;
-    private HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer,Integer>>> adjacentNodesDict = new HashMap<>();
+    private HashMap<Integer, HashSet<AbstractMap.SimpleEntry<Integer, Integer>>> adjacentNodesDict = new HashMap<>(); //adjNodeID, adjEdgeID
     //private HashMap<Integer, Label> nodeIDLabelsDict = new HashMap<Integer, Label>();
     private List<Node> nodes = null;
     private List<Relationship> rels = null;
     private HashSet<String> duplicateFreeMetaPaths = new HashSet<>();
     private PrintStream out;
-    private int printCount = 0;
-    private double estimatedCount;
+    int printCount = 0;
+    double estimatedCount;
     private long startTime;
+    private String type1;
+    private String type2;
+    private Integer type1ID;
+    private Integer type2ID;
     private HashMap<Integer, String> idTypeMappingNodes = new HashMap<>();
     private HashMap<Integer, String> idTypeMappingEdges = new HashMap<>();
     final int MAX_NOF_THREADS = 12; //TODO why not full utilization?
@@ -41,14 +43,16 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
     private HashMap<String, Double> metaPathWeightsDict = new HashMap<>();
     private Integer countAllTwoMP;
 
-    public ComputeAllMetaPathsSchemaFullWeights(int metaPathLength, GraphDatabaseAPI api) throws Exception {
+    public ComputeAllMetaPathsBetweenTypes(int metaPathLength, String type1, String type2, GraphDatabaseAPI api) throws Exception {
         this.metaPathLength = metaPathLength;
+        this.type1 = type1;
+        this.type2 = type2;
         this.api = api;
-        this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full_Debug.txt"));
-        this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Full.txt"));//ends up in root/tests //or in dockerhome
+        this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema_Debug.txt"));
+        this.out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Schema.txt"));//ends up in root/tests //or in dockerhome
     }
 
-    public Result compute() throws Exception{
+    public Result compute() throws Exception {
         debugOut.println("START");
         startTime = System.nanoTime();
         getMetaGraph();
@@ -57,17 +61,12 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
         ArrayList<ComputeMetaPathFromNodeLabelThread> threads = new ArrayList<>();
         int i = 0;
 
-        for (Node node : nodes) {
-            ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, toIntExact(node.getId()), metaPathLength);
-            thread.start();
-            threads.add(thread);
-            i++;
-        }
+        ComputeMetaPathFromNodeLabelThread thread = new ComputeMetaPathFromNodeLabelThread(this, "thread-" + i, type1ID, metaPathLength);
+        thread.start();
+        threads.add(thread);
 
         try {
-            for (ComputeMetaPathFromNodeLabelThread thread : threads) {
-                thread.join();
-            }
+            thread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -82,8 +81,8 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
         return new Result(duplicateFreeMetaPaths, idTypeMappingNodes, idTypeMappingEdges, metaPathWeightsDict);
     }
 
-    private void getMetaGraph() {
-        org.neo4j.graphdb.Result result;
+    private void getMetaGraph() throws Exception {
+        org.neo4j.graphdb.Result result = null;
         try (Transaction tx = api.beginTx()) {
             result = api.execute("CALL apoc.meta.graph()");
             tx.success();
@@ -91,20 +90,32 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
         Map<String, Object> row = result.next();
         nodes = (List<Node>) row.get("nodes");
         rels = (List<Relationship>) row.get("relationships");
-        for (Node node : nodes){
+        for (Node node : nodes) {
             nodeLabelIDs.add(toIntExact(node.getId()));
             String nodeType = node.getLabels().iterator().next().name();
             this.idTypeMappingNodes.put(toIntExact(node.getId()), nodeType);
+            //debugOut.println(nodeType);
+            if (this.type1.equals(nodeType)) {
+                this.type1ID = toIntExact(node.getId());
+            }
+            if (this.type2.equals(nodeType)) {
+                this.type2ID = toIntExact(node.getId());
+            }
+        }
+        if (this.type1 == null || this.type2 == null) {
+            throw new Exception("None of the types found in meta-graph");
         }
     }
 
-    private void initializeDictionaries(){
+    private void initializeDictionaries() {
         for (Node node : nodes) {
             int nodeID = toIntExact(node.getId());
 
             HashSet<AbstractMap.SimpleEntry<Integer, Integer>> adjNodesSet = new HashSet<>();
             adjacentNodesDict.putIfAbsent(toIntExact(nodeID), adjNodesSet);
             for (Relationship rel : rels) {
+                //debugOut.println(rel);
+                //debugOut.println(rel.getAllProperties());
                 try {
                     int adjNodeID = toIntExact(rel.getOtherNodeId(node.getId()));
                     int adjEdgeID = toIntExact(rel.getId());
@@ -113,7 +124,6 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
                 } catch (Exception e) {/*prevent duplicates*/}
             }
         }
-        out.println(adjacentNodesDict);
     }
 
     public void computeMetaPathFromNodeLabel(int nodeID, int metaPathLength) { //TODO will it be faster if not node but nodeID with dicts?
@@ -134,8 +144,7 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
         int currentInstance;
         int metaPathLength;
 
-        while(!st_allMetaPaths.empty() && !st_currentNode.empty() && !st_metaPathLength.empty())
-        {
+        while (!st_allMetaPaths.empty() && !st_currentNode.empty() && !st_metaPathLength.empty()) {
             currentMetaPath = st_allMetaPaths.pop();
             currentInstance = st_currentNode.pop();
             metaPathLength = st_metaPathLength.pop();
@@ -152,15 +161,15 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
                 int edgeID = edge.getValue();
                 newMetaPath.add(edgeID);
                 newMetaPath.add(nodeID);
-
-                synchronized (duplicateFreeMetaPaths) {
-                    // add new meta-path to threads
-                    String joinedMetaPath;
-                    joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
-                    duplicateFreeMetaPaths.add(joinedMetaPath);
-                    out.println(joinedMetaPath);
+                if (nodeID == type2ID) {
+                    synchronized (duplicateFreeMetaPaths) {
+                        // add new meta-path to threads
+                        String joinedMetaPath;
+                        joinedMetaPath = newMetaPath.stream().map(Object::toString).collect(Collectors.joining("|"));
+                        duplicateFreeMetaPaths.add(joinedMetaPath);
+                        out.println(joinedMetaPath);
+                    }
                 }
-
                 st_allMetaPaths.push(newMetaPath);
                 st_currentNode.push(nodeID);
                 st_metaPathLength.push(metaPathLength - 1);
@@ -370,12 +379,12 @@ public class ComputeAllMetaPathsSchemaFullWeights extends MetaPathComputation {
 
 
     @Override
-    public ComputeAllMetaPathsSchemaFullWeights me() {
+    public ComputeAllMetaPathsBetweenTypes me() {
         return this;
     }
 
     @Override
-    public ComputeAllMetaPathsSchemaFullWeights release() {
+    public ComputeAllMetaPathsBetweenTypes release() {
         return null;
     }
 

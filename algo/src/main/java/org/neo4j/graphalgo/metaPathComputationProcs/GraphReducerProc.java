@@ -1,6 +1,6 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import org.neo4j.graphalgo.impl.metaPathComputation.GraphReducer;
+import org.neo4j.graphalgo.impl.metapath.GraphReducer;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;

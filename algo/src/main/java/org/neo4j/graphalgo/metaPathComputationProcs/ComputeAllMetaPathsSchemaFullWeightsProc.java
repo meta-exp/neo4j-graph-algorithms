@@ -1,7 +1,6 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsBetweenTypes;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsSchemaFullWeights;
+import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPathsSchemaFullWeights;
 import org.neo4j.graphalgo.results.metaPathComputationResults.ComputeAllMetaPathsBetweenTypesResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;

@@ -4,7 +4,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.neo4j.graphalgo.impl.metaPathComputation.MetaPath;
+import org.neo4j.graphalgo.impl.metapath.MetaPath;
 import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
