@@ -1,5 +1,6 @@
 package org.neo4j.graphalgo.walkingProcs;
 
+import org.neo4j.graphalgo.core.ProcedureConfiguration;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.impl.walking.AbstractWalkOutput;
 import org.neo4j.graphalgo.impl.walking.NodeWalker;
@@ -10,6 +11,7 @@ import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class NodeWalkerProc extends AbstractWalkingProc {
@@ -58,6 +60,7 @@ public class NodeWalkerProc extends AbstractWalkingProc {
         return stream;
     }
 
+    // config: {mode:node2Vec, concurrency:5, writeToFile:true}
     @Procedure(name = "node2vecWalk", mode = Mode.READ)
     @Description("Starts (multiple) node2vecWalk(s) with the given parameters at the given start node. " +
             "Optionally specify a filePath instead of returning the paths within neo4j.")
@@ -66,7 +69,12 @@ public class NodeWalkerProc extends AbstractWalkingProc {
                                          @Name("walks") long walks,
                                          @Name("returnParameter") double returnParam,
                                          @Name("inOutParameter") double inOutParam,
-                                         @Name(value = "filePath", defaultValue = "") String filePath) throws IOException {
+                                         @Name(value = "filePath", defaultValue = "") String filePath,
+                                         @Name(value = "config", defaultValue ="{}") Map<String,Object> config) throws IOException {
+        ProcedureConfiguration procedureConfiguration = ProcedureConfiguration.create(config);
+        procedureConfiguration.getConcurrency();
+        procedureConfiguration.get("mode","random");
+
         NodeWalker walker = getNode2VecWalker(returnParam, inOutParam);
         AbstractWalkOutput output = getAppropriateOutput(filePath);
 

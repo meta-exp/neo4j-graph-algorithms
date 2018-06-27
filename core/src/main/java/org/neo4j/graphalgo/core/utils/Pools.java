@@ -45,7 +45,7 @@ public class Pools {
                 DEFAULT_CONCURRENCY * 2,
                 30L,
                 TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(DEFAULT_QUEUE_SIZE),
+                    new ArrayBlockingQueue<>(DEFAULT_QUEUE_SIZE),
                 NamedThreadFactory.daemon("algo"),
                 new CallerBlocksPolicy());
     }

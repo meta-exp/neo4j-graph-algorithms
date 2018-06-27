@@ -9,10 +9,11 @@ import org.neo4j.graphdb.Relationship;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 public class WalkPath implements Path {
-    private ArrayList<Node> nodes;
-    private ArrayList<Relationship> relationships;
+    private List<Node> nodes;
+    private List<Relationship> relationships;
 
     public WalkPath(int size) {
         nodes = new ArrayList<>(size);

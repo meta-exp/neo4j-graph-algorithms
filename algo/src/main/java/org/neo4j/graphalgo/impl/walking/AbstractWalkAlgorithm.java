@@ -44,7 +44,7 @@ public abstract class AbstractWalkAlgorithm {
 
     protected BoundedExecutor getBoundedExecutor(){
         ThreadPoolExecutor executor = getExecutor();
-        return new BoundedExecutor(executor, executor.getCorePoolSize() * 1000);
+        return new BoundedExecutor(executor, executor.getCorePoolSize() * 100);
     }
 
     public class BoundedExecutor {
@@ -69,7 +69,7 @@ public abstract class AbstractWalkAlgorithm {
                         }
                     }
                 });
-            } catch (RejectedExecutionException e) {
+            } catch (Exception e) {
                 semaphore.release();
                 throw e;
             }

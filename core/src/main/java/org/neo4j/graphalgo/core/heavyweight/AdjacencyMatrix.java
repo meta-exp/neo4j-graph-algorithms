@@ -94,22 +94,23 @@ class AdjacencyMatrix {
     }
 
     public int[] getAdjacentNodes(int nodeId){
-        int[] adjacentNodes = new int[degree(nodeId, Direction.BOTH)];
-        for(int i = 0; i < degree(nodeId, Direction.INCOMING); i++)
-        {
-            adjacentNodes[i] = incoming[nodeId][i];
-        }
-
-        for(int i = 0; i < degree(nodeId, Direction.OUTGOING); i++)
-        {
-            adjacentNodes[degree(nodeId, Direction.INCOMING) + i] = outgoing[nodeId][i];
-        }
-
+        int inDegree = degree(nodeId, Direction.INCOMING);
+        int outDegree = degree(nodeId, Direction.OUTGOING);
+        if (inDegree == 0 && outDegree == 0) return EMPTY_INTS;
+        int[] adjacentNodes = new int[inDegree + outDegree];
+        System.arraycopy(incoming[nodeId],0,adjacentNodes,0,inDegree);
+        System.arraycopy(outgoing[nodeId],0, adjacentNodes,inDegree, outDegree);
         return adjacentNodes;
     }
 
-    public int[] getOutgoingNodes(int nodeId){
+    public int getRelationship(int nodeId, int index) {
+        if (index < incoming[nodeId].length) return incoming[nodeId][index];
+        index -= incoming[nodeId].length;
+        if (index < outgoing[nodeId].length) return outgoing[nodeId][index];
+        return -1;
+    }
 
+    public int[] getOutgoingNodes(int nodeId){
         return outgoing[nodeId];
     }
 

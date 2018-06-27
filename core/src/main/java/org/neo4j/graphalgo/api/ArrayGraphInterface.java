@@ -24,4 +24,6 @@ public interface ArrayGraphInterface {
     AbstractMap<Integer, String> getNodeLabelDict();
 
     AbstractMap<Integer, String> getEdgeLabelDict();
+
+    int getRelationship(int nodeId, int index);
 }

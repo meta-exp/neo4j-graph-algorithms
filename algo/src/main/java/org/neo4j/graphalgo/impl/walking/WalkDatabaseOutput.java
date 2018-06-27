@@ -1,5 +1,6 @@
 package org.neo4j.graphalgo.impl.walking;
 
+import org.neo4j.graphalgo.impl.util.PathImpl;
 import org.neo4j.graphalgo.walkingProcs.NodeWalkerProc;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -9,10 +10,11 @@ import org.neo4j.logging.Log;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class WalkDatabaseOutput extends AbstractWalkOutput {
-    public ArrayList<long[]> pathIds = new ArrayList<>();
+    public List<long[]> pathIds = new ArrayList<>();
     private Iterator<long[]> pathIterator;
     private GraphDatabaseService db;
     private Log log;
@@ -41,6 +43,8 @@ public class WalkDatabaseOutput extends AbstractWalkOutput {
     }
 
     private WalkPath convertIdsToPath(long[] pathIds){
+
+        // new PathImpl.Builder(start).push(rel).build();
 //        NodeWalkerProc.WalkPath path = new NodeWalkerProc.WalkPath(pathIds[1].length);
         int pathLength = pathIds.length;
         WalkPath path = new WalkPath(pathLength);

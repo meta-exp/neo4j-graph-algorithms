@@ -1,21 +1,20 @@
 package org.neo4j.graphalgo.impl.walking;
 
+import com.carrotsearch.hppc.IntHashSet;
+import com.carrotsearch.hppc.IntSet;
 import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.concurrent.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class NodeWalker extends AbstractWalkAlgorithm {
 
-    private static Random random = new Random();
+    private static Random random = ThreadLocalRandom.current();
 
     private AbstractNextNodeStrategy nextNodeStrategy;
 
@@ -25,7 +24,8 @@ public class NodeWalker extends AbstractWalkAlgorithm {
     }
 
     public Stream<WalkResult> walkFromNode(AbstractWalkOutput output, long nodeId, long steps, long walks) {
-        Stream<Integer> stream = Stream.generate(() -> getMappedId(nodeId)).limit(walks);
+
+        IntStream stream = IntStream.generate(() -> getMappedId(nodeId)).limit(walks);
 
         startWalks(output, stream, walks, steps);
 
@@ -33,11 +33,11 @@ public class NodeWalker extends AbstractWalkAlgorithm {
     }
 
     public Stream<WalkResult> walkFromNodeType(AbstractWalkOutput output, long steps, long walks, String type) {
-        Stream<Integer> startNodeIdStream;
+        IntStream startNodeIdStream;
         if (type.isEmpty()) {
             startNodeIdStream = randomNodesFromAllNodes((int) walks);
         } else {
-            startNodeIdStream = Stream.empty();
+            startNodeIdStream = IntStream.empty();
 //            startNodes = randomNodesFromType(type, walks);
         }
 
@@ -52,11 +52,11 @@ public class NodeWalker extends AbstractWalkAlgorithm {
         long nodeCount = graph.nodeCount();
         long totalWalks = nodeCount * walks;
 
-        Stream<Integer> stream = Stream.empty();
+        IntStream stream = IntStream.empty();
         for (int i = 0; i < walks; i++) {
-            Stream<Integer> nodeIdStream = IntStream.range(0, (int) graph.nodeCount()).boxed();
+            IntStream nodeIdStream = IntStream.range(0, (int) graph.nodeCount());
 
-            stream = Stream.concat(stream, nodeIdStream);
+            stream = IntStream.concat(stream, nodeIdStream);
         }
 
         startWalks(output, stream, totalWalks, steps);
@@ -65,9 +65,9 @@ public class NodeWalker extends AbstractWalkAlgorithm {
     }
 
 
-    private Stream<Integer> randomNodesFromAllNodes(int walks) {
+    private IntStream randomNodesFromAllNodes(int walks) {
         int nodeCount = (int) graph.nodeCount(); // data type of mapped id is int, so casting shouldn't be a problem
-        return Stream.generate(() -> random.nextInt(nodeCount)).limit(walks);
+        return IntStream.generate(() -> random.nextInt(nodeCount)).limit(walks);
     }
 
 //TODO
@@ -78,8 +78,16 @@ public class NodeWalker extends AbstractWalkAlgorithm {
 //    }
 
 
-    private void startWalks(AbstractWalkOutput output, Stream<Integer> nodeStream, long numberOfElements, long steps) {
+    private void startWalks(AbstractWalkOutput output, IntStream nodeStream, long numberOfElements, long steps) {
         BoundedExecutor executor = getBoundedExecutor();
+
+        /*
+        ExecutorService pool = null;
+
+        List<Future<Integer>> futures;
+        futures.add(pool.submit(() -> 42));
+        futures.stream().map(Future::get).flatMap()
+        */
 
         long startTime = System.nanoTime();
 
@@ -136,7 +144,7 @@ public class NodeWalker extends AbstractWalkAlgorithm {
     }
 
     private long[] doWalk(int startNodeId, int steps, AbstractNextNodeStrategy nextNodeStrategy) {
-        long[] nodeIds = new long[(int) steps + 1];
+        long[] nodeIds = new long[steps + 1];
         int currentNodeId = startNodeId;
         int previousNodeId = currentNodeId;
         nodeIds[0] = getOriginalId(currentNodeId);
@@ -146,10 +154,8 @@ public class NodeWalker extends AbstractWalkAlgorithm {
             currentNodeId = nextNodeId;
 
             if (currentNodeId == -1) {
-                nodeIds = new long[1];
-                nodeIds[0] = getOriginalId(startNodeId);
                 // End walk when there is no way out and return empty result
-                break;
+                return Arrays.copyOf(nodeIds,1);
             }
             nodeIds[i] = getOriginalId(currentNodeId);
         }
@@ -169,10 +175,13 @@ public class NodeWalker extends AbstractWalkAlgorithm {
 
         public abstract int getNextNode(int currentNodeId, int previousNodeId);
 
+        protected Random getRandom(){
+            return ThreadLocalRandom.current();
+        }
+
     }
 
     public static class RandomNextNodeStrategy extends AbstractNextNodeStrategy{
-        private static Random random = new Random();
 
         public RandomNextNodeStrategy(ArrayGraphInterface arrayGraphInterface, Degrees degrees){
             super(arrayGraphInterface, degrees);
@@ -183,10 +192,9 @@ public class NodeWalker extends AbstractWalkAlgorithm {
             if(degree == 0){
                 return -1;
             }
-            int randomEdgeIndex= random.nextInt(degree);
-            int neighbourId = super.arrayGraphInterface.getAdjacentNodes(currentNodeId)[randomEdgeIndex];
+            int randomEdgeIndex = getRandom().nextInt(degree);
 
-            return neighbourId;
+            return super.arrayGraphInterface.getRelationship(currentNodeId,randomEdgeIndex);
         }
     }
 
@@ -210,16 +218,15 @@ public class NodeWalker extends AbstractWalkAlgorithm {
 
             float[] distribution = buildProbabilityDistribution(currentNodeId, previousNodeId, returnParam, inOutParam);
             int neighbourIndex = pickIndexFromDistribution(distribution);
-            int neighbourId = super.arrayGraphInterface.getAdjacentNodes(currentNodeId)[neighbourIndex];
 
-            return neighbourId;
+            return super.arrayGraphInterface.getRelationship(currentNodeId,neighbourIndex);
         }
 
         private float[] buildProbabilityDistribution(int currentNodeId, int previousNodeId,
                                                    double returnParam, double inOutParam){
             int[] neighbours = super.arrayGraphInterface.getAdjacentNodes(currentNodeId);
             int[] previousNeighbours = super.arrayGraphInterface.getAdjacentNodes(previousNodeId);
-            List<Integer> prevList = IntStream.of(previousNeighbours).boxed().collect(Collectors.toList());
+            IntSet prevList = IntHashSet.from(previousNeighbours);
 
             float[] probabilities = new float[neighbours.length];
 
@@ -248,13 +255,13 @@ public class NodeWalker extends AbstractWalkAlgorithm {
 
         private float[] normalizeDistribution(float[] array, float sum){
             for(int i = 0; i < array.length; i++){
-                array[i] = array[i] / sum;
+                array[i] /=  sum;
             }
             return array;
         }
 
         private int pickIndexFromDistribution(float[] distribution){
-            double p = random.nextDouble();
+            double p = getRandom().nextDouble();
             double cumulativeProbability = 0.0;
             for(int i = 0; i < distribution.length; i++){
                 cumulativeProbability += distribution[i];

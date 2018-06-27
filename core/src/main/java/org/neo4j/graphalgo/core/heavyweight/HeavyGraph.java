@@ -118,6 +118,11 @@ public class HeavyGraph implements Graph, NodeWeights, NodeProperties, Relations
     public int[] getAdjacentNodes(int nodeId) {return container.getAdjacentNodes(nodeId);}
 
     @Override
+    public int getRelationship(int nodeId, int index) {
+        return container.getRelationship(nodeId, index);
+    }
+
+    @Override
     public int[] getOutgoingNodes(int nodeId) {return container.getOutgoingNodes(nodeId);}
 
     @Override
