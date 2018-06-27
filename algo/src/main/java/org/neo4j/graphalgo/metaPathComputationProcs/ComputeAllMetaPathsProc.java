@@ -52,8 +52,8 @@ public class ComputeAllMetaPathsProc {
         LabelMapping labelMapping = LabelImporter.loadMetaData(graph, api);
         final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, labelMapping, length.intValue(),
                     new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt")), executor);
-        graph.release();
         Map<ComputeAllMetaPaths.MetaPath, Long> result = algo.compute();
+        graph.release();
         return result.entrySet().stream().map(e -> new ComputeAllMetaPathsResult(e.getKey(), e.getValue(), labelMapping));
     }
 }
