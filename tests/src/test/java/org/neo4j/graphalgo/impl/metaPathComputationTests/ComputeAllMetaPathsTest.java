@@ -22,6 +22,7 @@ import java.io.PrintStream;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -95,18 +96,16 @@ public class ComputeAllMetaPathsTest {
 
         LabelMapping labelMapping = LabelImporter.loadMetaData(graph, api);
 
-        PrintStream out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));
+        //PrintStream out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));
         int processorCount = Runtime.getRuntime().availableProcessors();
         ExecutorService executor = Executors.newFixedThreadPool(processorCount);
-
 
         algo = new ComputeAllMetaPaths(graph, labelMapping, 3, System.out, executor);
     }
 
     @Test
     public void testCalculationOfMetapaths() {
-        //assertEquals(0.5, algo.similarity(), 0);
-        List<String> allMetaPaths = algo.compute().getFinalMetaPaths();//this runs the code two times..
+        List<String> allMetaPaths = resultToStrings(algo.compute());
         HashSet<String> allExpectedMetaPaths = new HashSet<>(Arrays.asList("0\t4", "1\t2", "2\t2", "0 | 0 | 0 | 0 | 0\t2", "0 | 0 | 0 | 0 | 1\t2", "0 | 0 | 0 | 0 | 2\t3", "0 | 0 | 1 | 0 | 0\t4", "0 | 0 | 1 | 0 | 2\t4", "0 | 0 | 2 | 0 | 0\t13", "0 | 0 | 2 | 0 | 1\t7", "0 | 0 | 2 | 0 | 2\t5",
                 "1 | 0 | 0 | 0 | 0\t2", "1 | 0 | 0 | 0 | 1\t2", "1 | 0 | 0 | 0 | 2\t3", "1 | 0 | 2 | 0 | 0\t7", "1 | 0 | 2 | 0 | 1\t5", "1 | 0 | 2 | 0 | 2\t3", "2 | 0 | 0 | 0 | 0\t3", "2 | 0 | 0 | 0 | 1\t3", "2 | 0 | 0 | 0 | 2\t7", "2 | 0 | 1 | 0 | 0\t4", "2 | 0 | 1 | 0 | 2\t5", "2 | 0 | 2 | 0 | 0\t5", "2 | 0 | 2 | 0 | 1\t3", "2 | 0 | 2 | 0 | 2\t2",
                 "0 | 0 | 1\t2", "0 | 0 | 2\t5", "0 | 0 | 0\t2", "1 | 0 | 0\t2", "1 | 0 | 2\t3", "2 | 0 | 0\t5", "2 | 0 | 1\t3", "2 | 0 | 2\t2")); //0|0|0, 1|0|1, 2|2|2 should not exist, but in this prototype its ok. we are going back to the same node we already were
@@ -117,11 +116,13 @@ public class ComputeAllMetaPathsTest {
 
         for (String expectedMetaPath : allExpectedMetaPaths) {
             assertTrue ("expected: " + expectedMetaPath, allMetaPaths.contains(expectedMetaPath));
-
         }
 
-        assertEquals(33, allMetaPaths.size());//this should be 30, ...
+        assertEquals(33, allMetaPaths.size());
+    }
 
+    private List<String> resultToStrings(Map<ComputeAllMetaPaths.MetaPath, Long> result) {
+        return  result.entrySet().stream().map(e -> e.getKey().toString() + "\t" + e.getValue()).collect(Collectors.toList());
     }
 
     /*@Test

@@ -1,34 +1,21 @@
 package org.neo4j.graphalgo.results.metaPathComputationResults;
 
-import org.neo4j.graphalgo.results.AbstractResultBuilder;
-
-import java.util.ArrayList;
+import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPaths;
+import org.neo4j.graphalgo.impl.metapath.labels.LabelMapping;
 import java.util.List;
 
 public class ComputeAllMetaPathsResult {
 
-    public final String metaPaths;
+    public final String metaPath;
+    public final long length;
+    public final List<Long> pathIds;
+    public final long count;
 
-    private ComputeAllMetaPathsResult() {
-        this.metaPaths = "";
-        //Gson gson = new Gson();
-        //this.metaPaths = gson.toJson(metaPaths);
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static class Builder extends AbstractResultBuilder<ComputeAllMetaPathsResult> {
-
-        private List<String> metaPaths;
-
-        public void setMetaPaths(List<String> metaPaths) {
-           this.metaPaths = metaPaths;
-        }
-
-        public ComputeAllMetaPathsResult build() {
-            return new ComputeAllMetaPathsResult();
-        }
+    public ComputeAllMetaPathsResult(ComputeAllMetaPaths.MetaPath metaPath, long count, LabelMapping mapping) {
+        this.metaPath = metaPath.toString();
+        // this.metaPathText = metaPath.toString(mapping);
+        this.length = metaPath.length;
+        this.pathIds = metaPath.toIdList();
+        this.count = count;
     }
 }
