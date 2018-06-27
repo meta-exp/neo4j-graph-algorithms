@@ -18,6 +18,8 @@ import org.neo4j.procedure.Procedure;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 public class ComputeAllMetaPathsProc {
@@ -49,9 +51,11 @@ public class ComputeAllMetaPathsProc {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
+        int processorCount = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(processorCount);
 
         LabelMapping labelMapping = LabelImporter.loadMetaData(graph, api);
-        final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, labelMapping, length, new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt")));
+        final ComputeAllMetaPaths algo = new ComputeAllMetaPaths(graph, labelMapping, length, new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt")), executor);
         List<String> metaPaths = algo.compute().getFinalMetaPaths();
         builder.setMetaPaths(metaPaths);
         graph.release();

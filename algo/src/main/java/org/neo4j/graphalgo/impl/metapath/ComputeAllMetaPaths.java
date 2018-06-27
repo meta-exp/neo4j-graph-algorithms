@@ -24,13 +24,15 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private PrintStream debugOut;
     private int printCount = 0;
     private long startTime;
+    ExecutorService executor;
 
-    public ComputeAllMetaPaths(HeavyGraph graph, LabelMapping labelMapping, int metaPathLength, PrintStream out) throws IOException {
+    public ComputeAllMetaPaths(HeavyGraph graph, LabelMapping labelMapping, int metaPathLength, PrintStream out, ExecutorService executor) throws IOException {
         this.graph = graph;
         this.labelMapping = labelMapping;
         this.metaPathLength = metaPathLength;
         this.out = out;//ends up in root/tests //or in dockerhome
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Debug.txt"));
+        this.executor = executor;
     }
 
     public Result compute() {
@@ -124,9 +126,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         ObjectContainer<CurrentState> states = loadNodes();
         ObjectLongMap<MetaPath> pathResults = new ObjectLongHashMap<>();
 
-        int processorCount = Runtime.getRuntime().availableProcessors();
-        debugOut.println("ProcessorCount: " + processorCount);
-        ExecutorService executor = Executors.newFixedThreadPool(processorCount);
         List<Future<ObjectLongMap<MetaPath>>> futures = new ArrayList<>();
 
         for (ObjectCursor<CurrentState> cursor : states) {

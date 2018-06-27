@@ -20,6 +20,8 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -94,7 +96,11 @@ public class ComputeAllMetaPathsTest {
         LabelMapping labelMapping = LabelImporter.loadMetaData(graph, api);
 
         PrintStream out = new PrintStream(new FileOutputStream("Precomputed_MetaPaths.txt"));
-        algo = new ComputeAllMetaPaths(graph, labelMapping, 3, System.out);
+        int processorCount = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(processorCount);
+
+
+        algo = new ComputeAllMetaPaths(graph, labelMapping, 3, System.out, executor);
     }
 
     @Test
