@@ -14,24 +14,20 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ComputeAllMetaPaths extends MetaPathComputation {
 
     private HeavyGraph graph;
     private LabelMapping labelMapping;
     private int metaPathLength;
-    private int currentLabelId = 0;
     private PrintStream out;
     private PrintStream debugOut;
     private int printCount = 0;
     private long startTime;
-    private short startEdgeLabel;
 
     public ComputeAllMetaPaths(HeavyGraph graph, LabelMapping labelMapping, int metaPathLength, PrintStream out) throws IOException {
         this.graph = graph;
         this.labelMapping = labelMapping;
-        startEdgeLabel = labelMapping.getAllEdgeLabels()[0];
         this.metaPathLength = metaPathLength;
         this.out = out;//ends up in root/tests //or in dockerhome
         this.debugOut = new PrintStream(new FileOutputStream("Precomputed_MetaPaths_Debug.txt"));
@@ -43,13 +39,13 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         startTime = System.nanoTime();
 
         ObjectLongMap<MetaPath> pathResults = computeMetaPaths();
-        List<String> strings = new ArrayList<>(pathResults.size());
-        pathResults.forEach((ObjectLongProcedure<MetaPath>)(path,count) -> {
-            out.println(path.toString(labelMapping) + ":" + count);
-            strings.add(String.format("%s\t%d",path.toString(),count));
-        });
 
         long endTime = System.nanoTime();
+        List<String> strings = new ArrayList<>(pathResults.size());
+        pathResults.forEach((ObjectLongProcedure<MetaPath>) (path, count) -> {
+            //out.println(path.toString(labelMapping) + ":" + count);
+            strings.add(String.format("%s\t%d", path.toString(), count));
+        });
 
         System.out.println("calculation took: " + String.valueOf(endTime - startTime));
         debugOut.println("actual amount of metaPaths: " + printCount);
@@ -59,17 +55,17 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     }
 
     private int combineLabels(short firstLabel, short secondLabel) {
-        return (int)firstLabel << 16 | (secondLabel & 0xFFFF);
+        return (int) firstLabel << 16 | (secondLabel & 0xFFFF);
     }
 
-    /*
 
-    private List<List<String>> computeMetaPathsFromAllNodeLabels() throws InterruptedException {
+
+    /*private List<List<String>> computeMetaPathsFromAllNodeLabels() throws InterruptedException {
         int processorCount = Runtime.getRuntime().availableProcessors();
         debugOut.println("ProcessorCount: " + processorCount);
 
         ExecutorService executor = Executors.newFixedThreadPool(processorCount);
-        List<Future<List<String>>> futures = new ArrayList<>();
+        List<Future<ObjectLongMap<MetaPath>>> futures = new ArrayList<>();
         for (short nodeLabel : labelMapping.getAllNodeLabels()) {
             Future<T> future = executor.submit(new ComputeMetaPathFromNodeLabelTask(nodeLabel, metaPathLength));
             futures.add(future);
@@ -79,17 +75,18 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         executor.awaitTermination(100, TimeUnit.SECONDS);
 
         return futures.stream().map(this::get).collect(Collectors.toList());
-    }
+    }*/
 
+    /*
     private <T> T get(Future<T> future) {
         try {
             return future.get();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-    */
-    static class CurrentState  {
+    }*/
+
+    static class CurrentState {
         MetaPath path;
         int remainingLength;
         IntLongMap nodes = new IntLongHashMap();
@@ -99,10 +96,11 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             this.remainingLength = length - 1;
         }
 
-        public CurrentState() { }
+        public CurrentState() {
+        }
 
         public CurrentState addNode(int id, long count) {
-            this.nodes.putOrAdd(id,count,count);
+            this.nodes.putOrAdd(id, count, count);
             return this;
         }
 
@@ -125,7 +123,33 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private ObjectLongMap<MetaPath> computeMetaPaths() {
         ObjectContainer<CurrentState> states = loadNodes();
         ObjectLongMap<MetaPath> pathResults = new ObjectLongHashMap<>();
-        recurse(states, pathResults);
+
+        int processorCount = Runtime.getRuntime().availableProcessors();
+        debugOut.println("ProcessorCount: " + processorCount);
+        ExecutorService executor = Executors.newFixedThreadPool(processorCount);
+        List<Future<ObjectLongMap<MetaPath>>> futures = new ArrayList<>();
+
+        for (ObjectCursor<CurrentState> cursor : states) {
+            CurrentState current = cursor.value;
+
+            Future<ObjectLongMap<MetaPath>> future = executor.submit(new ComputeMetaPathFromNodeLabelTask(current));
+            futures.add(future);
+        }
+
+        executor.shutdown();
+
+        try {
+            //executor.awaitTermination(100, TimeUnit.SECONDS);
+            for (Future<ObjectLongMap<MetaPath>> future : futures) {
+                pathResults.putAll(future.get());
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        //recurse(states, pathResults);
         return pathResults;
     }
 
@@ -135,7 +159,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             pathResults.put(current.path, current.totalCount());
             ObjectContainer<CurrentState> newStates = expand(current);
             if (newStates != null) {
-               recurse(newStates, pathResults);
+                recurse(newStates, pathResults);
             }
         }
     }
@@ -143,11 +167,11 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
     private ObjectContainer<CurrentState> loadNodes() {
         IntObjectMap<CurrentState> nodesByLabel = new IntObjectHashMap<>();
         for (short label : labelMapping.getAllNodeLabels()) {
-            nodesByLabel.put(combineLabels((short)0,label), new CurrentState(label, metaPathLength));
+            nodesByLabel.put(combineLabels((short) 0, label), new CurrentState(label, metaPathLength));
         }
         labelMapping.forEachNode((nodeLabels) -> {
             for (short nodeLabel : nodeLabels.value) {
-                nodesByLabel.get(combineLabels((short)0,nodeLabel)).addNode(nodeLabels.key, 1);
+                nodesByLabel.get(combineLabels((short) 0, nodeLabel)).addNode(nodeLabels.key, 1);
             }
         });
         return nodesByLabel.values();
@@ -166,7 +190,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
                 int pair = combineLabels(type, label);
                 if (newStates.containsKey(pair)) {
                     newStates.get(pair).addNode(neighbourId, count);
-                } else  {
+                } else {
                     CurrentState newState = state.next(count, type, label, neighbourId);
                     newStates.put(pair, newState);
                 }
@@ -174,7 +198,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         }
         return newStates.values();
     }
-
 
     /*private void drainFutures() {
         List<Future<String>> futures = new ArrayList<>();
@@ -187,8 +210,8 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             }
         }
 
-        List<String> strings = futures.stream().map(this::get).collect(Collectors.toList());
-        for (Future<String> future : futures) {
+        ObjectLongMap<MetaPath> listOfMetaPaths = futures.stream().map(this::get).map( list -> list.stream()).flatMap().collect(Collectors.toList());
+        for (Future<MetaPath> future : futures) {
             future.get();
         }
     }*/
@@ -202,14 +225,15 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             this.length = 1;
         }
 
-        public MetaPath() { }
+        public MetaPath() {
+        }
 
         @Override
         public int hashCode() {
             if (length == 0) return 0;
             int hash = path[0];
             for (int i = 1; i < length; i++) {
-                hash = hash*31 + path[i];
+                hash = hash * 31 + path[i];
             }
             return hash;
         }
@@ -225,6 +249,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             }
             return true;
         }
+
         public String toString(LabelMapping mapping) {
             Tokens labels = mapping.getLabels();
             Tokens types = mapping.getTypes();
@@ -232,7 +257,7 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             for (int i = 0; i < length; i++) {
                 int id = path[i];
                 sb.append(i % 2 == 0 ? labels.name(id) : types.name(id));
-                if (i < length -1) sb.append("|");
+                if (i < length - 1) sb.append("|");
             }
             return sb.toString();
         }
@@ -241,14 +266,14 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
             StringBuilder sb = new StringBuilder(length * 5);
             for (int i = 0; i < length; i++) {
                 sb.append((int) path[i]);
-                if (i < length -1) sb.append(" | ");
+                if (i < length - 1) sb.append(" | ");
             }
             return sb.toString();
         }
 
         public void add(short label) {
             if (length == path.length) {
-                path = Arrays.copyOf(path,length+5);
+                path = Arrays.copyOf(path, length + 5);
             }
             path[length++] = label;
         }
@@ -268,20 +293,22 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         }
     }
 
-    private class ComputeMetaPathFromNodeLabelTask implements Callable<ObjectIntMap<MetaPath>> {
-        short nodeLabel;
+    private class ComputeMetaPathFromNodeLabelTask implements Callable<ObjectLongMap<MetaPath>> {
+        CurrentState state;
+        ObjectLongMap<MetaPath> metaPaths;
 
-        short metaPathLength;
-        ObjectIntMap<MetaPath> metaPaths;
-
-        ComputeMetaPathFromNodeLabelTask(short nodeLabel, short metaPathLength) {
-            this.nodeLabel = nodeLabel;
-            this.metaPathLength = metaPathLength;
-            this.metaPaths = new ObjectIntHashMap<>();
+        ComputeMetaPathFromNodeLabelTask(CurrentState state) {
+            this.state = state;
+            this.metaPaths = new ObjectLongHashMap<>();
         }
 
-        public ObjectIntMap<MetaPath> call() {
-      //      computeMetaPathFromNodeLabel(nodeLabel, metaPathLength);
+        public ObjectLongMap<MetaPath> call() {
+            metaPaths.put(state.path, state.totalCount());
+            ObjectContainer<CurrentState> newStates = expand(state);
+            if (newStates != null) {
+                recurse(newStates, metaPaths);
+            }
+
             return metaPaths;
         }
 
