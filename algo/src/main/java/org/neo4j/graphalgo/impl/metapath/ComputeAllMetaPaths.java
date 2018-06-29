@@ -54,25 +54,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         return (int) firstLabel << 16 | (secondLabel & 0xFFFF);
     }
 
-
-
-    /*private List<List<String>> computeMetaPathsFromAllNodeLabels() throws InterruptedException {
-        int processorCount = Runtime.getRuntime().availableProcessors();
-        debugOut.println("ProcessorCount: " + processorCount);
-
-        ExecutorService executor = Executors.newFixedThreadPool(processorCount);
-        List<Future<ObjectLongMap<MetaPath>>> futures = new ArrayList<>();
-        for (short nodeLabel : labelMapping.getAllNodeLabels()) {
-            Future<T> future = executor.submit(new ComputeMetaPathFromNodeLabelTask(nodeLabel, metaPathLength));
-            futures.add(future);
-        }
-
-        executor.shutdown();
-        executor.awaitTermination(100, TimeUnit.SECONDS);
-
-        return futures.stream().map(this::get).collect(Collectors.toList());
-    }*/
-
     /*
     private <T> T get(Future<T> future) {
         try {
@@ -169,7 +150,6 @@ public class ComputeAllMetaPaths extends MetaPathComputation {
         });
         return nodesByLabel.values();
     }
-
 
     private ObjectContainer<CurrentState> expand(CurrentState state) {
         if (state.remainingLength == 0) return null;
