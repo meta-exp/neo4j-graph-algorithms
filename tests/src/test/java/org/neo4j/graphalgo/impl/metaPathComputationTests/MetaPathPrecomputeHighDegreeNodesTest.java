@@ -5,8 +5,7 @@ import org.neo4j.graphalgo.TestDatabaseCreator;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPaths;
-import org.neo4j.graphalgo.impl.metaPathComputation.MetaPathPrecomputeHighDegreeNodes;
+import org.neo4j.graphalgo.impl.metapath.MetaPathPrecomputeHighDegreeNodes;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
@@ -84,7 +83,7 @@ public class MetaPathPrecomputeHighDegreeNodesTest {
                 .withLabelAsProperty(true)
                 .load(HeavyGraphFactory.class);
 
-        algo = new MetaPathPrecomputeHighDegreeNodes(graph, graph, graph, 3, 0.5f);
+        algo = null; // TODO new MetaPathPrecomputeHighDegreeNodes(graph, graph, graph, 3, 0.5f);
 
     }
 

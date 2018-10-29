@@ -8,7 +8,9 @@ package org.neo4j.graphalgo.impl.metaPathComputationTests;
         import org.neo4j.graphalgo.core.GraphLoader;
         import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
         import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-        import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsForInstances;
+        import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPathsForInstances;
+        import org.neo4j.graphalgo.impl.metapath.labels.LabelImporter;
+        import org.neo4j.graphalgo.impl.metapath.labels.LabelMapping;
         import org.neo4j.graphdb.*;
         import org.neo4j.kernel.api.exceptions.KernelException;
         import org.neo4j.kernel.impl.proc.Procedures;
@@ -16,7 +18,6 @@ package org.neo4j.graphalgo.impl.metaPathComputationTests;
         import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
         import java.util.*;
-        import java.util.regex.Pattern;
 
         import static org.junit.Assert.assertEquals;
 
@@ -89,8 +90,7 @@ public class ComputeAllMetaPathsForInstancesTest {
 
         List<Integer> startNodes = new ArrayList<>(Arrays.asList(0, 4));
         List<Integer> endNodes = new ArrayList<>(Arrays.asList(1, 5));
-
-        algo = new ComputeAllMetaPathsForInstances(graph, graph, 4, startNodes, endNodes);
+        algo = null; // TODO new ComputeAllMetaPathsForInstances(graph, graph, 4, startNodes, endNodes);
 
     }
 

@@ -1,10 +1,9 @@
-package org.neo4j.graphalgo.impl.metaPathComputation;
+package org.neo4j.graphalgo.impl.metapath;
 
 import org.neo4j.graphalgo.api.ArrayGraphInterface;
 import org.neo4j.graphalgo.api.Degrees;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Node;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -12,8 +11,6 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 
 //TODO test correctness!
@@ -250,7 +247,7 @@ public class MetaPathPrecomputeHighDegreeNodes extends MetaPathComputation {
 
         maxDegreeNodes = nodeList.subList((int) (nodeList.size() - Math.ceil((double) nodeList.size() * ratioHighDegreeNodes)), nodeList.size());
         for (int nodeID : maxDegreeNodes) { //TODO always consecutive? (without gap)
-            debugOut.println("nodeID: " + nodeID + "; degree: " + graph.degree(nodeID, Direction.BOTH) + "; label: " + graph.getLabel(nodeID));
+            debugOut.println("nodeID: " + nodeID + "; degree: " + graph.degree(nodeID, Direction.BOTH) + "; label: " ); // TODO gaph.getLabel(nodeID));
 
         }
         return maxDegreeNodes;

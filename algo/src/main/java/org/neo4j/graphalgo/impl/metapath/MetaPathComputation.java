@@ -1,9 +1,7 @@
-package org.neo4j.graphalgo.impl.metaPathComputation;
+package org.neo4j.graphalgo.impl.metapath;
 
 import org.neo4j.graphalgo.impl.Algorithm;
 import java.util.HashSet;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class MetaPathComputation extends Algorithm<MetaPathComputation> {
     public void computeMetaPathFromNodeLabel(int startNodeLabel, int pMetaPathLength) {

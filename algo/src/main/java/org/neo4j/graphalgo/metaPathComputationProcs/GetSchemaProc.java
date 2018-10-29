@@ -3,8 +3,9 @@ package org.neo4j.graphalgo.metaPathComputationProcs;
 import org.neo4j.graphalgo.core.GraphLoader;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
 import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-import org.neo4j.graphalgo.impl.metaPathComputation.getSchema.GetSchema;
-import org.neo4j.graphalgo.impl.metaPathComputation.Pair;
+import org.neo4j.graphalgo.impl.metapath.getSchema.GetSchema;
+import org.neo4j.graphalgo.impl.metapath.Pair;
+import org.neo4j.graphalgo.impl.metapath.labels.LabelMapping;
 import org.neo4j.graphalgo.results.metaPathComputationResults.GetSchemaResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
@@ -70,7 +71,8 @@ public class GetSchemaProc {
                     .withLabelAsProperty(true)
                     .load(HeavyGraphFactory.class);
 
-            final GetSchema algo = new GetSchema(graph);
+            LabelMapping labelMapping = null; // TODO
+            final GetSchema algo = new GetSchema(graph, labelMapping);
             GetSchema.Result result = algo.compute();
             graph.release();
 

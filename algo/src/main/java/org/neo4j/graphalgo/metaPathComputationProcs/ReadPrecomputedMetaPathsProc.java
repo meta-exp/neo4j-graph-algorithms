@@ -1,6 +1,6 @@
 package org.neo4j.graphalgo.metaPathComputationProcs;
 
-import org.neo4j.graphalgo.impl.metaPathComputation.ReadPrecomputedMetaPaths;
+import org.neo4j.graphalgo.impl.metapath.ReadPrecomputedMetaPaths;
 import org.neo4j.graphalgo.results.metaPathComputationResults.MetaPathComputationResult;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;

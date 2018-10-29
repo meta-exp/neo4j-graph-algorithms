@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo.impl.metaPathComputation;
+package org.neo4j.graphalgo.impl.metapath;
 
 import org.neo4j.graphalgo.api.*;
 import org.neo4j.graphalgo.core.IdMap;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class MetaPath extends Algorithm<MetaPath> {
+public class MetaPathAlgorithm extends Algorithm<MetaPathAlgorithm> {
 
     private ArrayGraphInterface arrayGraphInterface;
     private Degrees degrees;
@@ -24,13 +24,13 @@ public class MetaPath extends Algorithm<MetaPath> {
     private Random random;
     private final static int DEFAULT_WEIGHT = 5;
 
-    public MetaPath(IdMapping idMapping,
-                    ArrayGraphInterface arrayGraphInterface,
-                    Degrees degrees,
-                    HashSet<Long> startNodeIds,
-                    HashSet<Long> endNodeIds,
-                    int numberOfRandomWalks,
-                    int randomWalkLength){
+    public MetaPathAlgorithm(IdMapping idMapping,
+                             ArrayGraphInterface arrayGraphInterface,
+                             Degrees degrees,
+                             HashSet<Long> startNodeIds,
+                             HashSet<Long> endNodeIds,
+                             int numberOfRandomWalks,
+                             int randomWalkLength){
 
         this.startNodeIds = new HashSet<>();
         this.endNodeIds = new HashSet<>();
@@ -95,15 +95,15 @@ public class MetaPath extends Algorithm<MetaPath> {
         }
     }
 
-    public Stream<MetaPath.Result> resultStream() {
+    public Stream<MetaPathAlgorithm.Result> resultStream() {
         return IntStream.range(0, 1).mapToObj(result -> new Result());
     }
 
     @Override
-    public  MetaPath me() { return this; }
+    public MetaPathAlgorithm me() { return this; }
 
     @Override
-    public MetaPath release() {
+    public MetaPathAlgorithm release() {
         return null;
     }
 

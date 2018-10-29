@@ -98,6 +98,7 @@ public class LabelMapTest {
         api.shutdown();
     }
 
+    /*
     @Test
     public void testLabelMapNotNull(){
         final HeavyGraph graphWithLabelMap;
@@ -160,5 +161,6 @@ public class LabelMapTest {
         Collection<Integer> allLabels = graphWithLabelMap.getAllLabels();
         assertEquals(4, allLabels.size());
     }
+    */
 }
 

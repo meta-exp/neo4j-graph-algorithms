@@ -2,10 +2,7 @@ package org.neo4j.graphalgo.impl.metaPathComputationTests;
 
 import org.junit.*;
 import org.neo4j.graphalgo.TestDatabaseCreator;
-import org.neo4j.graphalgo.core.GraphLoader;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-import org.neo4j.graphalgo.core.heavyweight.HeavyGraphFactory;
-import org.neo4j.graphalgo.impl.metaPathComputation.ComputeAllMetaPathsBetweenTypes;
+import org.neo4j.graphalgo.impl.metapath.ComputeAllMetaPathsBetweenTypes;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.exceptions.KernelException;
 import org.neo4j.kernel.impl.proc.Procedures;
@@ -13,7 +10,6 @@ import org.neo4j.graphalgo.metaPathComputationProcs.GettingStartedProc;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

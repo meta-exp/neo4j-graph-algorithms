@@ -4,13 +4,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.neo4j.graphalgo.TestDatabaseCreator;
-import org.neo4j.graphalgo.impl.metaPathComputation.GraphReducer;
+import org.neo4j.graphalgo.impl.metapath.GraphReducer;
 import org.neo4j.graphalgo.metaPathComputationProcs.GettingStartedProc;
 import org.neo4j.graphdb.*;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import static org.junit.Assert.assertArrayEquals;
 

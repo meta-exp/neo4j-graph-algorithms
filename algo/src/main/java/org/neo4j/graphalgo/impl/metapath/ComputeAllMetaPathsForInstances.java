@@ -1,11 +1,9 @@
-package org.neo4j.graphalgo.impl.metaPathComputation;
+package org.neo4j.graphalgo.impl.metapath;
 
         import com.carrotsearch.hppc.*;
         import com.carrotsearch.hppc.cursors.IntCursor;
         import org.neo4j.graphalgo.api.ArrayGraphInterface;
-        import org.neo4j.graphalgo.api.IdMapping;
         import org.neo4j.graphalgo.core.heavyweight.HeavyGraph;
-        import org.neo4j.graphalgo.core.utils.paged.IntArray;
 
         import java.io.FileOutputStream;
         import java.io.PrintStream;
@@ -13,8 +11,6 @@ package org.neo4j.graphalgo.impl.metaPathComputation;
         import java.util.*;
         import java.util.regex.Pattern;
         import java.util.stream.Collectors;
-        import java.util.stream.IntStream;
-        import java.util.stream.Stream;
 
         import static java.lang.Float.max;
 

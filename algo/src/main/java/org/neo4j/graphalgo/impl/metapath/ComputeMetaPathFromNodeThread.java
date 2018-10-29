@@ -1,4 +1,4 @@
-package org.neo4j.graphalgo.impl.metaPathComputation;
+package org.neo4j.graphalgo.impl.metapath;
 
 public class ComputeMetaPathFromNodeThread extends Thread {
     MetaPathComputation parent;
